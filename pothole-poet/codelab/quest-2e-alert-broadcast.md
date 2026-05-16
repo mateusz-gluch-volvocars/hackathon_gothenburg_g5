@@ -14,7 +14,14 @@
 
 ```bash
 PROJECT_ID="$(gcloud config get-value project)"
+PROJECT_NUMBER="$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')"
 EMAIL="$(gcloud config get-value account)"
+
+# 0. Let the Pod read the broadcast bucket. Bind storage.objectViewer to the
+#    WIF principal — same principal URI as the BQ + OTel bindings (Q2D-3, Q2E-2).
+PRINCIPAL="principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/laureate/sa/pothole-laureate"
+gcloud storage buckets add-iam-policy-binding "gs://${PROJECT_ID}-broadcast" \
+  --member="$PRINCIPAL" --role="roles/storage.objectViewer"
 
 # 1. Email notification channel
 gcloud beta monitoring channels create \
@@ -23,10 +30,10 @@ gcloud beta monitoring channels create \
   --channel-labels="email_address=$EMAIL"
 
 CHANNEL_ID="$(gcloud beta monitoring channels list \
-  --filter="displayName~Guardian.*$EMAIL" --format='value(name)' | head -1)"
+  --filter='displayName:"Guardian"' --format='value(name)' | head -1)"
 
 # 2. Alert policy on the Q2E-1 uptime check
-UPTIME_CHECK_ID="$(gcloud monitoring uptime list \
+UPTIME_CHECK_ID="$(gcloud monitoring uptime list-configs \
   --filter="displayName=pothole-laureate-uptime" \
   --format='value(name)' | head -1 | awk -F/ '{print $NF}')"
 
@@ -40,7 +47,7 @@ cat > /tmp/uptime-alert.json <<EOF
       "filter": "metric.type=\"monitoring.googleapis.com/uptime_check/check_passed\" AND metric.label.\"check_id\"=\"${UPTIME_CHECK_ID}\" AND resource.type=\"uptime_url\"",
       "aggregations": [{
         "alignmentPeriod": "60s",
-        "perSeriesAligner": "ALIGN_FRACTION_TRUE",
+        "perSeriesAligner": "ALIGN_NEXT_OLDER",
         "crossSeriesReducer": "REDUCE_COUNT_FALSE",
         "groupByFields": ["resource.label.\"host\""]
       }],
@@ -83,6 +90,26 @@ We use `gcloud` here on purpose. Each Console click hides what's happening; the 
 
 ---
 
+### Step 0 — Let the Pod read the broadcast bucket
+
+The Streamlit Pod reads `gs://<project>-broadcast/broadcast.txt` on every page render (cached 30 s). Until the Pod's WIF principal has read access, `read_broadcast()` silently returns `""` and the banner never appears.
+
+This binding can't be pre-provisioned in Terraform — the GKE Workload Identity Pool `<project>.svc.id.goog` is only created when participants run Q2D-1. Bind it now, the same way Q2D-3 binds the BQ roles and Q2E-2 binds the OTel roles.
+
+```bash
+PROJECT_ID="$(gcloud config get-value project)"
+PROJECT_NUMBER="$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')"
+PRINCIPAL="principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/laureate/sa/pothole-laureate"
+
+gcloud storage buckets add-iam-policy-binding "gs://${PROJECT_ID}-broadcast" \
+  --member="$PRINCIPAL" \
+  --role="roles/storage.objectViewer"
+```
+
+✅ **Expect:** `Updated IAM policy for bucket [gs://<project>-broadcast].` with the new principal + role.
+
+> IAM propagation takes 2–7 minutes per Google's WIF docs. If the first banner you write in Step 3 doesn't show up immediately, wait and refresh.
+
 ### Step 1 — Create the email notification channel
 
 ```bash
@@ -100,7 +127,7 @@ Capture the channel ID for the next step:
 
 ```bash
 CHANNEL_ID="$(gcloud beta monitoring channels list \
-  --filter="displayName~Guardian.*$EMAIL" \
+  --filter='displayName:"Guardian"' \
   --format='value(name)' | head -1)"
 echo "Channel: $CHANNEL_ID"
 ```
@@ -113,7 +140,7 @@ Find the uptime check ID and write a policy file:
 
 ```bash
 PROJECT_ID="$(gcloud config get-value project)"
-UPTIME_CHECK_ID="$(gcloud monitoring uptime list \
+UPTIME_CHECK_ID="$(gcloud monitoring uptime list-configs \
   --filter="displayName=pothole-laureate-uptime" \
   --format='value(name)' | head -1 | awk -F/ '{print $NF}')"
 
@@ -127,7 +154,7 @@ cat > /tmp/uptime-alert.json <<EOF
       "filter": "metric.type=\"monitoring.googleapis.com/uptime_check/check_passed\" AND metric.label.\"check_id\"=\"${UPTIME_CHECK_ID}\" AND resource.type=\"uptime_url\"",
       "aggregations": [{
         "alignmentPeriod": "60s",
-        "perSeriesAligner": "ALIGN_FRACTION_TRUE",
+        "perSeriesAligner": "ALIGN_NEXT_OLDER",
         "crossSeriesReducer": "REDUCE_COUNT_FALSE",
         "groupByFields": ["resource.label.\"host\""]
       }],
@@ -242,7 +269,7 @@ gcloud alpha monitoring snoozes update "$SNOOZE_ID" \
 ### Step 5 — Verify everything is wired
 
 ```bash
-gcloud monitoring uptime list                 --filter="displayName=pothole-laureate-uptime"        --format="value(displayName)"
+gcloud monitoring uptime list-configs                 --filter="displayName=pothole-laureate-uptime"        --format="value(displayName)"
 gcloud beta monitoring channels list          --filter="displayName~Guardian"                      --format="value(displayName)"
 gcloud alpha monitoring policies list         --filter="displayName=pothole-laureate-uptime-alert" --format="value(displayName)"
 gcloud storage cat "gs://${PROJECT_ID}-broadcast/broadcast.txt"

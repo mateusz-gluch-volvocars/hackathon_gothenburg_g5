@@ -13,28 +13,38 @@
 <QuickPath>
 
 ```bash
+# 0. Bind the Pod's WIF principal to the two OTel IAM roles. These can't be
+#    pre-provisioned (the GKE Workload Identity Pool only exists after Q2D-1),
+#    so the Guardian binds them once GKE is up.
+PRINCIPAL="principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/laureate/sa/pothole-laureate"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="$PRINCIPAL" --role="roles/cloudtrace.agent"      --condition=None
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="$PRINCIPAL" --role="roles/monitoring.metricWriter" --condition=None
+
+# 1. Edit app.py — paste the setup_otel() block + wrap 3 functions (see Steps 1-2)
 cd ~/quest/pothole-poet/streamlit
 
-# 1. Paste the setup_otel() block at the top of app.py — see Step 1 below
-# 2. Wrap read_broadcast() / load_silver() / load_bronze() with tracer.start_as_current_span — see Step 2
-
-# 3. Add OTEL_ENABLED env var to the Deployment (uncomment the existing block in deployment.yaml)
+# 2. Uncomment OTEL_ENABLED in deployment.yaml
 sed -i 's|# - name: OTEL_ENABLED|- name: OTEL_ENABLED|; s|#   value: "true"|  value: "true"|' k8s/deployment.yaml
 grep OTEL_ENABLED k8s/deployment.yaml
 # ✅ Expect: - name: OTEL_ENABLED \n   value: "true"
 
-# 4. Build + roll out
+# 3. Build + roll out — build from pothole-poet/ (NOT streamlit/) so the
+#    Bronze seed CSV is in the build context (see Q2D-2 Concept).
+cd ~/quest/pothole-poet
 gcloud builds submit \
-  --tag="europe-west1-docker.pkg.dev/$PROJECT_ID/laureate/pothole-laureate:v2-otel" \
+  --tag="europe-west1-docker.pkg.dev/$PROJECT_ID/laureate/pothole-laureate:v3-otel" \
   --region=$REGION
 
-kubectl apply -f k8s/deployment.yaml
+kubectl apply -f streamlit/k8s/deployment.yaml
 kubectl set image deployment/pothole-laureate \
-  pothole-laureate=europe-west1-docker.pkg.dev/$PROJECT_ID/laureate/pothole-laureate:v2-otel \
+  pothole-laureate=europe-west1-docker.pkg.dev/$PROJECT_ID/laureate/pothole-laureate:v3-otel \
   -n laureate
 kubectl rollout status deployment/pothole-laureate -n laureate
 
-# 5. Generate traffic + verify spans land
+# 4. Generate traffic + verify spans land
 for i in 1 2 3 4 5; do curl -s "http://$GATEWAY_IP/" >/dev/null; sleep 1; done
 sleep 60   # spans take ~30-60 sec to land in Cloud Trace
 gcloud trace traces list --limit=5 --format="value(traceId)"
@@ -48,6 +58,32 @@ Google rolled out a unified OpenTelemetry Protocol (OTLP) endpoint at `telemetry
 For your Streamlit app this is **two changes**: a `setup_otel()` initialisation block at the top of `app.py`, and `with tracer.start_as_current_span(...)` wrappers around three functions. The BigQuery and Cloud Storage clients auto-emit their own spans that attach as children of yours.
 
 ---
+
+### Step 0 — Bind the Pod's WIF principal to the OTel IAM roles
+
+OpenTelemetry export to `telemetry.googleapis.com` needs two project-level IAM roles on the Pod's identity: `roles/cloudtrace.agent` (lets the Pod write spans) and `roles/monitoring.metricWriter` (lets it write metrics).
+
+These can't live in the per-Garage Terraform module — the GKE Workload Identity Pool `<PROJECT_ID>.svc.id.goog` is only created when your Infra-Admin runs `gcloud container clusters create-auto` in Q2D-1. IAM rejects bindings to pool members that don't exist yet, so the Guardian binds them here, after the cluster is up.
+
+```bash
+PRINCIPAL="principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/laureate/sa/pothole-laureate"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="$PRINCIPAL" \
+  --role="roles/cloudtrace.agent" \
+  --condition=None
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="$PRINCIPAL" \
+  --role="roles/monitoring.metricWriter" \
+  --condition=None
+```
+
+✅ **Expect** (twice): `Updated IAM policy for project [...]` followed by the policy bindings showing your `principal://...` member with the new role.
+
+Same principal URI format as Q2D-3 — `PROJECT_NUMBER` in the `projects/` segment, `PROJECT_ID` in the `.svc.id.goog` pool name. If either is empty, re-export them from Q2D-1.
+
+> IAM propagation takes 2–7 minutes per Google's WIF docs. The OTel exporter retries silently — first traces may appear ~7 min after the rollout, not the ~60 s shown in Step 6.
 
 ### Step 1 — Paste the `setup_otel()` block at the top of `app.py`
 
@@ -165,18 +201,22 @@ grep -A1 OTEL_ENABLED k8s/deployment.yaml
 
 ### Step 4 — Build the new image and roll it out
 
+Build from the `pothole-poet/` parent directory (where the Dockerfile lives — see Q2D-2 Concept for why). The previous Step 3 sed ran inside `streamlit/`; `cd` up one level for the build:
+
 ```bash
+cd ~/quest/pothole-poet
+
 gcloud builds submit \
-  --tag="europe-west1-docker.pkg.dev/$PROJECT_ID/laureate/pothole-laureate:v2-otel" \
+  --tag="europe-west1-docker.pkg.dev/$PROJECT_ID/laureate/pothole-laureate:v3-otel" \
   --region=$REGION
 ```
 
 ✅ **Expect** (after ~3 min): `SUCCESS` + the digest.
 
 ```bash
-kubectl apply -f k8s/deployment.yaml
+kubectl apply -f streamlit/k8s/deployment.yaml
 kubectl set image deployment/pothole-laureate \
-  pothole-laureate=europe-west1-docker.pkg.dev/$PROJECT_ID/laureate/pothole-laureate:v2-otel \
+  pothole-laureate=europe-west1-docker.pkg.dev/$PROJECT_ID/laureate/pothole-laureate:v3-otel \
   -n laureate
 kubectl rollout status deployment/pothole-laureate -n laureate
 ```
@@ -224,10 +264,10 @@ That's the moment you can answer *"why is the page slow today?"* without guessin
 
 <Gotchas>
 - <strong>No traces appear, ever.</strong> Most likely: <code>cloudtrace.googleapis.com</code> isn&rsquo;t enabled on the project. <code>telemetry.googleapis.com</code> silently discards trace data when Cloud Trace API is disabled. Check: <code>gcloud services list --enabled | grep cloudtrace</code>. Fix: <code>gcloud services enable cloudtrace.googleapis.com</code>. (Per-Garage Terraform pre-enables it; flag your Garage owner if it&rsquo;s missing.)
-- <strong>"Permission denied" in Pod logs from OTel exporter.</strong> The Pod&rsquo;s WIF principal needs <code>roles/cloudtrace.agent</code>. Pre-baked in <code>observability.tf</code>; if missing, the Pod can&rsquo;t write spans. <code>gcloud projects get-iam-policy $PROJECT_ID --format=json | grep -A4 cloudtrace.agent</code>.
+- <strong>"Permission denied" in Pod logs from OTel exporter.</strong> The Pod&rsquo;s WIF principal needs <code>roles/cloudtrace.agent</code> and <code>roles/monitoring.metricWriter</code>. Both are bound in Step 0 above; if the Pod logs show <code>permission denied</code>, re-run Step 0 and wait ~7 min for IAM propagation (per Google&rsquo;s WIF docs). Verify: <code>gcloud projects get-iam-policy $PROJECT_ID --flatten='bindings[].members' --filter='bindings.members:principal*pothole-laureate AND bindings.role:cloudtrace.agent' --format='value(bindings.role)'</code>.
 - <strong>Streamlit reloader keeps recreating the TracerProvider.</strong> Streamlit&rsquo;s file-watch reloader can re-import the app on file changes, which calls <code>setup_otel()</code> again. The OTel SDK warns about double initialisation but keeps working. Safe to ignore in dev.
-- <strong>Custom spans show up but BigQuery spans don&rsquo;t.</strong> The BigQuery Python client&rsquo;s auto-instrumentation needs the <code>opentelemetry-instrumentation-google-cloud-bigquery</code> package, which is shipped in <code>requirements.txt</code>. If missing, traces will only show your manual spans &mdash; <code>kubectl exec deploy/pothole-laureate -n laureate -- pip show opentelemetry-instrumentation-google-cloud-bigquery</code> in the running Pod to confirm.
-- <strong>gRPC connection errors in Pod logs.</strong> The Pod&rsquo;s outbound gRPC needs to reach <code>telemetry.googleapis.com:443</code>. Cloud NAT (provisioned for the seeder VM) handles this; if your cluster has any non-default egress restrictions, OTel breaks first.
+- <strong>Custom spans show up but BigQuery spans don&rsquo;t.</strong> The <code>google-cloud-bigquery</code> Python client has OpenTelemetry instrumentation built in &mdash; it auto-emits spans when a TracerProvider is configured before the client is constructed. There is <strong>no separate</strong> <code>opentelemetry-instrumentation-google-cloud-bigquery</code> package on PyPI; don&rsquo;t add one. If BQ child spans are missing, confirm <code>setup_otel()</code> runs before <code>bigquery.Client()</code> is first imported/called. (In <code>app.py</code> the setup block is at the top, above <code>load_silver</code>, so this works by construction.)
+- <strong>gRPC connection errors in Pod logs.</strong> The Pod&rsquo;s outbound gRPC needs to reach <code>telemetry.googleapis.com:443</code>. GKE Autopilot reaches it via Private Google Access (auto-enabled on private-node subnets) &mdash; no Cloud NAT required. If you see connection refused, confirm <code>cloudtrace.googleapis.com</code> is enabled on the project (per-Garage Terraform pre-enables it).
 </Gotchas>
 
 <Shipped>

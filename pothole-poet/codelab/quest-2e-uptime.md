@@ -30,7 +30,7 @@ gcloud monitoring uptime create pothole-laureate-uptime \
   --status-codes=200
 
 # 3. Verify it exists
-gcloud monitoring uptime list \
+gcloud monitoring uptime list-configs \
   --filter="displayName=pothole-laureate-uptime" \
   --format="value(name,httpCheck.path)"
 # ✅ Expect: one line — uptime check name + /_stcore/health
@@ -96,7 +96,7 @@ This is the Guardian rhythm: **be ready before things break, be available before
 ### Step 3 — Verify the check exists
 
 ```bash
-gcloud monitoring uptime list \
+gcloud monitoring uptime list-configs \
   --filter="displayName=pothole-laureate-uptime" \
   --format="value(name,httpCheck.path)"
 ```
