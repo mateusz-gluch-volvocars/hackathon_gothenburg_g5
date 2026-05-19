@@ -31,7 +31,7 @@ kubectl set env deployment/pothole-laureate -n laureate \
 
 kubectl rollout status deployment/pothole-laureate -n laureate
 
-# 3. Submit a quote through the form (in laptop Chrome), then ask Pipeline-author
+# 3. Submit a quote through the form (in laptop browser), then ask Pipeline-author
 # to re-trigger the DAG, then refresh and read the new ode.
 ```
 
@@ -78,7 +78,7 @@ GKE Pods get an IP from your VPC's pod range when they schedule, so they're alre
 
 Add the env vars to the running Deployment in one command. Kubernetes does a rolling restart automatically.
 
-> **Important:** `kubectl set env` *replaces* the entire env list rather than merging. If you already have `BROADCAST_BUCKET` set (from Q2E-3), include it in the same command or it'll disappear.
+> **Important:** `kubectl set env` *merges* into the existing env list — it updates or appends the vars you name and leaves the rest alone. We list all six here anyway so the Gold env contract is explicit on one line; if you already set `BROADCAST_BUCKET` in Q2E-3 it would survive a narrower command too.
 
 ```bash
 kubectl set env deployment/pothole-laureate -n laureate \
@@ -98,7 +98,7 @@ kubectl rollout status deployment/pothole-laureate -n laureate
 
 ### Step 3 — Submit a quote through the form
 
-Open the Gateway URL (or `<ip>.nip.io` if you also did Q6B) in your **laptop's** Chrome.
+Open the Gateway URL (or `<ip>.nip.io` if you also did Q6B) in your **laptop's** browser.
 
 ✅ **Expect:** The sidebar now has the **🚧 Report a pothole** form.
 
@@ -137,7 +137,7 @@ gcloud composer environments run the-laureate-bureau \
 ### Step 6 — Refresh Streamlit and read the new ode
 
 1. Wait ~60 sec for the DAG to complete.
-2. Refresh the Streamlit page in your laptop's Chrome.
+2. Refresh the Streamlit page in your laptop's browser.
 3. Pick the neighbourhood you reported in.
 
 ✅ **Expect:** The new poem references your quote phrasing.
@@ -156,7 +156,7 @@ If you're also doing **Q6B** (HTTPS), demo on the `https://<ip>.nip.io/` URL —
 - <strong>Form submits without error but no row in AlloyDB.</strong> The Streamlit code is silently swallowing the exception &mdash; check Pod logs (<code>kubectl logs -n laureate -l app=pothole-laureate --tail=100</code>).
 - <strong>Form 500s with <code>connection refused</code>.</strong> The <code>ALLOYDB_HOST</code> env var didn&rsquo;t make it onto the Pod. Re-check with <code>kubectl describe deployment pothole-laureate -n laureate | grep -A6 Environment</code>.
 - <strong>DAG re-ran but the new ode doesn&rsquo;t mention your quote.</strong> The aggregation may have averaged your quote out. Submit 2&ndash;3 quotes to the same neighbourhood to dominate the dominant-mood / dominant-weather bucket the prompt sees.
-- <strong>Gold form works but the Guardian's broadcast banner disappeared.</strong> If you also did Q2E-3, your <code>kubectl set env</code> in Step 2 dropped <code>BROADCAST_BUCKET</code>. The QuickPath above re-asserts it; if you ran your own <code>set env</code> without it, run again with all the env vars listed.
+- <strong>Gold form works but the Guardian's broadcast banner disappeared.</strong> Only possible if someone explicitly removed it &mdash; <code>kubectl set env</code> merges, so it can&rsquo;t have happened from Step 2 alone. Check Pod env (<code>kubectl describe deployment pothole-laureate -n laureate | grep -A6 Environment</code>) and re-assert with <code>kubectl set env deployment/pothole-laureate -n laureate BROADCAST_BUCKET=&quot;$(gcloud config get-value project)-broadcast&quot;</code>.
 </Gotchas>
 
 <Shipped>

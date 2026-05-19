@@ -33,7 +33,7 @@ You don't need to create the dataset — the platform pre-provisioned `pothole_l
 
 ### Step 1 — Open BigQuery Studio
 
-Open `https://console.cloud.google.com/bigquery?project=<your-project-id>` in your laptop's Chrome.
+Open `https://console.cloud.google.com/bigquery?project=<your-project-id>` in your laptop's browser.
 
 ✅ **Expect:** The Explorer panel runs down the left side. Top-level entries are projects you have access to.
 

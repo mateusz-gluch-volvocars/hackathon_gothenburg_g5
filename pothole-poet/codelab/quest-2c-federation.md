@@ -10,6 +10,26 @@
 
 > Lane C · 2 of 3. ~5 minutes hands-on.
 
+<Concept title="🤖 Or drive this with Antigravity CLI">
+
+**Antigravity CLI** has a **`bq-federation-helper`** skill that handles the two annoying parts of this lane: substituting your real `PROJECT_ID` into the federation path (no `<your-project-id>` Find-and-Replace) and adding the PostgreSQL `UUID` → `TEXT` cast inside the inner SELECT. Launch it from any terminal:
+
+```bash
+agy
+```
+
+then ask:
+
+> *"Run the federation smoke test against alloydb_archive and confirm 5000 rows."*
+
+or, for any ad-hoc federated query:
+
+> *"Write a federation query that returns all pothole reports with severity ≥ 3 in Hisingen."*
+
+The QuickPath and Studio paths below still work — the skill just bakes in the substitutions for you.
+
+</Concept>
+
 <QuickPath>
 
 ```bash

@@ -4,7 +4,7 @@
 
 **🎯 What you'll do.** Run a single `gcloud container clusters create-auto` command to spin up a regional GKE Autopilot cluster called `laureate-cluster` with `--enable-private-nodes`. ~6-8 minutes of waiting. While it provisions, capture `PROJECT_ID` + `PROJECT_NUMBER` (you'll need both for Q2D-3).
 
-**🤝 Why it matters.** This cluster is **the runtime your Streamlit app will live on for the rest of the day**. Every other Q2D page (image build, identity binding, deploy, gateway) targets this cluster. The `--enable-private-nodes` flag is non-negotiable on `dev5-495618` — the org policy blocks public-IP nodes — and forgetting it costs you 8 minutes when the create fails halfway. Get the click right the first time.
+**🤝 Why it matters.** This cluster is **the runtime your Streamlit app will live on for the rest of the day**. Every other Q2D page (image build, identity binding, deploy, gateway) targets this cluster. The `--enable-private-nodes` flag is non-negotiable in your Garage's project — the Volvo Cars org policy blocks public-IP nodes — and forgetting it costs you 8 minutes when the create fails halfway. Get the click right the first time.
 
 </Objective>
 
@@ -49,13 +49,13 @@ export REGION="europe-west1"
 echo "PROJECT_ID=$PROJECT_ID  PROJECT_NUMBER=$PROJECT_NUMBER"
 ```
 
-✅ **Expect:** Both values printed. `PROJECT_NUMBER` is all digits (e.g. `624958632298`); `PROJECT_ID` is human-readable (e.g. `dev5-495618`).
+✅ **Expect:** Both values printed. `PROJECT_NUMBER` is all digits (12 digits, looks like `624958632298`); `PROJECT_ID` is human-readable (lowercase + digits + hyphens, matches the value on your workbench card).
 
 > Both values are needed for the Workload Identity binding in Q2D-3. **They are different identifiers for the same project** — mixing them up in Q2D-3 is the single most expensive mistake in the day. Capture them both now and never substitute one for the other.
 
 ### Step 2 — Create the cluster
 
-The single command below creates a regional Autopilot cluster with private nodes (the project's org policy forbids public-IP nodes — Cloud NAT handles outbound).
+The single command below creates a regional Autopilot cluster with private nodes (the project's org policy forbids public-IP nodes — outbound to Google APIs goes via Private Google Access, no NAT involved).
 
 ```bash
 gcloud container clusters create-auto laureate-cluster \
@@ -80,7 +80,9 @@ The trade is some flexibility — no SSH to nodes, no privileged Pods, no kernel
 
 By default, GKE nodes get a public IP and become directly reachable from the internet. **Private nodes** keep them on internal-only IPs — no public surface to scan, no risk of a misconfigured Pod accidentally accepting outside traffic. This Quest enforces it (the project's `compute.vmExternalIpAccess` org policy refuses to provision public-IP nodes at all).
 
-Private nodes still need a way to reach the public internet for things like pulling container images. **Cloud NAT** is the managed answer: a NAT gateway that gives private VMs outbound-only internet, no public IP attached. The platform team set this up during pre-provisioning, so the cluster Just Works for image pulls without any extra configuration.
+Private nodes still need a way to reach Google APIs — pulling images from Artifact Registry, talking to BigQuery, fetching tokens from the metadata server. **Private Google Access** handles that: it's auto-enabled on Autopilot's private-node subnet, and routes traffic to any `*.googleapis.com` endpoint over Google's internal network without a public IP. No NAT, no firewall plumbing.
+
+**There is no general-purpose internet egress.** The per-Garage Terraform module deliberately omits Cloud NAT to mimic a secure corporate environment — your Pods can reach Google APIs and that's it. If your app needs to call a third-party webhook or a non-Google public API, it won't work; route that traffic via a Google service (e.g. Cloud Functions / Workflows with their own egress) instead.
 
 </Concept>
 
@@ -111,7 +113,7 @@ In the Console (`https://console.cloud.google.com/kubernetes/list/overview?proje
 - <strong>Stuck on PROVISIONING for &gt;12 min.</strong> Check the Console's <strong>Kubernetes Engine &rarr; Operations</strong> tab for an error. Past 15 min, flag a Sherpa.
 - <strong><code>command not found: gcloud</code>.</strong> You&rsquo;re in a Cloud Shell, not the Workstation. Open the Workstation terminal instead &mdash; <code>gcloud</code> is preinstalled there.
 - <strong><code>Insufficient quota</code> errors.</strong> Autopilot uses E2 nodes from the project&rsquo;s default quota. If hit, flag a Sherpa &mdash; the platform pre-allocates enough but a stale Garage may still be holding nodes.
-- <strong><code>PROJECT_NUMBER</code> empty in Step 1.</strong> Make sure <code>gcloud config get-value project</code> returns your Garage&rsquo;s project_id, not the dev5-495618 default. <code>gcloud config set project &lt;your-project-id&gt;</code> first.
+- <strong><code>PROJECT_NUMBER</code> empty in Step 1.</strong> Make sure <code>gcloud config get-value project</code> returns your Garage&rsquo;s project_id (from your workbench card). If it&rsquo;s blank or a different project, run <code>gcloud config set project &lt;your-project-id&gt;</code> first.
 </Gotchas>
 
 <Shipped>

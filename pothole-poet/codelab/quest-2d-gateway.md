@@ -34,7 +34,7 @@ echo "Public URL: http://$GATEWAY_IP/"
 curl -s "http://$GATEWAY_IP/_stcore/health"
 # ✅ Expect: ok
 
-# 5. Open http://$GATEWAY_IP/ in your LAPTOP's Chrome (Workstation has no browser)
+# 5. Open http://$GATEWAY_IP/ in your laptop's browser (Workstation has no browser)
 ```
 
 </QuickPath>
@@ -158,9 +158,9 @@ curl -s "http://$GATEWAY_IP/_stcore/health"
 
 > If you get `404 default backend - 404`: the Gateway is up but the HTTPRoute hasn't attached yet. Run `kubectl describe httproute pothole-route -n laureate` and check the **Parents** → **Conditions** section for `Accepted: True`. Wait 30 sec and re-curl.
 
-### Step 5 — Open it in your laptop's Chrome
+### Step 5 — Open it in your laptop's browser
 
-In your **laptop's** Chrome (the Workstation has no browser), open:
+In your **laptop's** browser (the Workstation has no browser), open:
 
 ```
 http://<your-gateway-ip>/
@@ -185,8 +185,8 @@ Pair with the Data Engineer and Pipeline-author: when they finish, the DAG trigg
 - <strong><code>no healthy upstream</code> / 503s once traffic arrives.</strong> The LB&rsquo;s health check is probing the wrong path or your Pods are slow to respond. Confirm the HealthCheckPolicy applied: <code>kubectl get healthcheckpolicy -n laureate</code> &mdash; should list <code>pothole-laureate-hc</code>. If it&rsquo;s missing, <code>kubectl apply -f k8s/healthcheckpolicy.yaml</code>. Without it the LB defaults to <code>GET /</code> which on Streamlit triggers a full page render and can flap on cold Pods.
 - <strong>Tried to edit the <code>cloud.google.com/neg</code> annotation on the Service.</strong> Don&rsquo;t. Per the official Gateway API docs: <em>"you cannot modify the cloud.google.com/neg annotation for a Service that is part of the Gateway."</em> If you need to change exposed ports, delete + recreate the Service (and the Gateway controller will re-attach).
 - <strong>HTTPRoute has no effect.</strong> <code>kubectl describe httproute pothole-route -n laureate</code> shows attachment status. Look for <code>Accepted: True</code> in the parents conditions. If <code>Reason: NoMatchingParent</code>, the parentRef name (or namespace) is wrong.
-- <strong>Page loads in Chrome but the dataframe is empty, or the Pod crashes with <code>FileNotFoundError: '/seed/pothole_reports.csv'</code>.</strong> The image was built from <code>streamlit/</code> instead of <code>pothole-poet/</code>, so the sibling <code>seed/</code> directory wasn&rsquo;t in the build context. Re-do Q2D-2 with the correct <code>cd</code>.
-- <strong>You opened the URL in the Workstation IDE preview pane.</strong> The Workstation has no browser &mdash; the preview pane doesn&rsquo;t reach external IPs. Open the URL in your <em>laptop&rsquo;s</em> Chrome.
+- <strong>Page loads in your browser but the dataframe is empty, or the Pod crashes with <code>FileNotFoundError: '/seed/pothole_reports.csv'</code>.</strong> The image was built from <code>streamlit/</code> instead of <code>pothole-poet/</code>, so the sibling <code>seed/</code> directory wasn&rsquo;t in the build context. Re-do Q2D-2 with the correct <code>cd</code>.
+- <strong>You opened the URL in the Workstation IDE preview pane.</strong> The Workstation has no browser &mdash; the preview pane doesn&rsquo;t reach external IPs. Open the URL in your <em>laptop&rsquo;s</em> browser.
 </Gotchas>
 
 <Shipped>

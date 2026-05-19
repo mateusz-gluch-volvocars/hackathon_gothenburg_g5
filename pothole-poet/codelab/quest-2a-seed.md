@@ -10,6 +10,22 @@
 
 > Lane B · 3 of 3. ~5 minutes hands-on.
 
+<Concept title="🤖 Or drive this with Antigravity CLI">
+
+**Antigravity CLI** has an **`alloydb-seed-helper`** skill that does this end-to-end: resolves the AlloyDB private IP, inspects the live `pothole_reports` schema, pre-flights the CSV row count, proposes the `\copy` for your approval, and verifies the 5000-row load. Launch it from any terminal:
+
+```bash
+agy
+```
+
+then ask:
+
+> *"Seed the AlloyDB pothole_reports table from the seed CSV in my repo."*
+
+Read-only checks run on their own; the `\copy` itself pauses for your `y`. The QuickPath below is exactly what the skill runs under the hood — pick whichever you prefer.
+
+</Concept>
+
 <QuickPath>
 
 ```bash

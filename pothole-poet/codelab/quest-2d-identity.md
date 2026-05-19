@@ -10,6 +10,22 @@
 
 > Lane D · 3 of 5. ~5 minutes hands-on.
 
+<Concept title="🤖 Or drive this with Antigravity CLI (strongly recommended for this step)">
+
+This is the **single most expensive mistake of the hackathon day** if you confuse `PROJECT_ID` (human-readable, the value printed on your workbench card) with `PROJECT_NUMBER` (a 12-digit number, looks like `624958632298`) in the principal URI. Antigravity CLI's **`wif-binding-helper`** skill reads both identifiers fresh from `gcloud`, constructs the principal URI in the right shape, and proposes both `add-iam-policy-binding` commands for your approval — so the only way to get it wrong is to skip reading the surfaced values before pressing `y`. Launch it from any terminal:
+
+```bash
+agy
+```
+
+then ask:
+
+> *"Bind the pothole-laureate Kubernetes ServiceAccount to the BigQuery dataViewer and jobUser roles via direct Workload Identity."*
+
+The QuickPath below is what the skill runs under the hood. Either path lands the same bindings; the agentic path just makes the principal URI bulletproof.
+
+</Concept>
+
 <QuickPath>
 
 ```bash
@@ -57,8 +73,8 @@ echo "PROJECT_NUMBER=$PROJECT_NUMBER  PROJECT_ID=$PROJECT_ID"
 ```
 
 ✅ **Expect:**
-- `PROJECT_NUMBER` is **all digits** (e.g. `624958632298`)
-- `PROJECT_ID` is **human-readable** (e.g. `dev5-495618`)
+- `PROJECT_NUMBER` is **all digits** — a 12-digit number, looks like `624958632298`
+- `PROJECT_ID` is **human-readable** — lowercase + digits + hyphens, matches what's printed on your workbench card
 
 If either is empty or wrong, re-run Q2D-1 Step 1.
 

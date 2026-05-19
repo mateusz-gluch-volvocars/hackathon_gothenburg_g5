@@ -52,7 +52,7 @@ Fill in these fields exactly:
 | Location | `europe-west1` |
 | Image version | leave default (latest Gen 3 + Airflow 3.x) |
 | Environment size | leave default (small) |
-| Service account | `composer-runner-test@<your-project-id>.iam.gserviceaccount.com` (pick from dropdown) |
+| Service account | `composer-runner-<garage_id>@<your-project-id>.iam.gserviceaccount.com` (pick from dropdown — `<garage_id>` is on your workbench card) |
 
 Click **CREATE**.
 

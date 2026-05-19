@@ -45,7 +45,7 @@ You provision a **cluster** (the management unit) and a **primary instance** (th
 
 ### Step 1 — Click CREATE CLUSTER
 
-Open the AlloyDB console: `https://console.cloud.google.com/alloydb/clusters?project=<your-project-id>` (in your laptop's Chrome — the Workstation has no browser).
+Open the AlloyDB console: `https://console.cloud.google.com/alloydb/clusters?project=<your-project-id>` (in your laptop's browser — the Workstation has no browser).
 
 Click **CREATE CLUSTER**. Pick **Highly available**.
 

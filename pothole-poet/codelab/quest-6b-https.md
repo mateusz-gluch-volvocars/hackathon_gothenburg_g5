@@ -42,7 +42,7 @@ until [ "$(gcloud certificate-manager certificates describe pothole-laureate-cer
   echo "$(date +%H:%M) cert state: PROVISIONING..."; sleep 60
 done
 
-# 5. Visit https://$NIP_HOST/ in laptop's Chrome → green padlock
+# 5. Visit https://$NIP_HOST/ in laptop's browser → green padlock
 ```
 
 </QuickPath>
@@ -139,7 +139,7 @@ While you wait, help your team — the Guardian may have alerts firing, the App 
 
 ### Step 5 — Visit the HTTPS URL
 
-Open `https://<your-nip-host>/` in your **laptop's** Chrome (replace with the value from Step 1, e.g. `https://35.190.42.17.nip.io/`).
+Open `https://<your-nip-host>/` in your **laptop's** browser (replace with the value from Step 1, e.g. `https://35.190.42.17.nip.io/`).
 
 ✅ **Expect:** Page loads with a valid certificate. No browser warning. Green padlock in the address bar.
 
@@ -157,3 +157,5 @@ Gold tier (Part B) achieved. <strong>The Pothole Poet now serves over a real HTT
 </Shipped>
 
 🥇 **Gold tier (Part B) achieved.** Pair this with Q6A and your demo URL is `https://<ip>.nip.io/` with a fresh ode for whichever neighbourhood the judge picked.
+
+➡️ Next: **Q7 — Differentiate to Win** (sidebar on the left). Your canonical Gold is shipped — now use **Antigravity CLI** to push past the tutorial and make your demo the one the judges remember.

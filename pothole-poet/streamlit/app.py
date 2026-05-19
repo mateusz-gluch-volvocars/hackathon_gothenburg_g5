@@ -21,7 +21,7 @@ import streamlit as st
 # ─── CONFIG ──────────────────────────────────────────────────────────────────
 
 TIER             = os.environ.get("TIER", "BRONZE")          # BRONZE | SILVER | GOLD
-PROJECT_ID       = os.environ.get("PROJECT_ID", "dev5-495618")
+PROJECT_ID       = os.environ.get("PROJECT_ID", "")
 BROADCAST_BUCKET = os.environ.get("BROADCAST_BUCKET", "")    # Guardian banner; empty = disabled
 BQ_DATASET       = "pothole_laureate"
 BQ_TABLE         = "neighbourhood_odes"

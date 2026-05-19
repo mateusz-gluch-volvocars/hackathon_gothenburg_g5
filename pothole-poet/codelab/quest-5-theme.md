@@ -4,7 +4,7 @@
 
 **🎯 What you'll do.** Polish the visual palette and swap the Laureate's voice. The voice is **one prompt change** in `airflow/sql/02_enrich.sql` — make Gemini compose as a pirate captain, IKEA assembly manual, ABBA chorus, somber Bergman narrator, anything. Re-trigger the DAG (~3 min) and watch every poem regenerate in the new voice. ~15 minutes.
 
-**🤝 Why it matters.** This is the **second-loudest demo moment** after Gold. Generic AI poems are forgettable; pirate-captain pothole poems are unforgettable. Pick a voice that lands the joke for the room you're presenting to — judges will remember "the Garage that did the IKEA-manual potholes" three weeks after they've forgotten everything else.
+**🤝 Why it matters.** This is the **second-loudest demo moment** after Gold. Generic AI poems are forgettable; pirate-captain pothole poems are unforgettable. Pick a voice that lands the joke for the room you're presenting to — judges will remember "the Garage that did the IKEA-manual potholes" three weeks after they've forgotten everything else. **The persona you pick here is also the foundation you'll deepen during the Gold-tier build window** — ask Antigravity CLI to apply the same voice across the whole app (page title, sidebar, theme color, analyst prompts), not just the ode.
 
 </Objective>
 
