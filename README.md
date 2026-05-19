@@ -36,14 +36,6 @@ You don't *need* to read this README cold — the hub walks you through everythi
 
 ---
 
-## What this repo is *not*
-
-The platform side of the hackathon — the Terraform that pre-provisions each Garage's GCP project, the hub web app itself, the smoke-verify harness, the per-team ops scripts — is owned by the platform team and is **not** in this repo. You won't need any of it during the lab; it runs ahead of time and behind the scenes.
-
-If you're a future Quest author and want the platform context, ask the platform team for access to the internal repo.
-
----
-
 ## Licensing
 
 See [`LICENSE`](./LICENSE).
