@@ -12,30 +12,38 @@
 
 <QuickPath>
 
+Run each command in turn. `gcloud` prints progress and blocks until the operation finishes — no polling loop needed.
+
+Create the cluster (~2 min):
+
 ```bash
-# 1. Create cluster + primary instance (~10 min provisioning)
 gcloud alloydb clusters create pothole-archive \
   --region=europe-west1 \
-  --network=default \
+  --network=garage-vpc \
   --password=buildwithgemini2026
-
-gcloud alloydb instances create pothole-archive-primary \
-  --cluster=pothole-archive --region=europe-west1 \
-  --instance-type=PRIMARY --availability-type=REGIONAL \
-  --cpu-count=2
-
-# 2. Wait until READY (polls every 20 sec)
-until [ "$(gcloud alloydb clusters describe pothole-archive --region=europe-west1 --format='value(state)')" = "READY" ]; do
-  echo "still CREATING..."; sleep 20
-done
-# ✅ Expect: READY
-
-# 3. Capture the private IP (use this in Q2A-2 / Q2A-3)
-ALLOYDB_HOST="$(gcloud alloydb instances describe pothole-archive-primary \
-  --cluster=pothole-archive --region=europe-west1 \
-  --format='value(ipAddress)')"
-echo "AlloyDB private IP: $ALLOYDB_HOST"
 ```
+
+Create the primary instance (~8 min):
+
+```bash
+gcloud alloydb instances create pothole-archive-primary \
+  --cluster=pothole-archive \
+  --region=europe-west1 \
+  --instance-type=PRIMARY \
+  --availability-type=ZONAL \
+  --cpu-count=2
+```
+
+Print the private IP — you'll paste it into Q2A-2 and Q2A-3:
+
+```bash
+gcloud alloydb instances describe pothole-archive-primary \
+  --cluster=pothole-archive \
+  --region=europe-west1 \
+  --format='value(ipAddress)'
+```
+
+Expected output: `10.x.x.x`
 
 </QuickPath>
 
@@ -47,7 +55,7 @@ You provision a **cluster** (the management unit) and a **primary instance** (th
 
 Open the AlloyDB console: `https://console.cloud.google.com/alloydb/clusters?project=<your-project-id>` (in your laptop's browser — the Workstation has no browser).
 
-Click **CREATE CLUSTER**. Pick **Highly available**.
+Click **CREATE CLUSTER**. Pick **Basic** (single instance, single zone — right choice for a 3.5-hour workload; HA would just burn compute on a standby you'll never failover to).
 
 Fill in these fields exactly:
 
@@ -56,7 +64,7 @@ Fill in these fields exactly:
 | Cluster ID | `pothole-archive` |
 | Password | `buildwithgemini2026` |
 | Region | `europe-west1` |
-| Network | `default` |
+| Network | `garage-vpc` |
 | PostgreSQL version | 16 (default) |
 
 Click **CONFIGURE PRIMARY INSTANCE** → fill the next page → **CREATE PRIMARY INSTANCE** → **CREATE CLUSTER**.
@@ -65,7 +73,7 @@ Click **CONFIGURE PRIMARY INSTANCE** → fill the next page → **CREATE PRIMARY
 |---|---|
 | Instance ID | `pothole-archive-primary` |
 | Machine type | smallest (2 vCPU, 16 GB) — **at the top** of the dropdown |
-| Availability | Highly available |
+| Availability | Zonal (single zone) |
 
 ✅ **Expect:** Cluster status shows ⏳ **CREATING**. Takes ~10 minutes.
 
@@ -74,17 +82,6 @@ Click **CONFIGURE PRIMARY INSTANCE** → fill the next page → **CREATE PRIMARY
 A **cluster** is the management unit — owns storage, backup policy, network attachment, IAM, user accounts. Doesn't run any database workload by itself.
 
 An **instance** is the database server — attaches to a cluster and is the thing you connect to with `psql`. A cluster has one **PRIMARY** (read+write) and optionally read-pool / secondary instances. We only need a primary today.
-
-</Concept>
-
-<Concept title="Why pick 'Highly Available' for a 3-hour hackathon?">
-
-For 3.5 hours of demo workload you'd never see a failover — so why not pick "Basic"? Two reasons:
-
-1. The create form is identical either way — there's no extra clicking.
-2. HA is the right default for any production workload, and building the muscle here means you do the right thing when you ship for real.
-
-The only cost is a small bump in compute that you'll never notice on the smallest machine type.
 
 </Concept>
 
@@ -98,32 +95,22 @@ c) **Hand off cluster details to your BigQuery sub-lane (yourself, in Q2C).** No
 
 > *Cluster `pothole-archive`, primary instance `pothole-archive-primary`, region `europe-west1`. Password is the standard one.*
 
-### Step 3 — Verify cluster is READY
+### Step 3 — Grab the private IP
 
-Once the Console shows ✅ **READY**:
+Once the Console shows ✅ **READY**, pull the primary's private IP from your Workstation terminal — you'll paste it into Q2A-2 and Q2A-3:
 
 ```bash
-gcloud alloydb clusters describe pothole-archive \
+gcloud alloydb instances describe pothole-archive-primary \
+  --cluster=pothole-archive \
   --region=europe-west1 \
-  --format='value(state)'
+  --format='value(ipAddress)'
 ```
 
-✅ **Expect:** `READY`
-
-Capture the private IP for Q2A-2 + Q2A-3:
-
-```bash
-ALLOYDB_HOST="$(gcloud alloydb instances describe pothole-archive-primary \
-  --cluster=pothole-archive --region=europe-west1 \
-  --format='value(ipAddress)')"
-echo "AlloyDB private IP: $ALLOYDB_HOST"
-```
-
-✅ **Expect:** `AlloyDB private IP: 10.x.x.x`
+Expected output: `10.x.x.x` (jot it down).
 
 <Gotchas>
 - <strong>Cluster stuck on CREATING for &gt;15 min.</strong> Refresh the cluster list (don&rsquo;t click Create again). Past 18 min, flag a Sherpa.
-- <strong>Wrong network on cluster create.</strong> If you picked something other than <code>default</code>, BigQuery federation will fail later. Easiest fix: delete and recreate (still takes ~10 min, but unblocks Q2C).
+- <strong>Wrong network on cluster create.</strong> If you picked something other than <code>garage-vpc</code> (or your Console didn&rsquo;t show <code>garage-vpc</code> in the dropdown), BigQuery federation will fail later. Easiest fix: delete and recreate (still takes ~10 min, but unblocks Q2C).
 - <strong>Smallest machine type missing from dropdown.</strong> Look at the <em>top</em> of the dropdown, not the bottom. The 2 vCPU/16 GB option is the smallest AlloyDB supports.
 - <strong>Forgot the password.</strong> The Console doesn&rsquo;t reveal it after create. Reset with <code>gcloud alloydb users set-password postgres --cluster=pothole-archive --region=europe-west1 --password=...</code>.
 - <strong>"Network is not configured for service networking" error.</strong> The platform&rsquo;s service-networking peering didn&rsquo;t run. Flag a Sherpa &mdash; this is pre-provisioned plumbing.

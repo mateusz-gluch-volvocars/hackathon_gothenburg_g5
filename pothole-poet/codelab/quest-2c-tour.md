@@ -46,7 +46,7 @@ In the Explorer panel, expand your project node, then expand `pothole_laureate`.
 
 ✅ **Expect:** All 6 tables and the connection visible. If any are missing, the platform's provisioning didn't run — flag a Sherpa.
 
-<Screenshot caption="BigQuery Studio Explorer panel showing the pre-loaded tables and gemini connection." />
+<Screenshot src="/quest/pothole-poet/img/bq_studio_explorer.png" caption="BigQuery Studio Explorer panel showing the pre-loaded tables and gemini connection." />
 
 <Concept title="What's a dataset vs. an external connection?">
 

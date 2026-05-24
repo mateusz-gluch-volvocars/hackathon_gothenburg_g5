@@ -68,6 +68,38 @@ gcloud container clusters create-auto laureate-cluster \
 
 > **Don't sit and watch it.** Read Step 3 while it provisions.
 
+<Cheat title="Or create the cluster via the Console UI">
+
+If you prefer clicking over typing, here's the Console path. The CLI command above does exactly the same thing — use whichever you're more comfortable with.
+
+1. Open the GKE page: `https://console.cloud.google.com/kubernetes/list/overview?project=<your-project-id>`
+
+<Screenshot src="/quest/pothole-poet/img/gke_clusters_landing.png" caption="Kubernetes Engine landing page — click Create to start the cluster wizard." />
+
+2. Click **Create**. GKE defaults to **Autopilot** mode (if it asks, pick Autopilot, not Standard).
+
+3. On the **Cluster basics** page: set **Name** to `laureate-cluster` and **Region** to `europe-west1`. Leave everything else default.
+
+<Screenshot src="/quest/pothole-poet/img/gke_cluster_basics.png" caption="Cluster basics — set Name to laureate-cluster, Region to europe-west1." />
+
+4. Click **Next: Fleet registration**. Your cluster is auto-registered to your project's fleet. No changes needed — click through.
+
+<Screenshot src="/quest/pothole-poet/img/gke_fleet_registration.png" caption="Fleet registration — auto-registered to your project. Click Next." />
+
+5. On the **Networking** page: confirm **Enable Private nodes** is checked (it should be by default for your Garage's project). Leave the VPC and subnet on defaults (`garage-vpc`).
+
+<Screenshot src="/quest/pothole-poet/img/gke_networking.png" caption="Networking — confirm Enable Private nodes is checked. This is required by the Volvo Cars org policy." />
+
+6. On the **Advanced settings** page: expand the **Security** section to see the default settings (no changes needed). Scroll down to see **Operations** (logging/monitoring enabled by default).
+
+<Screenshot src="/quest/pothole-poet/img/gke_advanced_security.png" caption="Advanced settings — Security defaults. No changes needed." />
+
+7. Scroll to the bottom and click **Create**.
+
+<Screenshot src="/quest/pothole-poet/img/gke_advanced_create.png" caption="Bottom of Advanced settings — click Create. The cluster takes ~6-8 minutes to provision." />
+
+</Cheat>
+
 <Concept title="What does Autopilot do for me that Standard GKE doesn't?">
 
 A Standard GKE cluster gives you Kubernetes plus a pile of operational chores: sizing nodes, patching them, configuring autoscalers, hardening images, deciding bin-packing strategies. **Autopilot** removes all of that. You write Pod specs; Google provisions the right node shapes on demand and bills you per-pod (CPU/memory/storage you actually requested), not per-node.

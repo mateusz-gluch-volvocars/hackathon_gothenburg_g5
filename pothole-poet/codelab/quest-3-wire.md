@@ -94,7 +94,7 @@ The same two Pods bounce one at a time (rolling restart, zero downtime). The pub
 
 Open the Gateway IP in your **laptop's** browser tab (the workstation has no browser). The page now shows **real Gemini-composed poems** read live from BigQuery.
 
-<Screenshot caption="Silver tier live: Streamlit page rendering real Gemini odes per neighbourhood, pulled from BigQuery." />
+<Screenshot src="/quest/pothole-poet/img/streamlit_silver.png" caption="Silver tier live: Streamlit page rendering real Gemini odes per neighbourhood, pulled from BigQuery." />
 
 🥈 **Silver shipped.** The Office is now fully operational.
 

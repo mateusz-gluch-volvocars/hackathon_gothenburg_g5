@@ -53,13 +53,13 @@ Open it. Find the `prompt =>` block. The default is *"a melancholic Swedish bure
    ```bash
    DAGS_BUCKET="$(gcloud composer environments describe the-laureate-bureau \
      --location=europe-west1 --format='value(config.dagGcsPrefix)')"
-   gsutil cp ~/quest/pothole-poet/airflow/sql/02_enrich.sql "$DAGS_BUCKET/sql/"
+   gcloud storage cp ~/quest/pothole-poet/airflow/sql/02_enrich.sql "$DAGS_BUCKET/sql/"
    ```
 3. Re-trigger the DAG from the Airflow UI.
 4. Wait ~60 seconds. Refresh the Streamlit page.
 5. The Laureate now speaks differently.
 
-<Screenshot caption="Streamlit page after a voice swap — same neighbourhoods, different tone (e.g. pirate captain, IKEA manual, ABBA chorus)." />
+<Screenshot src="/quest/pothole-poet/img/streamlit_voiceswap.png" caption="Streamlit page after a voice swap — same neighbourhoods, different tone (e.g. pirate captain, IKEA manual, ABBA chorus)." />
 
 ## B. Polish the Office's look
 

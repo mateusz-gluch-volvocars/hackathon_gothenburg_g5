@@ -82,7 +82,10 @@ pothole-poet/
 │   ├── citizen_quotes.txt             # 120 Volvo-coded one-liners
 │   └── pothole_reports.csv            # generated; uploaded to seed bucket
 └── codelab/
-    ├── quest-1-warmup.md              # All — open Workstation, tour repo
+    ├── quest-1-signin.md              # All · 1/4 — Volvo SSO sign-in, name the four Console landmarks
+    ├── quest-1-navigation.md          # All · 2/4 — Project picker, search bar, pin the four lab products
+    ├── quest-1-vpc.md                 # All · 3/4 — Look at your Garage's VPC + no-public-IP policy
+    ├── quest-1-warmup.md              # All · 4/4 — Open Workstation, clone repo, agentic check, lane pick
     ├── quest-2a-cluster.md            # Lane B · 1/3 — Create AlloyDB cluster + instance
     ├── quest-2a-schema.md             # Lane B · 2/3 — Run schema in AlloyDB Studio
     ├── quest-2a-seed.md               # Lane B · 3/3 — psql \copy 5,000 reports from terminal

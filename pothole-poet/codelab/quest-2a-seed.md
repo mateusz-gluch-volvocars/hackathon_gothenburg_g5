@@ -133,7 +133,7 @@ LIMIT 5;
 ```
 
 <Gotchas>
-- <strong><code>psql: command not found</code>.</strong> The Workstation image doesn&rsquo;t ship PostgreSQL client by default. Q1 has the install command, but if you skipped it: <code>sudo apt-get update -qq &amp;&amp; sudo apt-get install -y postgresql-client</code>.
+- <strong><code>psql: command not found</code>.</strong> Shouldn&rsquo;t happen &mdash; <code>psql</code> 16 is baked into the Iron &amp; Cloud workstation image. If it&rsquo;s genuinely missing, your workstation may be running an outdated image &mdash; flag a Sherpa.
 - <strong><code>could not connect to server</code> or connection times out.</strong> <code>ALLOYDB_HOST</code> must be the cluster&rsquo;s <strong>private IP</strong> (a <code>10.x.x.x</code>), not the cluster name. Re-run the <code>gcloud alloydb instances describe</code> from Step 1.
 - <strong><code>psql \copy</code> says <code>permission denied</code>.</strong> You&rsquo;re likely in <strong>AlloyDB Studio</strong> &mdash; <code>\copy</code> only works from a real shell. Studio has no filesystem.
 - <strong><code>SSL connection required</code>.</strong> Add <code>sslmode=require</code> to the connection string. AlloyDB rejects unencrypted connections.

@@ -260,7 +260,7 @@ read_broadcast                           ──  35 ms
 
 That's the moment you can answer *"why is the page slow today?"* without guessing.
 
-<Screenshot caption="Trace explorer: filtered to pothole-laureate, showing recent traces with load_silver / load_bronze / read_broadcast as root spans." />
+<Screenshot src="/quest/pothole-poet/img/trace_otel.png" caption="Trace explorer: filtered to pothole-laureate, showing recent traces with load_silver / load_bronze / read_broadcast as root spans." />
 
 <Gotchas>
 - <strong>No traces appear, ever.</strong> Most likely: <code>cloudtrace.googleapis.com</code> isn&rsquo;t enabled on the project. <code>telemetry.googleapis.com</code> silently discards trace data when Cloud Trace API is disabled. Check: <code>gcloud services list --enabled | grep cloudtrace</code>. Fix: <code>gcloud services enable cloudtrace.googleapis.com</code>. (Per-Garage Terraform pre-enables it; flag your Garage owner if it&rsquo;s missing.)

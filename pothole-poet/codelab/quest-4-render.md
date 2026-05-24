@@ -20,7 +20,7 @@ The platform refuses to pick the look for you. That's the team's job. Surprise e
 
 `pothole-poet/streamlit/app.py` — scroll to the **`# TEAM CANVAS`** block near the bottom. Everything above it is plumbing. Everything below it is yours.
 
-<Screenshot caption="The TEAM CANVAS marker in app.py — everything below this line is the team's playground." />
+<Screenshot src="/quest/pothole-poet/img/team_canvas.png" caption="The TEAM CANVAS marker in app.py — everything below this line is the team's playground." />
 
 The dataframe `df` available to you contains:
 
@@ -39,7 +39,7 @@ The dataframe `df` available to you contains:
 
 ## Three inspiration cards (you can ignore them all)
 
-### 🗺 Map mode
+### Map mode
 
 Use `pydeck` (already in `requirements.txt`) to render Gothenburg as a choropleth. Each neighbourhood gets a marker scaled by `pothole_count`. Hovering shows the ode in a tooltip.
 
@@ -63,7 +63,7 @@ st.pydeck_chart(pdk.Deck(
 ))
 ```
 
-### 📜 Wall mode
+### Wall mode
 
 A scrollable parchment of all twelve poems with a severity bar next to each.
 
@@ -75,7 +75,7 @@ for _, row in df.iterrows():
         st.progress(row['avg_severity'] / 5.0, text=f"{row['avg_severity']:.1f} / 5 iron marks")
 ```
 
-### 🚨 Dashboard mode
+### Dashboard mode
 
 A Volvo-style instrument cluster — each neighbourhood is a gauge, the central console shows the active ode.
 

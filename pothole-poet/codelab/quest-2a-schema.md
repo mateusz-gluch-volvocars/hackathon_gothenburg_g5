@@ -40,7 +40,7 @@ In the AlloyDB console, click into your `pothole-archive` cluster, then click **
 
 ✅ **Expect:** A sign-in dialog appears.
 
-<Screenshot caption="Cluster overview showing READY status. The AlloyDB Studio link appears in the left nav once the cluster is up." />
+<Screenshot src="/quest/pothole-poet/img/alloydb_cluster_overview.png" caption="Cluster overview showing READY status. The AlloyDB Studio link appears in the left nav once the cluster is up." />
 
 ### Step 2 — Sign in as `postgres`
 

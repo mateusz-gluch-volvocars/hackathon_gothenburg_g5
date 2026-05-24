@@ -1,4 +1,4 @@
-# 🛠 Quest 1 — Workstation Warm-up
+# 🛠 Quest 1-4 — Workstation warm-up
 
 <Objective lane="all">
 
@@ -6,19 +6,17 @@
 
 **🤝 Why it matters.** Every codelab from Q2 onward assumes you're sitting in a Workstation terminal with the repo at `~/quest` and `gcloud` pointed at your Garage's project. Persona assignment locks in here too — once Q2 starts you're working *solo* for ~30 minutes, so pick now while the team's still in the same room.
 
-**🏆 How the day is judged.** Sixteen Garages are running this same Quest in parallel. Everyone's pipeline will look identical by Silver tier. **The prize goes to the Garage whose Gold-tier demo is most creative and most differentiated from the rest** — and the leverage for that comes from **Antigravity CLI** (`agy`), which you'll meet in Step 5 below. Start thinking about what your team's "voice" might be from the start of the day, not just at the end.
-
 </Objective>
 
 > ~10 minutes. Everyone in the Garage.
 
-You've just walked in. Before anyone splits into lanes, the whole team gets their Cloud Workstation open, the Quest repo cloned, a few sanity checks done, and roles picked.
+You're signed in (Q1-1), you know how to navigate the Console (Q1-2), and you've seen your VPC (Q1-3). Last orientation step before the build sprint: open your Cloud Workstation, clone the Quest repo, run a few sanity checks, and pick a lane.
 
 ---
 
 ## 🌐 Open these tabs (all in your laptop's browser — the workstation has no browser)
 
-Sign in with **Volvo Cars SSO** — your Garage's GCP project is already bound to that identity.
+Sign in with **Volvo Cars SSO** — the same identity you used in Q1-1. Your Garage's GCP project is one of the projects your identity has access to; the Project Selector in the Console (top-left) is how you switched into it.
 
 1. **Cloud Workstation IDE** — link on your workbench card. Looks like:
    `https://<workstation>.cloudworkstations.dev`
@@ -58,23 +56,28 @@ LICENSE  pothole-poet  README.md
 <your-garage-project-id>
 ```
 
-<Screenshot caption="Cloud Workstation IDE on first load — file tree on the left, terminal on the bottom." />
+<Screenshot src="/quest/pothole-poet/img/workstation_ide.png" caption="Cloud Workstation IDE on first load — file tree on the left, terminal on the bottom." />
 
-## 3. 💻 Open the IDE and a terminal
+## 3. Open the IDE and a terminal
 
-Click the workstation link from your workbench card. If it asks, click **Start workstation** and wait ~20 seconds for the VS Code window to load.
+There are two ways to open your Cloud Workstation:
 
-Then open the integrated terminal: **Terminal → New Terminal**, or press <kbd>Ctrl</kbd>+<kbd>`</kbd>.
+- **Option A (Direct link):** Click the workstation link on your workbench card.
+- **Option B (GCP Console):** Search for `Cloud Workstations` in the Console search bar. You will land on the Workstations page showing the 4 workstations pre-provisioned for your Garage — named `garage-<garage_id>-dev-1` through `dev-4` (e.g. `garage-g01-dev-1`, `garage-g01-dev-2`, …). Find the one with your name / slot number on the workbench card. If its status is **Stopped**, click the **Start** (play) button next to it and wait ~20 seconds. Once its status changes to **Running**, click **Launch** to open the IDE in a new tab.
 
-## 4. 💻 Clone the Quest repo into `~/quest`
+<Screenshot src="/quest/pothole-poet/img/console_workstations_list.png" caption="The Cloud Workstations page in the Google Cloud Console — showing cards for your workstations, their statuses (Stopped / Running), and buttons to Start and Launch them." />
 
-The workstation comes up empty. Pull the Quest repo into your home directory at `~/quest` — every codelab references files from that path.
+Once the VS Code window loads in your browser, open the integrated terminal: **Terminal → New Terminal**, or press <kbd>Ctrl</kbd>+<kbd>`</kbd>.
 
-*Hints:*
-- The repo is public, no auth needed.
-- Use `git clone` with the repo URL and the destination path as the second argument.
+## 4. Clone the Quest repo into `~/quest`
 
-<Cheat title="Show the clone command">
+The workstation comes up empty. Every later codelab references files at `~/quest/pothole-poet/...`, so the first thing you do in the terminal is clone the **public Iron & Cloud Quest repo** into that path.
+
+**The repo:** `https://github.com/larsers/hackathon_gothenburg.git`
+**Clone target:** `~/quest`
+**Auth:** none — the repo is public.
+
+Copy this whole block into your Workstation terminal:
 
 ```bash
 git clone https://github.com/larsers/hackathon_gothenburg.git ~/quest
@@ -82,104 +85,118 @@ cd ~/quest
 ls
 ```
 
-You should see `LICENSE`, `pothole-poet/`, and `README.md`.
+**Expected output of `ls`:**
 
-</Cheat>
+```
+LICENSE  pothole-poet  README.md
+```
 
-## 5. 💻 Verify your environment is sane
+If you see those three entries, you're good. If `git clone` reports "Repository not found", double-check the URL — it's case-sensitive. If `ls` shows `quests/` instead of `pothole-poet/`, you cloned an older snapshot; run `cd ~ && rm -rf quest` and re-clone.
+
+## 5. Verify your environment is sane
 
 Run a few commands in the terminal to confirm the workstation is wired to your Garage's GCP project and has the tools the codelabs assume.
 
 *What to check:*
 - Active gcloud account (likely the workstation runner SA).
 - Default project matches your `project_id`.
-- `bq`, `gsutil`, `kubectl`, and `python3` are on PATH.
-- `psql` is on PATH — Lane B (AlloyDB) needs it to seed the database. The default Workstation image does not ship it; install it now so the lane doesn't stall later.
+- `bq`, `gsutil`, `kubectl`, `python3`, `psql`, `jq` are all on PATH (pre-installed in the Iron & Cloud workstation image).
 
 Two paths to do this — pick whichever fits your style.
 
 ### ✨ Path A — Agentic verification with **Antigravity CLI** (recommended)
 
-Google's **Antigravity CLI** (launched with the command `agy`) is pre-installed on the Workstation image. It's a terminal-based AI agent that reads workspace skills committed to the Quest repo (`~/quest/.agents/plugins/iron-and-cloud/`) and can drive the whole verification with one prompt — including the `psql` install, with your explicit approval before anything is changed.
+Google's **Antigravity CLI** (launched with the command `agy`) is pre-installed on the Workstation image. It's a terminal-based AI agent that reads workspace skills committed to the Quest repo (`~/quest/.agents/plugins/iron-and-cloud/`) and can drive the whole verification with one prompt — read-only, no system changes.
 
-**1.** Bind Antigravity CLI to your Garage's GCP project. Run this once:
+The first time you run `agy` on a fresh Workstation, it walks you through a 4-step onboarding: login method → OAuth → project ID → location. Read the steps below before you start; it's quicker if you know what's coming.
 
-```bash
-agy login
-```
-
-Follow the browser flow and pick your Garage's project when prompted (the `project_id` on your workbench card). Antigravity CLI remembers — you won't need to log in again unless you switch project.
-
-**2.** Launch the agent from inside the repo:
+**Step 1 — Launch `agy` from inside the repo.**
 
 ```bash
 cd ~/quest
 agy
 ```
 
-**3.** At the prompt, type and hit <kbd>Enter</kbd>:
+**Step 2 — Pick "Use a Google Cloud project" as the login method.**
+
+You'll see a welcome banner with two options. Use the arrow keys to highlight **`2. Use a Google Cloud project`**, then press <kbd>Enter</kbd>. **Do NOT pick option 1 (Google OAuth)** — that's the consumer flow and won't work with Volvo Cars Cloud Identity in the Garage's project.
+
+<Screenshot src="/quest/pothole-poet/img/agy_login_select.png" caption="Antigravity CLI welcome screen — two login methods. Pick option 2 'Use a Google Cloud project'." />
+
+**Step 3 — Authenticate via your laptop's browser.**
+
+Antigravity CLI prints a long Google OAuth URL and waits. The Workstation has no browser, so:
+
+1. **Select the entire URL** (starts with `https://accounts.google.com/o/oauth2/auth?...`) and copy it to your clipboard.
+2. **Paste the URL into a new tab** in your laptop's browser — the same browser session you used in Q1-1, where you're already signed in with your **Volvo Cars work account**.
+3. **Approve the OAuth consent screen**. Google hands you back an **authorization code** — a short string.
+4. **Copy the authorization code** and paste it back into the Workstation terminal at the `authorization code...` prompt. Press <kbd>Enter</kbd>.
+
+<Screenshot src="/quest/pothole-poet/img/agy_oauth_url.png" caption="After picking 'Use a Google Cloud project', Antigravity CLI prints the OAuth URL and a clickable 'Click here to authenticate' link, with an input field for the authorization code at the bottom." />
+
+**Step 4 — Enter your Garage's Google Cloud Project ID.**
+
+At the `Enter Google Cloud Project ID:` prompt, type your **Garage's `project_id`** from the workbench card (something like `vcc-ic-g03`) and press <kbd>Enter</kbd>.
+
+<Screenshot src="/quest/pothole-poet/img/agy_project_id.png" caption="The 'Enter Google Cloud Project ID' prompt. Paste your Garage's project_id from the workbench card, e.g. `vcc-ic-g03`." />
+
+**Step 5 — Select `global` as the Google Cloud Location.**
+
+The prompt offers three options: `global`, `us`, `eu`. Use the arrow keys to highlight **`global`** and press <kbd>Enter</kbd>. **Do NOT pick `eu` or `us`** — the Iron & Cloud Quest uses Gemini 3 which is only hosted on the global endpoint. Picking a regional endpoint will silently break the AI lanes later.
+
+<Screenshot src="/quest/pothole-poet/img/agy_location.png" caption="The Google Cloud Location picker. Always pick `global` — Gemini 3 is global-endpoint only." />
+
+**Step 6 — Run the verification prompt.**
+
+Antigravity CLI drops you into its interactive prompt. Type and press <kbd>Enter</kbd>:
 
 > *Verify my environment and make sure I'm ready for the Iron & Cloud hackathon.*
 
-**4.** Antigravity CLI runs the read-only checks (`gcloud auth list`, tool versions, repo layout) on its own, then **pauses** when it notices `psql` is missing and wants to install it. You'll see something like:
+Antigravity CLI runs the read-only checks (`gcloud auth list`, tool versions, repo layout) on its own — no permission prompts, because no system changes happen during verification. You'll see a green summary like:
 
 ```
-agy wants to run: sudo apt-get update -qq && sudo apt-get install -y postgresql-client
-Confirm? [y/N]
+✅ gcloud signed in as workstation-runner-<garage_id>@<project>.iam.gserviceaccount.com
+✅ Project: <your-project-id>
+✅ Tools on PATH: bq, gsutil, kubectl, python3, psql 16, jq, agy
+✅ Repo at ~/quest with pothole-poet/ present
+You're ready.
 ```
 
-Because `sudo` needs unsandboxed access, the confirmation prompt also offers **"Yes, and run without sandbox restrictions"** — that's the correct choice for this command. Pick it and press <kbd>Enter</kbd>.
+**Step 7 — Exit Antigravity CLI.**
 
-**5.** Exit Antigravity CLI with <kbd>Ctrl</kbd>+<kbd>D</kbd> when it prints the success summary. You're back in your shell.
+Type `/exit` and press <kbd>Enter</kbd>. You're back in your Workstation shell. (Antigravity CLI remembers your login, project, and location — next time you run `agy`, you go straight to the interactive prompt; no re-authentication.)
 
 <Concept title="What just happened — the agentic loop in 30 seconds">
 
-Antigravity CLI read the `workstation-check` **skill** committed in the Quest repo, planned its checks, ran read-only discovery commands on its own (no permission asked), then **paused** the moment it wanted to *change* something (the `sudo apt`) and waited for your explicit `y`. That's the **human-in-the-loop** pattern modern agentic AI uses everywhere — read freely, write only with your consent.
+Antigravity CLI read the `workstation-check` **skill** committed in the Quest repo, planned its checks, and ran read-only discovery commands on its own. It would have paused for your `y`/`N` confirmation before running anything that *changes* the system — but for this verification there's nothing to change; every tool the Quest needs is already baked into the workstation image.
 
-You'll see the same pattern in **Q2A-3**, **Q2C-2** and **Q2D-3** where dedicated skills walk lane-specific tasks (AlloyDB seed, BigQuery federation, Workload Identity binding). All driven by the same Antigravity CLI session and the same workspace rule (`~/quest/.agents/plugins/iron-and-cloud/rules/context.md`) that teaches it our region, project conventions, and the Quest's hard constraints.
+You'll see the human-in-the-loop pattern properly in **Q2A-3**, **Q2C-2** and **Q2D-3** where dedicated skills walk lane-specific tasks (AlloyDB seed, BigQuery federation, Workload Identity binding) and each one stops before any write to ask for your `y`. All driven by the same Antigravity CLI session and the same workspace rule (`~/quest/.agents/plugins/iron-and-cloud/rules/context.md`) that teaches it our region, project conventions, and the Quest's hard constraints.
 
 </Concept>
 
 ### Path B — Manual verification
 
-If `agy login` stalls, the agent is unresponsive, or you'd just rather see the raw commands — run them yourself. Both paths leave you with `psql` installed and all tools verified.
+If `agy login` stalls, the agent is unresponsive, or you'd just rather see the raw commands — run them yourself. Both paths confirm the same thing: every tool is on PATH and gcloud is wired to your Garage's project.
 
-<Cheat title="Show the verify + install commands">
+<Cheat title="Show the verify commands">
 
 ```bash
 gcloud auth list
 gcloud config get-value project
-bq --version | head -1 && gsutil --version | head -1 && kubectl version --client 2>/dev/null | head -1 && python3 --version
-
-# Install the PostgreSQL client (needed by Lane B in Q2A-3 for `psql \copy`).
-# The Workstation image doesn't ship it — install once, persists on the home PD.
-if ! command -v psql >/dev/null; then
-  sudo apt-get update -qq && sudo apt-get install -y postgresql-client
-fi
+bq --version | head -1
+gsutil --version | head -1
+kubectl version --client 2>/dev/null | head -1
+python3 --version
 psql --version
+jq --version
+agy --version 2>/dev/null || echo 'agy installed'
 ```
 
-✅ You should see an active SA, your project_id, and version strings for `bq`, `gsutil`, `kubectl`, Python 3, and `psql` (PostgreSQL 16). If anything is missing, flag a Sherpa.
+✅ You should see an active SA, your `project_id`, and version strings for every tool. `psql` should report PostgreSQL 16. If anything is missing, flag a Sherpa.
 
 </Cheat>
 
-## 6. 🌐 Find your way around the GCP Console
-
-Open the GCP Console tab on your laptop's browser (`https://console.cloud.google.com/?project=<your-project-id>`). Three landmarks to know before Q2:
-
-- **Project selector** — top-left, next to the Google Cloud logo. Shows your current project name. **Confirm it matches your `project_id`** before clicking anything; lots of "this isn't working" stories trace back to having the wrong project selected.
-- **Search bar** — top centre (also <kbd>/</kbd>). The fastest way to jump to any product. Type *"AlloyDB"* / *"Apache Airflow"* / *"BigQuery"* / *"Kubernetes Engine"* and pick the matching result. Faster than the hamburger menu.
-- **☰ Hamburger menu** — top-left of the page. The full product catalog organised by category. Pin frequently-used products here so they appear at the top.
-
-You can also see a small **Cloud Shell** icon (top-right, looks like `>_`). It opens a terminal *inside the Console*. We don't use it today — your **Workstation terminal** is where everything happens.
-
-<Concept title="Why is the project selector such a big deal?">
-
-Every GCP resource (database, bucket, service, dataset) lives inside exactly one **project**. Every API call you make is scoped to whichever project is currently selected. If your console tab is on the *wrong* project, you'll get permission-denied errors, missing-resource errors, or — worst — you'll create your AlloyDB cluster in someone else's Garage and not realise it. Always glance at the project selector before clicking.
-
-</Concept>
-
-## 7. Skim the Quest README
+## 6. Skim the Quest README
 
 Open `pothole-poet/README.md` in the IDE (left-side file tree → click). Skim the story, the lane table, and the tier ladder. Two minutes.
 
@@ -193,7 +210,7 @@ These aren't required, but they make life nicer:
 
 </Cheat>
 
-## 8. Decide your lanes (~3 min, all together)
+## 7. Decide your lanes (~3 min, all together)
 
 Look at your team. Pick one role each — then open that lane's codelab page from the sidebar on the left.
 
@@ -208,13 +225,13 @@ Look at your team. Pick one role each — then open that lane's codelab page fro
 - **3 people:** collapse C + D. BigQuery Lead finishes BQ work, then drops into Streamlit.
 - **2 people:** you're a **Bronze Garage**. One person provisions; the other ships Streamlit on the bundled CSV. Skip the rest. The Foreman will confirm.
 
-## 9. Final check before you split
+## 8. Final check before you split
 
 Each person should now have:
-- ✅ Cloud Workstation IDE open in their laptop's browser
-- ✅ The Quest repo cloned at `~/quest`
-- ✅ A lane (write it on a sticky note if helpful)
-- ✅ Their next codelab page open in another tab on the **hub**
+- Cloud Workstation IDE open in their laptop's browser
+- The Quest repo cloned at `~/quest`
+- A lane (write it on a sticky note if helpful)
+- Their next codelab page open in another tab on the **hub**
 
 When the room confirms — **the build sprint begins.**
 

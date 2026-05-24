@@ -170,7 +170,7 @@ http://<your-gateway-ip>/
 
 🥉 **You just shipped Bronze.**
 
-<Screenshot caption="Bronze Streamlit page served via GKE Gateway: header, 12 neighbourhoods, dataframe view." />
+<Screenshot src="/quest/pothole-poet/img/streamlit_bronze.png" caption="Bronze Streamlit page served via GKE Gateway: header, 12 neighbourhoods, dataframe view." />
 
 ### Step 6 — While you wait for the rest of the Garage
 

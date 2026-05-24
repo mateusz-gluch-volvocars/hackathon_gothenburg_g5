@@ -109,7 +109,7 @@ Open **Console → Monitoring → Uptime checks** → click `pothole-laureate-up
 
 ✅ **Expect** (within 1-2 min): Green checkmarks across all 6 probe regions. Last latency: 100-400 ms.
 
-<Screenshot caption="Cloud Monitoring uptime check overview: pothole-laureate-uptime, green across 6 regions, 1-minute frequency." />
+<Screenshot src="/quest/pothole-poet/img/monitoring_uptime.png" caption="Cloud Monitoring uptime check overview: pothole-laureate-uptime, green across 6 regions, 1-minute frequency." />
 
 ### Step 5 — While you wait: be useful
 

@@ -13,26 +13,33 @@
 <QuickPath>
 
 ```bash
-PROJECT_ID="$(gcloud config get-value project)"
-GARAGE_ID="${GARAGE_ID:-test}"
-SA="composer-runner-${GARAGE_ID}@${PROJECT_ID}.iam.gserviceaccount.com"
-
-# 1. Create environment (returns immediately; provisions for ~25 min)
+# Replace <garage_id> with your Garage ID from the workbench card (e.g. g01)
 gcloud composer environments create the-laureate-bureau \
   --location=europe-west1 \
   --image-version=composer-3-airflow-3 \
-  --service-account="$SA"
-
-# 2. Poll until RUNNING (~25 min)
-until [ "$(gcloud composer environments describe the-laureate-bureau --location=europe-west1 --format='value(state)')" = "RUNNING" ]; do
-  echo "$(date +%H:%M) still CREATING..."; sleep 60
-done
-echo "✅ Composer environment RUNNING"
+  --service-account="composer-runner-<garage_id>@$(gcloud config get-value project).iam.gserviceaccount.com"
+# ✅ Blocks for ~25 min, then prints the environment details when ready.
 ```
 
 </QuickPath>
 
-You're not running Airflow yourself; you're provisioning a managed environment that hosts Airflow for you. Don't cancel and retry — you'll only restart the 25-minute clock.
+The command blocks until the environment is fully provisioned (~25 min). Don't cancel and retry — you'll only restart the clock. While it runs, read the *While you wait* section below.
+
+<Concept title="What is Managed Airflow — and what is a DAG?">
+
+**Apache Airflow** is a scheduler for data pipelines. Think of it as a smart alarm clock that runs your tasks in order, on a schedule, and retries if something fails. Instead of writing one long script that does steps A → B → C, you declare the steps and their dependencies as a **DAG** — a Directed Acyclic Graph.
+
+The name sounds academic, but the idea is simple — think of a vehicle assembly line:
+
+- **Directed:** tasks flow in a specific direction (welding must happen *before* painting).
+- **Acyclic:** no loops (painting cannot loop back and re-weld the same chassis).
+- **Graph:** a network of tasks connected by dependency lines.
+
+Your DAG has two tasks: `federate_pothole_reports` (pull data from AlloyDB into BigQuery) then `ask_the_laureate` (call Gemini to compose poems). Airflow makes sure the second never runs until the first finishes.
+
+**"Managed"** means Google runs all the Airflow infrastructure — the scheduler, the workers, the database, the web server — inside a Google-managed project you never see. You upload your DAG file, and Google handles everything else. The Console URL still says `composer` because the product was originally called Cloud Composer; the current brand is **Managed Service for Apache Airflow**, but it's the same service.
+
+</Concept>
 
 ---
 
@@ -41,6 +48,8 @@ You're not running Airflow yourself; you're provisioning a managed environment t
 Open: `https://console.cloud.google.com/composer/environments?project=<your-project-id>`
 
 > The URL still uses `composer` for legacy reasons. The product is now branded **Managed Service for Apache Airflow** but the underlying API kept the original name.
+
+<Screenshot src="/quest/pothole-poet/img/composer_environments_page.png" caption="The Composer Environments page — click CREATE ENVIRONMENT at the top." />
 
 Click **CREATE ENVIRONMENT**. Pick **Gen 3** (*not* Gen 2 or Legacy).
 
@@ -56,7 +65,11 @@ Fill in these fields exactly:
 
 Click **CREATE**.
 
+<Screenshot src="/quest/pothole-poet/img/composer_create_form.png" caption="The Create Environment form — pick Gen 3, fill in Name / Location / Service account, leave everything else default." />
+
 ✅ **Expect:** Environment status shows ⏳ **CREATING**. Takes ~25 minutes.
+
+<Screenshot src="/quest/pothole-poet/img/composer_creating_status.png" caption="the-laureate-bureau in CREATING state — the spinner is normal. This takes ~25 minutes." />
 
 > **Do not** cancel and retry — you'll only restart the 25-minute clock.
 
@@ -88,11 +101,29 @@ Q2D uses a different identity model — Workload Identity Federation directly on
 
 ### Step 2 — While you wait (~25 min): be useful
 
-a) **Read the DAG.** In your Workstation IDE, open `pothole-poet/airflow/compose_the_odes.py`. Two tasks. ~70 lines. Read it.
+a) **Read the DAG.** In your Workstation IDE, open `pothole-poet/airflow/compose_the_odes.py`. Two tasks. ~70 lines. As you read, look for answers to these:
+
+   - Which Python class runs each task? (Hint: both use the same one.)
+   - Where does the SQL come from — is it inline or read from files?
+   - Look at the very last line: `federate_pothole_reports >> ask_the_laureate`. What does `>>` do?
+
+<Concept title="The >> operator — how Airflow chains tasks">
+
+In Python, `>>` is normally a bitwise right-shift. Airflow overloads it to mean **"runs before"**. So:
+
+```python
+federate_pothole_reports >> ask_the_laureate
+```
+
+tells the scheduler: *"Do not start `ask_the_laureate` until `federate_pothole_reports` completes successfully."* It's the equivalent of drawing an arrow between two boxes on a flowchart. If the first task fails, the second never runs — Airflow marks it as `upstream_failed`.
+
+Both tasks use `BigQueryInsertJobOperator`, which tells BigQuery to run a SQL job. The Airflow worker doesn't process data itself — it just submits the job to BigQuery and waits for the result. The heavy lifting happens inside BigQuery's engine.
+
+</Concept>
 
 b) **Read the SQL.**
-- `pothole-poet/airflow/sql/01_federate.sql` — the federation pull. Note the `EXTERNAL_QUERY` against `alloydb_archive` (the connection the Data Engineer creates in Q2C-2).
-- `pothole-poet/airflow/sql/02_enrich.sql` — the AI moment. Read the prompt fed to Gemini. **This is the file the team edits during Quest 5 to change the Laureate's voice.**
+   - `pothole-poet/airflow/sql/01_federate.sql` — the federation pull. Note the `EXTERNAL_QUERY` against `alloydb_archive` (the connection the Data Engineer creates in Q2C-2).
+   - `pothole-poet/airflow/sql/02_enrich.sql` — the AI moment. Read the prompt fed to Gemini. **This is the file the team edits during Quest 5 to change the Laureate's voice.** What voice does the default Laureate use? What data does the prompt draw on?
 
 c) **Pair with the Data Engineer.** They're working in the AlloyDB sub-lane (Q2A-1..3) AND the BigQuery sub-lane (Q2C-1..3). You can't successfully run the DAG until BOTH AlloyDB is seeded AND BigQuery federation is wired.
 
@@ -108,7 +139,9 @@ gcloud composer environments describe the-laureate-bureau \
 
 ✅ **Expect:** `RUNNING`
 
-In the Console, the environment shows ✅ **READY** (green).
+In the Console, the environment shows a green checkmark next to the name.
+
+<Screenshot src="/quest/pothole-poet/img/composer_running_status.png" caption="Environment RUNNING — green checkmark in the Environments list. You're ready to upload the DAG." />
 
 <Gotchas>
 - <strong>Composer takes ~25 min &mdash; that&rsquo;s normal.</strong> Don&rsquo;t cancel and retry; you&rsquo;ll just restart the clock.
