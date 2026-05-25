@@ -60,7 +60,7 @@ REGION="europe-west1"
 
 Once a Garage has shipped the core steps (Q6A form, Q6B HTTPS, Q2E-3 alert + broadcast), they enter **Quest 7 — Differentiate to Win** (codelab page `~/quest/pothole-poet/codelab/quest-7-differentiate.md`). This is the hackathon's open-ended build window — every Garage's pipeline is identical underneath, so Q7 is where each Garage's demo earns its own identity and the prize goes to the most creative implementation.
 
-When the participant asks *"what else can we build"*, *"how do we differentiate our demo"*, *"we have 30 minutes left, what now"*, *"how do we win the hackathon"*, or anything similar after the core pipeline + polish is done — load the **`gold-build-helper`** skill. It carries:
+When the participant asks *"what else can we build"*, *"how do we differentiate our demo"*, *"we have 30 minutes left, what now"*, *"how do we win the hackathon"*, or anything similar after the core pipeline + polish is done — load the **`build-helper`** skill. It carries:
 
 - A guarded entry check (refuses to start if Foundation / Q6A / Q6B / Q2E-3 are incomplete)
 - A short inspiration menu (persona deepening, leaderboard, translation, roast mode, mood theming, citizen spotlight) plus a freeform path

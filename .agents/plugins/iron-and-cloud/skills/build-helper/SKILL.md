@@ -1,9 +1,9 @@
 ---
-name: gold-build-helper
+name: build-helper
 description: Drives Quest 7 (Differentiate to Win) — the open-ended build window after the team has shipped the Foundation pipeline + Make it yours polish (Q6A form, Q6B HTTPS, Q2E-3 alert + broadcast). Helps the team pick a direction (small inspiration menu or freeform), preserves the pipeline's hard invariants, walks through agentic implementation with HITL on every write, time-boxes against the demo train clock, and verifies the end state. Use when the participant lands on Q7, asks to differentiate their demo, asks how to win the hackathon, says they want to build something beyond the core pipeline, or asks what to do with their remaining time before T+3:00.
 ---
 
-# Gold build helper
+# Build helper — Differentiate to Win
 
 **Codelab counterpart:** Q7 — `~/quest/pothole-poet/codelab/quest-7-differentiate.md` (the participant-facing version of this skill — same menu, same invariants, narrative tone).
 

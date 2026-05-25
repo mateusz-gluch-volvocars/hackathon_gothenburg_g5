@@ -21,7 +21,7 @@ Then ask:
 
 > *"We've finished the core pipeline + polish. We have ~30 minutes before demo. What can we build to make our demo stand out?"*
 
-Antigravity CLI will check your pipeline state, ask what your team is good at + what kind of "wow" you want, and walk you through one direction with HITL on every write. The `gold-build-helper` skill in `~/quest/.agents/plugins/iron-and-cloud/skills/` is what powers the flow — same pattern as the other lane skills, just open-ended at the end.
+Antigravity CLI will check your pipeline state, ask what your team is good at + what kind of "wow" you want, and walk you through one direction with HITL on every write. The `build-helper` skill in `~/quest/.agents/plugins/iron-and-cloud/skills/` is what powers the flow — same pattern as the other lane skills, just open-ended at the end.
 
 </QuickPath>
 
@@ -31,7 +31,7 @@ You've shipped the core pipeline + polish: form (Q6A) + HTTPS (Q6B) + alert/broa
 
 ## How it works
 
-The Quest repo ships a workspace plugin at `~/quest/.agents/plugins/iron-and-cloud/` — Antigravity CLI auto-loads it whenever you launch `agy` inside the repo. Inside the plugin is the `gold-build-helper` skill: it knows the pipeline's invariants (data spine, naming conventions, GCP service constraints), carries a small inspiration menu, and steers Antigravity CLI through a structured flow with HITL approval on every write.
+The Quest repo ships a workspace plugin at `~/quest/.agents/plugins/iron-and-cloud/` — Antigravity CLI auto-loads it whenever you launch `agy` inside the repo. Inside the plugin is the `build-helper` skill: it knows the pipeline's invariants (data spine, naming conventions, GCP service constraints), carries a small inspiration menu, and steers Antigravity CLI through a structured flow with HITL approval on every write.
 
 The flow:
 
@@ -61,7 +61,7 @@ These are **starting points**, not cookie-cutters. Mix and match welcomed. None 
 
 ## Hard invariants — never break these
 
-These are the load-bearing pieces of the pipeline. The `gold-build-helper` skill enforces them, but it helps to know what they are so you can sanity-check Antigravity CLI's proposed changes:
+These are the load-bearing pieces of the pipeline. The `build-helper` skill enforces them, but it helps to know what they are so you can sanity-check Antigravity CLI's proposed changes:
 
 - **The data spine.** AlloyDB `pothole_reports` schema, BigQuery dataset `pothole_laureate`, connection IDs `alloydb_archive` and `gemini`, the DAG producing `pothole_reports_raw` and `neighbourhood_odes`.
 - **12 neighbourhoods.** Any new view must keep showing all 12 (or explicitly filter from the full 12 in a way the demo can revert).
