@@ -22,13 +22,7 @@ Every interaction with Google Cloud: clicking in the Console, running `gcloud`, 
 
 GCP has hundreds of products, and the Console is the UI on top of them. The shape has been stable since 2018: a top bar with global tools (project, search, terminal, profile), a hamburger menu on the left for the product catalog, and the page body in the middle.
 
-## 2. What it looks like when done
-
-A browser tab on your laptop showing the Cloud overview page. Top-right: your Volvo Cars work email next to the avatar. Top-left: the project picker, showing your Garage's `project_id` from the workbench card.
-
-<Screenshot src="/quest/pothole-poet/img/console_overview_login.png" caption="The Cloud overview page on first sign-in; your Garage's project_id visible in the top-left project picker, your Volvo Cars work email visible in the top-right account avatar." />
-
-## 3. Sign in and select your Garage's project
+## 2. Sign in and select your Garage's project
 
 1. Open `https://console.cloud.google.com` in your laptop's browser (not the workstation; it has no browser).
 
@@ -42,7 +36,7 @@ A browser tab on your laptop showing the Cloud overview page. Top-right: your Vo
 
 **Shortcut:** you can skip the Project Selector clicks by opening `https://console.cloud.google.com/?project=<your-project-id>` directly. The `?project=` parameter pre-selects the project. Useful if your workbench card is already in your hand.
 
-## 4. Spot the four landmarks of the top bar
+## 3. Spot the four landmarks of the top bar
 
 You should land on the Cloud overview page. Look at the top bar, left-to-right:
 
@@ -57,11 +51,11 @@ You should land on the Cloud overview page. Look at the top bar, left-to-right:
 
 Glance at each. You don't have to click them yet. Q1-2 walks you through the project picker and search bar properly.
 
-## 5. While you wait
+## 4. While you wait
 
 *Nothing waits.* **Sherpa moment**. if sign-in stalled, popped a strange consent screen, or landed you in someone else's project, flag a Sherpa now. Almost every Day-1 sign-in issue is a workbench-card SSO binding fix and takes 30 seconds.
 
-## 6. Verify
+## 5. Verify
 
 Both of these are true:
 
@@ -87,6 +81,12 @@ Your Garage's project is bound to **Volvo Cars Cloud Identity**. the same SSO th
 This is how every enterprise GCP customer works. Volvo Cars-the-organisation owns the identity, you're a member of it, and the IAM bindings on your Garage's project list your work email as a principal.
 
 </Concept>
+
+## Expected result
+
+A browser tab on your laptop showing the Cloud overview page. Top-right: your Volvo Cars work email next to the avatar. Top-left: the project picker, showing your Garage's `project_id` from the workbench card.
+
+<Screenshot src="/quest/pothole-poet/img/console_overview_login.png" caption="The Cloud overview page on first sign-in; your Garage's project_id visible in the top-left project picker, your Volvo Cars work email visible in the top-right account avatar." />
 
 <Gotchas>
 - <strong>Sign-in lands you on a "Select an account" screen.</strong> Pick your Volvo Cars work account. If only a personal account shows up, your browser session is signed into the wrong Google account, open an incognito tab and try again.

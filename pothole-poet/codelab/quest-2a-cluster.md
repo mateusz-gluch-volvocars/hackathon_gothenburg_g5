@@ -55,7 +55,13 @@ You provision a **cluster** (the management unit) and a **primary instance** (th
 
 Open the AlloyDB console: `https://console.cloud.google.com/alloydb/clusters?project=<your-project-id>` (in your laptop's browser, the Workstation has no browser).
 
-Click **CREATE CLUSTER**. Pick **Basic** (single instance, single zone, right choice for a 3.5-hour workload; HA would just burn compute on a standby you'll never failover to).
+Click **CREATE CLUSTER**. The wizard may show you several options (e.g. "Basic", "Standard", "Enterprise"). **Scroll to the bottom** of the options and select **Single zone** (sometimes listed under "Basic"). Do not pick anything that says "High availability" or "Enterprise". For a 3.5-hour hackathon, a single-zone instance is all you need.
+
+<Callout type="critical" title="New projects may show a trial prompt at the top of this page">
+
+If you see a banner about an AlloyDB trial or a "Get started with a free trial" prompt, scroll past it. Look for the cluster configuration options below. Select **Single zone** as your availability type. The trial prompt can obscure the actual creation form.
+
+</Callout>
 
 Fill in these fields exactly:
 
@@ -67,13 +73,15 @@ Fill in these fields exactly:
 | Network | `garage-vpc` |
 | PostgreSQL version | 16 (default) |
 
-Click **CONFIGURE PRIMARY INSTANCE** → fill the next page → **CREATE PRIMARY INSTANCE** → **CREATE CLUSTER**.
+Click **CONTINUE** (or **CONFIGURE PRIMARY INSTANCE**) to reach the instance configuration page, then fill in:
 
 | Field | Value |
 |---|---|
 | Instance ID | `pothole-archive-primary` |
-| Machine type | smallest (2 vCPU, 16 GB). **at the top** of the dropdown |
-| Availability | Zonal (single zone) |
+| Machine type | smallest (2 vCPU, 16 GB), **at the top** of the dropdown |
+| Availability | **Zonal** (single zone) |
+
+Click **CREATE CLUSTER**.
 
 ✅ **Expect:** Cluster status shows ⏳ **CREATING**. Takes ~10 minutes.
 

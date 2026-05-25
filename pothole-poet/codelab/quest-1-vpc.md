@@ -22,13 +22,7 @@ One thing worth knowing about how Volvo Cars uses VPCs: **public IPs are not giv
 
 **Private Google Access** is enabled on the subnet, which means private resources can still reach `*.googleapis.com` (Artifact Registry, BigQuery, Cloud Build, etc.) over Google's private backbone, no public IP needed.
 
-## 2. What it looks like when done
-
-The VPC Networks page in the Console, showing your project's `garage-vpc` (custom-mode), a single regional subnet in `europe-west1` named `garage-vpc` with CIDR `10.0.0.0/16` and Private Google Access on, and one firewall rule (`allow-internal`).
-
-<Screenshot src="/quest/pothole-poet/img/console_vpc_detail.png" caption="VPC Network detail page for `garage-vpc`. the Subnets tab open, showing one regional subnet in europe-west1 with CIDR 10.0.0.0/16, Private Google Access ON, and the allow-internal firewall rule listed beneath." />
-
-## 3. Find your VPC
+## 2. Find your VPC
 
 1. Press <kbd>/</kbd> to open the search bar and type `VPC network`. Click **VPC networks** in the results. (You can pin it if you want, but you'll only visit it once or twice today.)
 
@@ -36,7 +30,7 @@ The VPC Networks page in the Console, showing your project's `garage-vpc` (custo
 
 *(If you also see a `default` VPC sitting alongside, that's a leftover from GCP's auto-provisioning. The Quest uses `garage-vpc` exclusively, ignore the default one.)*
 
-## 4. Look at the two things that matter
+## 3. Look at the two things that matter
 
 The VPC detail page has two things to look at. Don't change either of them.
 
@@ -48,11 +42,11 @@ The VPC detail page has two things to look at. Don't change either of them.
 
 That's the only firewall rule we ship. Volvo Cars' `compute.vmExternalIpAccess` policy means no VM in this VPC has a public IP, so the usual GCP `allow-ssh` / `allow-rdp` / `allow-icmp` rules from-anywhere would be dead weight, we don't create them.
 
-## 5. While you wait
+## 4. While you wait
 
 *Nothing waits.* If a teammate is still scrolling, point them at the CIDR (`10.0.0.0/16`) and the `allow-internal` firewall rule; that's the whole story of this page.
 
-## 6. Verify
+## 5. Verify
 
 - You can name your VPC (`garage-vpc`) and its subnet CIDR (`10.0.0.0/16`).
 - You did *not* click any Create / Edit / Delete buttons.
@@ -74,6 +68,12 @@ A CIDR like `10.0.0.0/16` is shorthand for "a block of IP addresses starting at 
 Workstation VMs and the AlloyDB peering allocation today come out of this block. You don't have to do anything with the number; it's just useful to know your IPs are private and what private range they're in.
 
 </Concept>
+
+## Expected result
+
+The VPC Networks page in the Console, showing your project's `garage-vpc` (custom-mode), a single regional subnet in `europe-west1` named `garage-vpc` with CIDR `10.0.0.0/16` and Private Google Access on, and one firewall rule (`allow-internal`).
+
+<Screenshot src="/quest/pothole-poet/img/console_vpc_detail.png" caption="VPC Network detail page for `garage-vpc`. the Subnets tab open, showing one regional subnet in europe-west1 with CIDR 10.0.0.0/16, Private Google Access ON, and the allow-internal firewall rule listed beneath." />
 
 <Gotchas>
 - <strong>You see a <code>default</code> VPC alongside <code>garage-vpc</code>.</strong> Ignore the default one; it's a GCP auto-create artifact and isn't wired up for the Quest. All later codelabs use <code>garage-vpc</code> exclusively.

@@ -20,13 +20,7 @@ GCP has hundreds of products organised into a dozen categories. The hamburger me
 
 The Console designers put three navigation tools at the top of every page for exactly this reason. Today you learn all three, in order of how often you'll use them.
 
-## 2. What it looks like when done
-
-The hamburger menu, open. At the top, a "📌 Pinned" section with four entries: **AlloyDB**, **Composer**, **BigQuery**, **Kubernetes Engine**, in roughly that order. Underneath, the rest of the product catalog organised by category.
-
-<Screenshot src="/quest/pothole-poet/img/console_pinned_menu.png" caption="Hamburger menu fully expanded, the Pinned section at the very top showing AlloyDB, Composer, BigQuery, and Kubernetes Engine (📌 icon visible next to each), with the rest of the product catalog (Compute, Databases, Storage, Networking, Data Analytics…) underneath." />
-
-## 3. The project picker — global state, glance at it constantly
+## 2. The project picker — global state, glance at it constantly
 
 1. Click your project name in the top-left, next to the Google Cloud logo.
 2. A panel slides out showing the projects you have access to. Type your `project_id` in the picker's search box to filter; click it to switch. (You're probably already on it; confirm.)
@@ -40,7 +34,7 @@ Every GCP resource (database, bucket, service, dataset) lives inside exactly one
 
 </Concept>
 
-## 4. The search bar — your fastest tool, by far
+## 3. The search bar — your fastest tool, by far
 
 The search bar is the single fastest tool in the Console. Get comfortable with it.
 
@@ -76,32 +70,32 @@ This works across products. Type a resource name and you don't need to remember 
 
 </Concept>
 
-## 5. The hamburger menu — and pinning
+## 4. The hamburger menu — and starring
 
 The hamburger is the full product catalog. You'll use it when you're browsing rather than hunting a specific product.
 
 1. Click the **☰** icon in the top-left. The menu slides out.
 
-2. Scroll to find each of these four products, and click the **📌 pin** icon next to its name. Pinned products float to the top of the menu and stay there across sessions:
+2. Scroll to find each of these four products, and click the **⭐ star** icon next to its name. Starred products float to the top of the menu and stay there across sessions:
 
-   | Product | Where it lives in the menu | Pin it |
+   | Product | Where it lives in the menu | Star it |
    |---|---|---|
-   | **AlloyDB for PostgreSQL** | Databases → AlloyDB for PostgreSQL | 📌 |
-   | **Composer** | Data Analytics → Cloud Composer *(Google's name for Managed Service for Apache Airflow)* | 📌 |
-   | **BigQuery** | Analytics → BigQuery | 📌 |
-   | **Kubernetes Engine** | (Top-level, near the top of the menu) | 📌 |
+   | **AlloyDB for PostgreSQL** | Databases → AlloyDB for PostgreSQL | ⭐ |
+   | **Composer** | Data Analytics → Cloud Composer *(Google's name for Managed Service for Apache Airflow)* | ⭐ |
+   | **BigQuery** | Analytics → BigQuery | ⭐ |
+   | **Kubernetes Engine** | (Top-level, near the top of the menu) | ⭐ |
 
-3. Scroll the menu back to the top. The pinned section should now show all four products. You'll be tabbing between them for the next three hours.
+3. Scroll the menu back to the top. The starred section should now show all four products. You'll be tabbing between them for the next three hours.
 
-4. Click outside the menu to close it. Reopen it; the pins persisted across the open/close.
+4. Click outside the menu to close it. Reopen it; the stars persisted across the open/close.
 
-## 6. While you wait
+## 5. While you wait
 
 *Nothing waits.* If you finish early, search for a product you've never heard of (`spanner`, `vertex ai`, `cloud run`) and read its landing page for a minute. GCP has a *lot* of products; the Console is also a discovery surface. Don't click Create on anything; every resource costs money.
 
-## 7. Verify
+## 6. Verify
 
-- 📌 The hamburger menu shows **AlloyDB**, **Composer**, **BigQuery**, **Kubernetes Engine** in the pinned section at the top.
+- ⭐ The hamburger menu shows **AlloyDB**, **Composer**, **BigQuery**, **Kubernetes Engine** in the starred section at the top.
 - 🔍 You used the search bar at least twice without touching the mouse to open it.
 - 🟦 The project picker still shows your `project_id` (you didn't accidentally switch).
 
@@ -115,13 +109,19 @@ The third option, running `gcloud` from your laptop, also works (install once, a
 
 </Concept>
 
+## Expected result
+
+The hamburger menu, open. At the top, a "⭐ Starred" section with four entries: **AlloyDB**, **Composer**, **BigQuery**, **Kubernetes Engine**, in roughly that order. Underneath, the rest of the product catalog organised by category.
+
+<Screenshot src="/quest/pothole-poet/img/console_pinned_menu.png" caption="Hamburger menu fully expanded, the Starred section at the very top showing AlloyDB, Composer, BigQuery, and Kubernetes Engine (⭐ icon visible next to each), with the rest of the product catalog (Compute, Databases, Storage, Networking, Data Analytics…) underneath." />
+
 <Gotchas>
 - <strong>Search bar doesn't open when you press <kbd>/</kbd>.</strong> Your browser caught the keystroke (usually if focus is in a text field). Click anywhere outside a form and try again; <kbd>Ctrl</kbd>+<kbd>/</kbd> also works.
-- <strong>Pinning didn't save.</strong> Browser is in incognito or you're signed into multiple Google accounts in the same browser. Sign out of all but the work account or stay in regular browsing mode for the day.
+- <strong>Starring didn't save.</strong> Browser is in incognito or you're signed into multiple Google accounts in the same browser. Sign out of all but the work account or stay in regular browsing mode for the day.
 - <strong>You see "Activate this API" on a product's landing page.</strong> Don't click it; every API you need today is pre-enabled for your Garage's project. If you see this prompt on AlloyDB / Composer / BigQuery / Kubernetes Engine, flag a Sherpa; that's a pre-provisioning miss.
 - <strong>"Permission denied" anywhere.</strong> Don't debug it yourself; flag a Sherpa with the exact error text. Your Garage role binding may be partial.
 </Gotchas>
 
 <Shipped>
-You can jump anywhere in the GCP Console in three keystrokes. Your four lab products are pinned at the top of the menu. The project picker is locked on your <code>project_id</code>. <strong>Console navigation is muscle memory. On to Q1-3, your VPC.</strong>
+You can jump anywhere in the GCP Console in three keystrokes. Your four lab products are starred at the top of the menu. The project picker is locked on your <code>project_id</code>. <strong>Console navigation is muscle memory. On to Q1-3, your VPC.</strong>
 </Shipped>

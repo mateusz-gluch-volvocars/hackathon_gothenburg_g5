@@ -2,7 +2,7 @@
 
 <Objective lane="all">
 
-**🎯 What you'll do.** Open your Cloud Workstation, clone the Quest repo into `~/quest`, run a few sanity checks, and pick which **Persona** (Data Engineer / Pipeline-author / Infra-Admin / App Dev / Guardian) you'll own for the build sprint. ~10 minutes, all four of you doing the same thing in parallel.
+**🎯 What you'll do.** Open your Cloud Workstation, clone the Quest repo into `~/quest`, configure your GCP project and credentials, verify your tools, and pick which lane you'll own for the build sprint. ~12 minutes, all four of you doing the same thing in parallel.
 
 **🤝 Why it matters.** Every codelab from Q2 onward assumes you're sitting in a Workstation terminal with the repo at `~/quest` and `gcloud` pointed at your Garage's project. Persona assignment locks in here too, once Q2 starts you're working *solo* for ~30 minutes, so pick now while the team's still in the same room.
 
@@ -45,20 +45,7 @@ You'll always have at least two tabs open in your **laptop's** browser:
 
 The Quest content lives in a public GitHub repo. Your first job is to clone it onto the Workstation so every command in the upcoming codelabs has the files it needs.
 
-## 2. What it looks like when done
-
-A VS Code window in your laptop's browser tab, with the Quest repo file tree on the left and a terminal at the bottom. Like this:
-
-```
-~/quest$ ls
-LICENSE  pothole-poet  README.md
-~/quest$ gcloud config get-value project
-<your-garage-project-id>
-```
-
-<Screenshot src="/quest/pothole-poet/img/workstation_ide.png" caption="Cloud Workstation IDE on first load, file tree on the left, terminal on the bottom." />
-
-## 3. Open the IDE and a terminal
+## 2. Open the IDE and a terminal
 
 There are two ways to open your Cloud Workstation:
 
@@ -69,7 +56,7 @@ There are two ways to open your Cloud Workstation:
 
 Once the VS Code window loads in your browser, open the integrated terminal: **Terminal → New Terminal**, or press <kbd>Ctrl</kbd>+<kbd>`</kbd>.
 
-## 4. Clone the Quest repo into `~/quest`
+## 3. Clone the Quest repo into `~/quest`
 
 The workstation comes up empty. Every later codelab references files at `~/quest/pothole-poet/...`, so the first thing you do in the terminal is clone the **public Iron & Cloud Quest repo** into that path.
 
@@ -93,14 +80,86 @@ LICENSE  pothole-poet  README.md
 
 If you see those three entries, you're good. If `git clone` reports "Repository not found", double-check the URL. it's case-sensitive. If `ls` shows `quests/` instead of `pothole-poet/`, you cloned an older snapshot; run `cd ~ && rm -rf quest` and re-clone.
 
+## 4. Configure your GCP project
+
+<Callout type="critical" title="Every command you run today targets a GCP project. Make sure it's yours.">
+
+If your project is misconfigured, you'll create resources in the wrong place, see "permission denied" errors, or accidentally touch another Garage's infrastructure. **Do not skip these steps.** They take two minutes and prevent the most common class of hackathon mistakes.
+
+</Callout>
+
+**Step 1. Check which project gcloud is pointing at.**
+
+```bash
+gcloud config get-value project
+```
+
+✅ The output should match the `project_id` on your workbench card (something like `vcc-ic-g03`). If it does, skip to Step 3.
+
+**Step 2. If the project is wrong (or empty), set it now.**
+
+Replace `<YOUR_PROJECT_ID>` with the value from your workbench card:
+
+```bash
+export PROJECT_ID=<YOUR_PROJECT_ID>
+gcloud config set project $PROJECT_ID
+```
+
+Run `gcloud config get-value project` again to confirm it stuck.
+
+**Step 3. Set up Application Default Credentials (ADC).**
+
+Several tools and client libraries (BigQuery, AlloyDB connectors, the Streamlit app when running locally) use **Application Default Credentials** to authenticate. The Workstation's service account handles basic gcloud commands, but ADC ensures everything works consistently under your own identity.
+
+The Workstation has no browser, so you'll copy a URL to your laptop:
+
+```bash
+gcloud auth application-default login --no-launch-browser
+```
+
+1. The command prints a long URL starting with `https://accounts.google.com/o/oauth2/auth?...`
+2. **Copy** the URL and **paste it into a new tab** on your laptop's browser (the same browser where you're signed in with your **Volvo Cars work account**).
+3. Approve the consent screen. Google shows you an **authorization code**.
+4. **Copy** the authorization code and **paste it back** into the Workstation terminal. Press <kbd>Enter</kbd>.
+
+✅ You should see: `Credentials saved to file: [/home/user/.config/gcloud/application_default_credentials.json]`
+
+**Step 4. Set the environment variables you'll reuse all day.**
+
+Several later codelab pages reference `PROJECT_ID`, `PROJECT_NUMBER`, and `REGION`. Set them once now so they're ready:
+
+```bash
+export PROJECT_ID="$(gcloud config get-value project)"
+export PROJECT_NUMBER="$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')"
+export REGION="europe-west1"
+
+echo "PROJECT_ID=$PROJECT_ID  PROJECT_NUMBER=$PROJECT_NUMBER  REGION=$REGION"
+```
+
+✅ `PROJECT_ID` should be human-readable (like `vcc-ic-g03`). `PROJECT_NUMBER` should be all digits (12 digits, like `266306106674`). `REGION` should be `europe-west1`. If any of these are empty or wrong, re-check the steps above.
+
+<Concept title="Why do we need both PROJECT_ID and PROJECT_NUMBER?">
+
+They are two different identifiers for the same GCP project. `PROJECT_ID` is the human-readable name you chose (or was assigned); `PROJECT_NUMBER` is an immutable numeric ID that Google assigns internally. Most gcloud commands accept either one, but the Workload Identity Federation principal URI in Q2D-3 requires both in specific positions. Setting them now means you can copy-paste commands later without hunting for them.
+
+</Concept>
+
+<Concept title="What is Application Default Credentials (ADC)?">
+
+When code running on your Workstation calls a Google Cloud API (for example, a Python script using the `google-cloud-bigquery` library), the library needs credentials. ADC is the standard way Google client libraries find credentials automatically, without you hardcoding anything in your code.
+
+By running `gcloud auth application-default login`, you placed a credential file at a well-known path (`~/.config/gcloud/application_default_credentials.json`). Any Google client library on the Workstation will find it automatically. This is the same pattern used in production, except in production the credentials come from a service account rather than a user login.
+
+</Concept>
+
 ## 5. Verify your environment is sane
 
-Run these commands in the terminal to confirm the workstation is wired to your Garage's GCP project and has the tools the codelabs assume:
+Quick check that all the tools the codelabs assume are on PATH:
 
 ```bash
 gcloud auth list
 gcloud config get-value project
-bq --version | head -1
+bq version 2>/dev/null || bq --version | head -1
 gsutil --version | head -1
 kubectl version --client 2>/dev/null | head -1
 python3 --version
@@ -109,7 +168,7 @@ jq --version
 agy --version 2>/dev/null || echo 'agy installed'
 ```
 
-✅ You should see an active SA, your `project_id`, and version strings for every tool. `psql` should report PostgreSQL 16. If anything is missing, flag a Sherpa.
+✅ You should see an active account, your `project_id`, and version strings for every tool. `psql` should report PostgreSQL 16. If anything is missing, flag a Sherpa.
 
 ## 6. Skim the Quest README
 
@@ -145,6 +204,9 @@ Look at your team. Pick one role each, then open that lane's codelab page from t
 Each person should now have:
 - Cloud Workstation IDE open in their laptop's browser
 - The Quest repo cloned at `~/quest`
+- `gcloud config get-value project` returning their Garage's `project_id`
+- ADC credentials saved (`~/.config/gcloud/application_default_credentials.json`)
+- `PROJECT_ID`, `PROJECT_NUMBER`, and `REGION` exported in their shell
 - A lane (write it on a sticky note if helpful)
 - Their next codelab page open in another tab on the **hub**
 
@@ -152,12 +214,27 @@ When the room confirms. **the build sprint begins.**
 
 🚦 Go to your lane.
 
+## Expected result
+
+A VS Code window in your laptop's browser tab, with the Quest repo file tree on the left and a terminal at the bottom. Like this:
+
+```
+~/quest$ ls
+LICENSE  pothole-poet  README.md
+~/quest$ gcloud config get-value project
+<your-garage-project-id>
+```
+
+<Screenshot src="/quest/pothole-poet/img/workstation_ide.png" caption="Cloud Workstation IDE on first load, file tree on the left, terminal on the bottom." />
+
 <Gotchas>
 - <strong>Workstation won&rsquo;t start / spins forever.</strong> Refresh the workbench card and click <strong>Start workstation</strong> again. If still stuck after 60 seconds, flag a Sherpa; they&rsquo;ll re-issue your card.
 - <strong><code>gcloud config get-value project</code> shows the wrong project.</strong> Run <code>gcloud config set project &lt;your-project-id&gt;</code> using the project_id on your workbench card.
 - <strong><code>git clone</code> says &ldquo;Repository not found&rdquo;.</strong> Double-check the URL spelling. The repo is public; no auth is needed.
 - <strong>You see <code>quests/</code> instead of <code>pothole-poet/</code> at the repo root.</strong> You may have cloned an older snapshot. <code>cd ~ &amp;&amp; rm -rf quest &amp;&amp; git clone &hellip; ~/quest</code> to start fresh.
 - <strong>Trying to open a URL from the workstation terminal does nothing.</strong> Expected, the workstation has no browser. Copy the URL and paste it into a fresh tab in your laptop&rsquo;s browser.
+- <strong><code>gcloud auth application-default login</code> hangs or says &ldquo;could not launch browser&rdquo;.</strong> Make sure you used the <code>--no-launch-browser</code> flag. The Workstation has no browser; you must copy the URL to your laptop.
+- <strong>ADC login succeeds but later tools still say &ldquo;permission denied&rdquo;.</strong> You may have authenticated with a personal Google account instead of your Volvo Cars work account. Run <code>gcloud auth application-default login --no-launch-browser</code> again and pick the right account in the browser.
 </Gotchas>
 
 <Shipped>

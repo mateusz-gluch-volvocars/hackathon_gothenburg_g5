@@ -20,7 +20,7 @@ ALLOYDB_HOST="$(gcloud alloydb instances describe pothole-archive-primary \
 export PGPASSWORD='buildwithgemini2026'
 psql "host=$ALLOYDB_HOST user=postgres dbname=postgres sslmode=require" \
   -f ~/quest/pothole-poet/alloydb/schema.sql
-# ✅ Expect: CREATE EXTENSION / CREATE TABLE / CREATE INDEX / CREATE INDEX
+# ✅ Expect: CREATE EXTENSION / CREATE TABLE / CREATE INDEX (×3) / GRANT
 
 # Verify
 psql "host=$ALLOYDB_HOST user=postgres dbname=postgres sslmode=require" \
@@ -72,6 +72,7 @@ Open `pothole-poet/alloydb/schema.sql` in your Workstation IDE. Select all, copy
 - `CREATE EXTENSION` (the `pgcrypto` extension we use for `gen_random_uuid()` default IDs)
 - `CREATE TABLE` (the `pothole_reports` table)
 - Three `CREATE INDEX` (on `neighbourhood`, `reported_at`, and `citizen_id`)
+- `GRANT` (read access for BigQuery federation)
 
 ### Step 4 — Verify the schema landed
 
@@ -103,7 +104,7 @@ ORDER BY ordinal_position;
 </Gotchas>
 
 <Shipped>
-The schema is installed. <strong>The <code>pothole_reports</code> table exists in the <code>postgres</code> database with all 10 expected columns and two indexes.</strong> Empty so far, next page fills it with 5,000 rows.
+The schema is installed. <strong>The <code>pothole_reports</code> table exists in the <code>postgres</code> database with all 11 columns and three indexes.</strong> Empty so far, next page fills it with 5,000 rows.
 </Shipped>
 
 🛢 **Q2A-2 done.** Schema installed.

@@ -23,3 +23,7 @@ CREATE TABLE IF NOT EXISTS pothole_reports (
 CREATE INDEX IF NOT EXISTS idx_neighbourhood ON pothole_reports (neighbourhood);
 CREATE INDEX IF NOT EXISTS idx_reported_at   ON pothole_reports (reported_at);
 CREATE INDEX IF NOT EXISTS idx_citizen_id    ON pothole_reports (citizen_id);
+
+-- Grant read access to all roles so BigQuery federation (which connects as
+-- the alloydb IAM service agent) can query the table without ownership issues.
+GRANT SELECT ON pothole_reports TO PUBLIC;

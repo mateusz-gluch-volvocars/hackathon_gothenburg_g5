@@ -33,11 +33,7 @@ Today you'll use Logging in four situations, each tied to a different **resource
 
 You don't need to memorize these. This page teaches the *pattern*; the later codelabs point you back here when a specific failure happens.
 
-## 2. What it looks like when done
-
-The Logs Explorer open in your browser, showing the four-pane layout (see the screenshot at the top of this page). Logging is pinned in your hamburger menu alongside the four products from Q1-2.
-
-## 3. Open the Logs Explorer
+## 2. Open the Logs Explorer
 
 1. Press <kbd>/</kbd> to open the search bar. Type `logs explorer`. Click **Logs Explorer** in the results (the one whose subheading says "Logging").
 
@@ -52,7 +48,7 @@ The Logs Explorer open in your browser, showing the four-pane layout (see the sc
 
    If the Fields pane is not visible, click the toggle labeled **Log fields** in the toolbar above the results.
 
-## 4. The one query pattern you need
+## 3. The one query pattern you need
 
 Every debugging session today follows three steps:
 
@@ -82,7 +78,7 @@ The resource type is `cloud_composer_environment`. Filter by `labels.workflow` t
 
 </Concept>
 
-## 5. Try it: look at what's already here
+## 4. Try it: look at what's already here
 
 Your project already has logs, even though you haven't built anything yet. GCP emits audit logs for every API call.
 
@@ -96,22 +92,26 @@ Your project already has logs, even though you haven't built anything yet. GCP e
 
 You've just run your first Logs Explorer query. The exact same flow works when a DAG fails or a Pod crashes; only the resource type changes.
 
-## 6. Pin Logging to your menu
+## 5. Star Logging in your menu
 
 1. Click the **hamburger menu** (top-left).
 2. Find **Logging** (under the Observability category, or type "logging" in the menu's filter box at the top).
-3. Click the **📌 pin icon** next to Logging.
-4. Your pinned section should now show five products: AlloyDB, Composer, BigQuery, Kubernetes Engine, and Logging.
+3. Click the **⭐ star icon** next to Logging. Starred products float to the top of your menu.
+4. Your starred section should now show five products: AlloyDB, Composer, BigQuery, Kubernetes Engine, and Logging.
 
-## 7. While you wait
+## 6. While you wait
 
 *Nothing waits.* If you finished early, try one more thing: in the Fields pane under Severity, select **Error**. If there are zero errors, your Garage's pre-provisioning was clean. If there *are* errors, skim one. You'll recognize the pattern when you need it later.
 
-## 8. Verify
+## 7. Verify
 
 - The Logs Explorer is open and you can see the four-pane layout.
 - You ran at least one query by clicking a resource type in the Fields pane.
-- Logging is pinned in your hamburger menu alongside the four products from Q1-2.
+- Logging is starred in your hamburger menu alongside the four products from Q1-2.
+
+## Expected result
+
+The Logs Explorer open in your browser, showing the four-pane layout (see the screenshot at the top of this page). Logging is pinned in your hamburger menu alongside the four products from Q1-2.
 
 <Gotchas>
 - <strong>The Fields pane is missing or hidden.</strong> Click the <strong>Log fields</strong> toggle in the toolbar above the Results pane.

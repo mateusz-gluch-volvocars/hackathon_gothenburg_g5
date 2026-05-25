@@ -35,19 +35,7 @@ The agent auto-discovers this plugin when you launch `agy` from inside `~/quest`
 
 </Concept>
 
-## 2. What it looks like when done
-
-Antigravity CLI is authenticated, your project and location are set, and the environment verification passes:
-
-```
-✅ gcloud signed in as workstation-runner-<garage_id>@<project>.iam.gserviceaccount.com
-✅ Project: <your-project-id>
-✅ Tools on PATH: bq, gsutil, kubectl, python3, psql 16, jq, agy
-✅ Repo at ~/quest with pothole-poet/ present
-You're ready.
-```
-
-## 3. First-time setup
+## 2. First-time setup
 
 The first time you run `agy` on a fresh Workstation, it walks you through a short onboarding: login method, OAuth, project ID, location. Read the steps below before you start; it's quicker if you know what's coming.
 
@@ -89,7 +77,7 @@ The prompt offers three options: `global`, `us`, `eu`. Pick **`global`** and pre
 
 <Screenshot src="/quest/pothole-poet/img/agy_location.png" caption="The Google Cloud Location picker. Always pick 'global' for this Quest." />
 
-## 4. Run the environment verification
+## 3. Run the environment verification
 
 Antigravity CLI drops you into its interactive prompt. Type:
 
@@ -97,7 +85,7 @@ Antigravity CLI drops you into its interactive prompt. Type:
 
 The agent runs the read-only checks (`gcloud auth list`, tool versions, repo layout) on its own. No permission prompts appear because nothing is being changed. You'll see a summary confirming all tools are present and your project is set correctly.
 
-## 5. Exit (for now)
+## 4. Exit (for now)
 
 Type `/exit` and press <kbd>Enter</kbd>. You're back in your Workstation shell.
 
@@ -144,6 +132,18 @@ Several later codelabs offer an agentic path alongside the manual click-path:
 Each one is optional. You can always follow the manual steps instead. But the agentic path is particularly valuable for Q2D-3, where a single character wrong in the principal URI causes a silent failure that costs 30 minutes to debug.
 
 </Concept>
+
+## Expected result
+
+Antigravity CLI is authenticated, your project and location are set, and the environment verification passes:
+
+```
+✅ gcloud signed in as workstation-runner-<garage_id>@<project>.iam.gserviceaccount.com
+✅ Project: <your-project-id>
+✅ Tools on PATH: bq, gsutil, kubectl, python3, psql 16, jq, agy
+✅ Repo at ~/quest with pothole-poet/ present
+You're ready.
+```
 
 <Gotchas>
 - <strong><code>agy</code> command not found.</strong> The Workstation image should have it pre-installed. If missing, run <code>pip install antigravity-cli</code> and retry.
