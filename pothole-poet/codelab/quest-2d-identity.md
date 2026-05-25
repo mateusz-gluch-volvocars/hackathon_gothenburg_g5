@@ -4,7 +4,7 @@
 
 **🎯 What you'll do.** Create a Kubernetes namespace + ServiceAccount, then tell Google Cloud "this Kubernetes identity is allowed to read BigQuery" by binding two IAM roles to it. No key files, no secrets — just an identity mapping. ~5 minutes if you get the principal URI exactly right; possibly 30 if you confuse `PROJECT_NUMBER` with `PROJECT_ID`.
 
-**🤝 Why it matters.** This is **how your Pod authenticates to BigQuery without ever touching a key file**. The principal URI is the single most error-prone string in the entire Quest. Get it wrong and Silver-tier Streamlit returns `AccessDenied` the moment you flip `TIER` in Q3 — and you waste the convergence moment debugging IAM instead of demoing poems.
+**🤝 Why it matters.** This is **how your Pod authenticates to BigQuery without ever touching a key file**. The principal URI is the single most error-prone string in the entire Quest. Get it wrong and Streamlit returns `AccessDenied` the moment you switch `MODE` to `live` in Q3 — and you waste the convergence moment debugging IAM instead of demoing poems.
 
 </Objective>
 

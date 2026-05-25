@@ -39,13 +39,12 @@ When the build sprint starts, the team splits four ways:
 
 All four lanes start at the same moment. They converge at [`codelab/quest-3-wire.md`](./codelab/quest-3-wire.md).
 
-## Tier mapping
+## Two phases
 
-| Tier | What ships | Time | Demo punch |
+| Phase | What ships | Time | Demo punch |
 |---|---|---|---|
-| 🥉 **Bronze** | Streamlit on GKE Autopilot reading bundled `seed.csv`, exposed via a Gateway-API global LB on plain HTTP. Twelve neighbourhoods, twelve placeholder poems. | ~45 min | A page exists. Always demoable. |
-| 🥈 **Silver** | Full pipeline. Streamlit reads `pothole_laureate.neighbourhood_odes` from BigQuery. Real Gemini-composed poems per neighbourhood. | ~85 min | Live AI poems from real (synthetic) citizen quotes. |
-| 🥇 **Gold** | Silver + a "Report a Pothole" form in Streamlit that writes to AlloyDB + real HTTPS via Certificate Manager (load balancer authorization, `<ip>.nip.io` hostname). Re-trigger the DAG; watch the poems regenerate. | ~100 min | Audience submits an absurd quote at demo time and watches it land in a freshly-composed poem 3 minutes later, on a properly-certificated URL. |
+| 🔧 **Foundation** | Full pipeline live: AlloyDB → Airflow → BigQuery (Gemini odes) → Streamlit on GKE Autopilot via Gateway API. Twelve neighbourhoods, twelve real AI-composed poems on a public URL. | ~95 min | A working data pipeline with live Gemini poems you can text to your friends. |
+| ✨ **Make it yours** | Interactive "Report a Pothole" form writing back to AlloyDB, real HTTPS via Certificate Manager (`<ip>.nip.io`), Guardian alerts + broadcast, and the open-ended differentiation window (Quest 7). | ~60+ min | Audience submits an absurd quote at demo time, watches it land in a freshly-composed poem 3 minutes later, on a properly-certificated URL — with your Garage's unique creative twist. |
 
 ## What's in this directory
 
@@ -65,8 +64,8 @@ pothole-poet/
 │   └── test_federation.sql            # Lane C smoke check
 ├── Dockerfile                         # built from pothole-poet/ so seed CSV is in context (see Q2D-2)
 ├── streamlit/
-│   ├── app.py                         # Bronze | Silver | Gold modes via CONFIG switch
-│   ├── alloydb_writer.py              # Gold-tier write-back helper
+│   ├── app.py                         # seed | live | full modes via MODE env var
+│   ├── alloydb_writer.py              # write-back helper (MODE=full)
 │   ├── requirements.txt
 │   ├── .streamlit/config.toml         # pinned light theme + Office palette
 │   └── k8s/                           # Kubernetes manifests
@@ -76,7 +75,7 @@ pothole-poet/
 │       ├── gateway.yaml               # gke-l7-global-external-managed, HTTP :80
 │       ├── httproute.yaml             # routes traffic to the Service
 │       └── gold/
-│           └── gateway-https.yaml     # Q6 Gold overlay — adds HTTPS :443
+│           └── gateway-https.yaml     # Q6B overlay — adds HTTPS :443
 ├── seed/
 │   ├── generator.py                   # synthetic data generator
 │   ├── citizen_quotes.txt             # 120 Volvo-coded one-liners
@@ -99,16 +98,16 @@ pothole-poet/
     ├── quest-2d-image.md              # Lane D · 2/5 — Build container with Cloud Build
     ├── quest-2d-identity.md           # Lane D · 3/5 — Workload Identity Federation to BigQuery
     ├── quest-2d-deploy.md             # Lane D · 4/5 — Apply Deployment + Service
-    ├── quest-2d-gateway.md            # Lane D · 5/5 — Apply Gateway + HTTPRoute (Bronze HTTP)
-    ├── quest-3-wire.md                # Convergence — trigger DAG, kubectl set env to SILVER
+    ├── quest-2d-gateway.md            # Lane D · 5/5 — Apply Gateway + HTTPRoute (public URL goes live)
+    ├── quest-3-wire.md                # Convergence — trigger DAG, kubectl set env MODE=live
     ├── quest-4-render.md              # Team huddle — design the visual
     ├── quest-5-theme.md               # Polish — palette + AI prompt voice
-    └── quest-6-gold-loop.md           # Stretch — Submit-a-Pothole writeback + real HTTPS
+    └── quest-6a-gold-form.md          # Make it yours — Submit-a-Pothole writeback + HTTPS
 ```
 
 ## The demo punchline
 
-For Gold tier, at demo time, a judge submits an absurd citizen quote — *"My pothole has political opinions"* — through the team's Streamlit form. Three minutes later the page refreshes; that quote is baked into the freshly-composed poem about whichever neighbourhood the judge picked. That's the moment the room *gets it.*
+At demo time, a judge submits an absurd citizen quote — *"My pothole has political opinions"* — through the team's Streamlit form. Three minutes later the page refreshes; that quote is baked into the freshly-composed poem about whichever neighbourhood the judge picked. That's the moment the room *gets it.*
 
 ## Citizen quotes — the secret ingredient
 

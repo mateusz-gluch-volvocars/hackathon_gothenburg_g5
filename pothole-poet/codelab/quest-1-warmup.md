@@ -104,9 +104,23 @@ Run a few commands in the terminal to confirm the workstation is wired to your G
 
 Two paths to do this — pick whichever fits your style.
 
-### ✨ Path A — Agentic verification with **Antigravity CLI** (recommended)
+## ✨ Path A — Agentic verification with **Antigravity CLI** (recommended)
 
 Google's **Antigravity CLI** (launched with the command `agy`) is pre-installed on the Workstation image. It's a terminal-based AI agent that reads workspace skills committed to the Quest repo (`~/quest/.agents/plugins/iron-and-cloud/`) and can drive the whole verification with one prompt — read-only, no system changes.
+
+<Concept title="New to Antigravity CLI? Watch this 5-minute walkthrough first">
+
+<div style="position:relative;width:100%;max-width:640px;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;">
+  <iframe
+    style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;border-radius:8px;"
+    src="https://www.youtube.com/embed/am0lg5-ofvQ"
+    title="Google Antigravity CLI Full Walkthrough"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+  ></iframe>
+</div>
+
+</Concept>
 
 The first time you run `agy` on a fresh Workstation, it walks you through a 4-step onboarding: login method → OAuth → project ID → location. Read the steps below before you start; it's quicker if you know what's coming.
 
@@ -174,11 +188,9 @@ You'll see the human-in-the-loop pattern properly in **Q2A-3**, **Q2C-2** and **
 
 </Concept>
 
-### Path B — Manual verification
+## Path B — Manual verification
 
 If `agy login` stalls, the agent is unresponsive, or you'd just rather see the raw commands — run them yourself. Both paths confirm the same thing: every tool is on PATH and gcloud is wired to your Garage's project.
-
-<Cheat title="Show the verify commands">
 
 ```bash
 gcloud auth list
@@ -194,11 +206,9 @@ agy --version 2>/dev/null || echo 'agy installed'
 
 ✅ You should see an active SA, your `project_id`, and version strings for every tool. `psql` should report PostgreSQL 16. If anything is missing, flag a Sherpa.
 
-</Cheat>
-
 ## 6. Skim the Quest README
 
-Open `pothole-poet/README.md` in the IDE (left-side file tree → click). Skim the story, the lane table, and the tier ladder. Two minutes.
+Open `pothole-poet/README.md` in the IDE (left-side file tree → click). Skim the story and the lane table. Two minutes.
 
 <Cheat title="Show two power-tips for the IDE">
 
@@ -223,7 +233,7 @@ Look at your team. Pick one role each — then open that lane's codelab page fro
 
 **Smaller Garage?**
 - **3 people:** collapse C + D. BigQuery Lead finishes BQ work, then drops into Streamlit.
-- **2 people:** you're a **Bronze Garage**. One person provisions; the other ships Streamlit on the bundled CSV. Skip the rest. The Foreman will confirm.
+- **2 people:** focus on getting the URL live with seed data. One person provisions; the other ships Streamlit. Skip the rest. The Foreman will confirm.
 
 ## 8. Final check before you split
 

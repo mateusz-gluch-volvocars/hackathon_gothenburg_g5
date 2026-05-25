@@ -10,7 +10,7 @@
 
 > The whole team. ~25 minutes.
 
-You shipped Silver. Twelve poems are live on a generic dataframe page. Now decide: **how does the Göteborg Pothole Poet Laureate Office want to present its work to the world?**
+The Foundation is live. Twelve poems are on a generic dataframe page. Now decide: **how does the Göteborg Pothole Poet Laureate Office want to present its work to the world?**
 
 The platform refuses to pick the look for you. That's the team's job. Surprise everyone at demo.
 
@@ -142,13 +142,13 @@ Each rebuild is ~1-2 min (cached layers). The Gateway URL stays the same. Iterat
 - <strong>pydeck map renders blank.</strong> Lat/lng are easy to swap. The dataframe column is <code>centroid_lng</code>, <code>centroid_lat</code> &mdash; pydeck wants <code>[longitude, latitude]</code> in <code>get_position</code>.
 - <strong>Rollout succeeds but the page didn&rsquo;t change.</strong> Browser cache. Hard-refresh (<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd>). If still stale, confirm the new tag is rolled out: <code>kubectl describe deployment pothole-laureate -n laureate | grep Image</code>.
 - <strong>Plotly gauge is too tall / overflows.</strong> Set <code>fig.update_layout(height=200, margin=dict(l=10, r=10, t=40, b=10))</code> &mdash; the inspiration card has it; don&rsquo;t drop it.
-- <strong>Page renders, but no data.</strong> The <code>load_silver()</code> function couldn&rsquo;t reach BigQuery &mdash; check that <code>TIER=SILVER</code> and <code>PROJECT_ID</code> are both set on the Deployment (<code>kubectl describe deployment pothole-laureate -n laureate | grep -A2 Environment</code>).
+- <strong>Page renders, but no data.</strong> The <code>load_live()</code> function couldn&rsquo;t reach BigQuery &mdash; check that <code>MODE=live</code> and <code>PROJECT_ID</code> are both set on the Deployment (<code>kubectl describe deployment pothole-laureate -n laureate | grep -A2 Environment</code>).
 </Gotchas>
 
 <Shipped>
 The Office has a face. <strong>Your Streamlit app reflects your Garage&rsquo;s taste &mdash; map, dashboard, parchment, opera libretto, or whatever you cooked up.</strong> No two Garages will demo the same page; that&rsquo;s the point.
 </Shipped>
 
-When the team is happy: high-five. Move to Quest 5 to polish the Laureate's voice (or skip ahead to Quest 6 for the Gold-tier audience-input loop).
+When the team is happy: high-five. Move to Quest 5 to polish the Laureate's voice (or skip ahead to Quest 6 for the interactive form + HTTPS).
 
-➡️ Optional next: **Quest 5 — Theme It** or **Quest 6 — The Gold Loop** (both in the sidebar).
+➡️ Optional next: **Quest 5 — Theme It** or **Quest 6 — Make it yours** (both in the sidebar).

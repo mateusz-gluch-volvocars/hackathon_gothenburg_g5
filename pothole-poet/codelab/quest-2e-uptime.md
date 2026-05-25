@@ -2,13 +2,13 @@
 
 <Objective lane="guardian">
 
-**🎯 What you'll do.** Stand up a **Cloud Monitoring uptime check** on the Streamlit Gateway in ~10 min. One gcloud command (or Console click-through, your choice). This is the first piece of the **App Dev / Guardian** lane: until something is being watched, nobody on your Garage knows whether the Bronze URL is actually staying alive.
+**🎯 What you'll do.** Stand up a **Cloud Monitoring uptime check** on the Streamlit Gateway in ~10 min. One gcloud command (or Console click-through, your choice). This is the first piece of the **App Dev / Guardian** lane: until something is being watched, nobody on your Garage knows whether the URL is actually staying alive.
 
 **🤝 Why it matters.** Every operational dashboard worth running starts with the question "is the thing up?". A green uptime check is your team's heartbeat — your Pipeline-author can see it; your Data Engineer can see it; your Infra-Admin can see it. The Guardian lane exists so somebody on the team owns the answer.
 
 </Objective>
 
-> Bronze tier · ~10 min hands-on · runs in parallel with your Infra-Admin's Q2D-5 Gateway provisioning.
+> Guardian lane · ~10 min hands-on · runs in parallel with your Infra-Admin's Q2D-5 Gateway provisioning.
 
 <QuickPath>
 
@@ -127,7 +127,7 @@ The check fires every minute, but it can take a few min for all 6 regions to con
 </Gotchas>
 
 <Shipped>
-Bronze tier, Guardian piece. <strong>Your team's first heartbeat is live.</strong> The Gateway has a watcher; if it goes down, the next two pages (Q2E-2 OTel + Q2E-3 alert) build on this signal so your Garage knows about failures before anyone refreshes the page.
+Guardian piece. <strong>Your team's first heartbeat is live.</strong> The Gateway has a watcher; if it goes down, the next two pages (Q2E-2 OTel + Q2E-3 alert) build on this signal so your Garage knows about failures before anyone refreshes the page.
 </Shipped>
 
 🛡 Move to **Q2E-2** — wire OpenTelemetry into the Streamlit Pod so you see what users actually do, not just whether the door is open.

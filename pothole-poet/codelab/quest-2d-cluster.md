@@ -121,9 +121,9 @@ Private nodes still need a way to reach Google APIs — pulling images from Arti
 ### Step 3 — While you wait (~6-8 min): be useful
 
 a) **Skim the Streamlit code.** In your Workstation IDE, open `pothole-poet/streamlit/app.py`. Note:
-- The `TIER` env var at the top — controls Bronze / Silver / Gold mode.
+- The `MODE` env var at the top — controls `seed` / `live` / `full` mode.
 - The `# TEAM CANVAS` block near the bottom — that's where Quest 4 lives. **Don't edit it now.**
-- `pothole-poet/Dockerfile` — vanilla Python + Streamlit, listens on 8080. It lives one directory up from `streamlit/` so the Bronze seed CSV is in the build context.
+- `pothole-poet/Dockerfile` — vanilla Python + Streamlit, listens on 8080. It lives one directory up from `streamlit/` so the seed CSV is in the build context.
 
 b) **Look at the manifests.** In `pothole-poet/streamlit/k8s/`, you'll see five YAMLs you'll apply across Q2D-3 to Q2D-5: `namespace-and-sa.yaml`, `deployment.yaml`, `service.yaml`, `gateway.yaml`, `httproute.yaml`. We'll explain each as you apply it.
 

@@ -1,4 +1,4 @@
-"""Write a new pothole report to AlloyDB. Used by Streamlit's Gold-tier form.
+"""Write a new pothole report to AlloyDB. Used by Streamlit's interactive form (MODE=full).
 
 Connects via psycopg2 over the AlloyDB private IP. The Streamlit Pod runs on
 GKE Autopilot in the same VPC as the AlloyDB cluster, so the private IP is
@@ -20,7 +20,7 @@ import os
 
 import psycopg2
 
-# Approximate Gothenburg-centre coordinates. The Gold form doesn't ask the
+# Approximate Gothenburg-centre coordinates. The form doesn't ask the
 # reporter for lat/lng — pothole location is implied by neighbourhood.
 DEFAULT_LAT = 57.7
 DEFAULT_LNG = 11.97

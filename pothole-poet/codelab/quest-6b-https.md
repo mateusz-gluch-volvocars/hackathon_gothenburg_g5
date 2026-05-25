@@ -1,14 +1,14 @@
-# 🥇 Quest 6B — Real HTTPS via Certificate Manager + nip.io
+# ✨ Quest 6B — Real HTTPS via Certificate Manager + nip.io
 
 <Objective lane="infra">
 
 **🎯 What you'll do.** Add **real HTTPS** to your Gateway via Certificate Manager **load-balancer authorization** on a `<your-ip>.nip.io` hostname. ~15 min of work + ~10–30 min cert provisioning wait you can spend on something else.
 
-**🤝 Why it matters.** The Bronze + Silver URLs were plain HTTP. For Gold polish the demo URL needs a green padlock — judges notice. TLS termination is platform substrate, not feature work, which is why this page belongs to **Infra-Admin**, not the App Dev / Guardian who's busy with the Q6A form.
+**🤝 Why it matters.** The Foundation URL was plain HTTP. For demo polish the URL needs a green padlock — judges notice. TLS termination is platform substrate, not feature work, which is why this page belongs to **Infra-Admin**, not the App Dev / Guardian who's busy with the Q6A form.
 
 </Objective>
 
-> Gold tier · ~15 min hands-on + ~10–30 min cert provisioning wait · independent of Q6A.
+> Make it yours · ~15 min hands-on + ~10–30 min cert provisioning wait · independent of Q6A.
 
 <QuickPath>
 
@@ -47,7 +47,7 @@ done
 
 </QuickPath>
 
-Bronze and Silver served over plain HTTP. For Gold polish, add HTTPS using **Certificate Manager** with **load balancer authorization** and a **nip.io** hostname derived from your Gateway IP.
+The Foundation URL served over plain HTTP. For demo polish, add HTTPS using **Certificate Manager** with **load balancer authorization** and a **nip.io** hostname derived from your Gateway IP.
 
 ---
 
@@ -97,7 +97,7 @@ gcloud certificate-manager maps entries create pothole-laureate-entry \
 
 ### Step 3 — Switch the Gateway to the HTTPS overlay
 
-The repo has a Gold-overlay manifest at `k8s/gold/gateway-https.yaml` that adds a `:443` HTTPS listener and the `networking.gke.io/certmap` annotation. Substitute your map name and apply.
+The repo has an HTTPS-overlay manifest at `k8s/gold/gateway-https.yaml` that adds a `:443` HTTPS listener and the `networking.gke.io/certmap` annotation. Substitute your map name and apply.
 
 ```bash
 cd ~/quest/pothole-poet/streamlit
@@ -143,7 +143,7 @@ Open `https://<your-nip-host>/` in your **laptop's** browser (replace with the v
 
 ✅ **Expect:** Page loads with a valid certificate. No browser warning. Green padlock in the address bar.
 
-🥇 **Gold tier (Part B) achieved.** Real HTTPS, no domain registration required.
+**Real HTTPS is live.** No domain registration required.
 
 <Gotchas>
 - <strong>Cert stuck on PROVISIONING for &gt;30 min.</strong> Either the Gateway isn&rsquo;t serving HTTP on :80 (the HTTP-01 challenge fails) or the IP doesn&rsquo;t actually resolve to your Gateway. Test: <code>curl http://$NIP_HOST/_stcore/health</code> should return <code>ok</code>; if not, fix that first.
@@ -153,9 +153,9 @@ Open `https://<your-nip-host>/` in your **laptop's** browser (replace with the v
 </Gotchas>
 
 <Shipped>
-Gold tier (Part B) achieved. <strong>The Pothole Poet now serves over a real HTTPS URL with a Google-managed certificate, with no domain ownership required.</strong> The green padlock costs nothing on judging day &mdash; nip.io + LB authorization is a pattern worth keeping in your back pocket for any internal demo.
+HTTPS is live. <strong>The Pothole Poet now serves over a real HTTPS URL with a Google-managed certificate, with no domain ownership required.</strong> The green padlock costs nothing on judging day &mdash; nip.io + LB authorization is a pattern worth keeping in your back pocket for any internal demo.
 </Shipped>
 
-🥇 **Gold tier (Part B) achieved.** Pair this with Q6A and your demo URL is `https://<ip>.nip.io/` with a fresh ode for whichever neighbourhood the judge picked.
+**HTTPS is live.** Pair this with Q6A and your demo URL is `https://<ip>.nip.io/` with a fresh ode for whichever neighbourhood the judge picked.
 
-➡️ Next: **Q7 — Differentiate to Win** (sidebar on the left). Your canonical Gold is shipped — now use **Antigravity CLI** to push past the tutorial and make your demo the one the judges remember.
+➡️ Next: **Q7 — Differentiate to Win** (sidebar on the left). Your core pipeline is shipped — now use **Antigravity CLI** to push past the tutorial and make your demo the one the judges remember.

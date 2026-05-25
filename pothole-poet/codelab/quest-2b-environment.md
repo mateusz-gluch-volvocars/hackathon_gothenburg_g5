@@ -4,7 +4,7 @@
 
 **🎯 What you'll do.** Click create on a Managed Service for Apache Airflow Gen 3 environment (Airflow 3.1, default image). ~25 minutes of waiting — the **longest single wait of the day**. Don't refresh, don't cancel; while it provisions, read the *While you wait* steps so you know what you're orchestrating.
 
-**🤝 Why it matters.** This environment is the **brain of the pipeline** — it wakes up on a schedule, pulls the Data Engineer's AlloyDB data into BigQuery, and tells Gemini to compose poems. Without your DAG running, the federation query just sits there and Streamlit is stuck on placeholder verse forever. You are the bottleneck on the path from Bronze to Silver — get the Create button clicked as early in the day as you can.
+**🤝 Why it matters.** This environment is the **brain of the pipeline** — it wakes up on a schedule, pulls the Data Engineer's AlloyDB data into BigQuery, and tells Gemini to compose poems. Without your DAG running, the federation query just sits there and Streamlit is stuck on placeholder verse forever. You are the bottleneck on the path to a live pipeline — get the Create button clicked as early in the day as you can.
 
 </Objective>
 

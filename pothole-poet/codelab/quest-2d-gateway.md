@@ -1,10 +1,10 @@
-# ☸ Quest 2D-5 — Configure the Gateway (Bronze URL goes live)
+# ☸ Quest 2D-5 — Configure the Gateway (your URL goes live)
 
 <Objective lane="infra">
 
-**🎯 What you'll do.** `kubectl apply -f` three manifests — Gateway, HTTPRoute, and a HealthCheckPolicy. Gateway uses GatewayClass `gke-l7-global-external-managed` and binds to the pre-provisioned global static IP `pothole-gateway-ip`. Wait ~5-8 minutes for `PROGRAMMED=True`, then `curl` the IP. **That URL is your Bronze tier.**
+**🎯 What you'll do.** `kubectl apply -f` three manifests — Gateway, HTTPRoute, and a HealthCheckPolicy. Gateway uses GatewayClass `gke-l7-global-external-managed` and binds to the pre-provisioned global static IP `pothole-gateway-ip`. Wait ~5-8 minutes for `PROGRAMMED=True`, then `curl` the IP. **That URL is your Garage's public endpoint.**
 
-**🤝 Why it matters.** This is the moment **your work goes public**. The whole Garage will be watching when this `curl` returns 200 — Bronze is locked in. After this page, the App Dev / Guardian can flip `TIER=SILVER` (Q3) the moment the DAG finishes, and the same URL starts serving live Gemini poems instead of bundled CSV. **Your URL is what the room sees at demo time.**
+**🤝 Why it matters.** This is the moment **your work goes public**. The whole Garage will be watching when this `curl` returns 200 — the Foundation URL is live. After this page, the App Dev / Guardian can switch `MODE=live` (Q3) the moment the DAG finishes, and the same URL starts serving real Gemini poems instead of bundled CSV. **Your URL is what the room sees at demo time.**
 
 </Objective>
 
@@ -65,7 +65,7 @@ All three files in `k8s/` ship ready to apply. Three design choices that keep th
 
 - **`gateway.yaml`** uses `addresses: [{type: NamedAddress, value: pothole-gateway-ip}]` — the per-Garage Terraform module pre-provisions a global static IP with that exact name, so the Gateway resolves to a determinate IP on first apply (and the same IP across re-deploys). No env-var substitution.
 - **`httproute.yaml`** has no `hostnames` field, which the Gateway API spec interprets as "match all hosts." That's correct for a hackathon where you don't own a domain — you route on IP. When Q6B introduces `<ip>.nip.io`, the same route still works because the cert binding handles host validation at the Cert Manager layer.
-- **`httproute.yaml`** also has no `sectionName` on its `parentRefs`, so it attaches to every listener on the Gateway. Bronze has one listener (`http`); Q6B's overlay adds `https` and the same route renders identically on both. No re-apply needed for Gold.
+- **`httproute.yaml`** also has no `sectionName` on its `parentRefs`, so it attaches to every listener on the Gateway. Foundation has one listener (`http`); Q6B's overlay adds `https` and the same route renders identically on both. No re-apply needed.
 
 The only file in this lane that needs `sed` is `deployment.yaml` (`REPLACE_PROJECT_ID` for the image path), and Q2D-4 handles that.
 
@@ -77,7 +77,7 @@ The Gateway API splits routing into three resources:
 
 1. **GatewayClass** — defines the implementation. We use `gke-l7-global-external-managed`, which means "GCP global external Application Load Balancer" — Anycast IP advertised in every Google region, Premium Network Tier. Pre-installed on every Autopilot cluster.
 
-2. **Gateway** — the actual entry point. It owns the public IP, the listener config (port 80 here), and the TLS settings (none in Bronze/Silver — Q6B adds HTTPS).
+2. **Gateway** — the actual entry point. It owns the public IP, the listener config (port 80 here), and the TLS settings (none during Foundation — Q6B adds HTTPS).
 
 3. **HTTPRoute** — routing rules. It says "send any request reaching this Gateway to this backend Service." You can have many HTTPRoutes per Gateway, owned by different teams. That separation is the whole point: platform team owns Gateways, app teams own HTTPRoutes.
 
@@ -166,17 +166,17 @@ In your **laptop's** browser (the Workstation has no browser), open:
 http://<your-gateway-ip>/
 ```
 
-✅ **Expect:** The Bronze Office page loads — header, 12 neighbourhoods, placeholder poems, dataframe.
+✅ **Expect:** The Office page loads — header, 12 neighbourhoods, placeholder poems, dataframe.
 
-🥉 **You just shipped Bronze.**
+**Your Garage's public URL is live.**
 
-<Screenshot src="/quest/pothole-poet/img/streamlit_bronze.png" caption="Bronze Streamlit page served via GKE Gateway: header, 12 neighbourhoods, dataframe view." />
+<Screenshot src="/quest/pothole-poet/img/streamlit_bronze.png" caption="Streamlit page served via GKE Gateway: header, 12 neighbourhoods, dataframe view (seed data)." />
 
 ### Step 6 — While you wait for the rest of the Garage
 
-The HTTPRoute has no hostname match — any request to the IP routes to your Streamlit Service. That's fine for Bronze/Silver. In Q6B you'll add HTTPS and use `<ip>.nip.io` as the hostname.
+The HTTPRoute has no hostname match — any request to the IP routes to your Streamlit Service. That's fine for Foundation. In Q6B you'll add HTTPS and use `<ip>.nip.io` as the hostname.
 
-Pair with the Data Engineer and Pipeline-author: when they finish, the DAG triggers and `pothole_laureate.neighbourhood_odes` populates. Then Quest 3 swaps your `TIER` env var from BRONZE to SILVER (one `kubectl set env`) and the same Pods read live data instead of the bundled CSV.
+Pair with the Data Engineer and Pipeline-author: when they finish, the DAG triggers and `pothole_laureate.neighbourhood_odes` populates. Then Quest 3 swaps your `MODE` env var from `seed` to `live` (one `kubectl set env`) and the same Pods read live data instead of the bundled CSV.
 
 <Gotchas>
 - <strong>Gateway stays <code>PROGRAMMED=False</code> for &gt;7 min.</strong> Run <code>kubectl describe gateway pothole-gateway -n laureate</code> &mdash; the Events section usually shows the actual error (firewall, missing NEG, IAM).
@@ -190,12 +190,12 @@ Pair with the Data Engineer and Pipeline-author: when they finish, the DAG trigg
 </Gotchas>
 
 <Shipped>
-Bronze is on the board. <strong>A public URL on a Google Cloud global load balancer serves the Office page with all 12 neighbourhoods, with NEG endpoints health-checked against Streamlit&rsquo;s real liveness endpoint.</strong> The Garage now has a guaranteed demo &mdash; even if the DAG, federation, or AlloyDB fall over, this URL is your safety net.
+The URL is on the board. <strong>A public URL on a Google Cloud global load balancer serves the Office page with all 12 neighbourhoods, with NEG endpoints health-checked against Streamlit&rsquo;s real liveness endpoint.</strong> The Garage now has a guaranteed demo &mdash; even if the DAG, federation, or AlloyDB fall over, this URL is your safety net.
 </Shipped>
 
 ---
 
-## Going further (after Bronze)
+## Going further
 
 Six things you'd reach for in production but we don't need today. Pointers, not prescriptions:
 
@@ -211,6 +211,6 @@ The full GKE Gateway API guide: [docs.cloud.google.com/kubernetes-engine/docs/co
 
 ---
 
-☸ **Lane D done (Bronze tier).** Five pages, one cluster, one image, one identity, four manifests, one global LB, one health-checked NEG. Now wait for the Pipeline-author + Data Engineer to finish. When the DAG is green, head to Quest 3 to swap the data source from CSV to BigQuery (one env var change + one rolling restart).
+☸ **Lane D done.** Five pages, one cluster, one image, one identity, four manifests, one global LB, one health-checked NEG. Now wait for the Pipeline-author + Data Engineer to finish. When the DAG is green, head to Quest 3 to swap the data source from CSV to BigQuery (one env var change + one rolling restart).
 
 ➡️ Next: **Quest 3 — Wire the Pipeline** (sidebar on the left).

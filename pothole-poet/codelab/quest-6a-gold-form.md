@@ -1,4 +1,4 @@
-# 🥇 Quest 6A — The Gold Loop: Submit a Pothole
+# ✨ Quest 6A — Make it yours: Submit a Pothole
 
 <Objective lane="guardian">
 
@@ -8,7 +8,7 @@
 
 </Objective>
 
-> Gold tier · ~20 minutes · pairs naturally with Q6B (HTTPS) which any order works.
+> Make it yours · ~20 minutes · pairs naturally with Q6B (HTTPS) which any order works.
 
 <QuickPath>
 
@@ -20,9 +20,9 @@ ALLOYDB_HOST="$(gcloud alloydb instances describe pothole-archive-primary \
 [ -z "$ALLOYDB_HOST" ] && { echo "ERROR: empty IP — check AlloyDB cluster"; exit 1; }
 echo "AlloyDB private IP: $ALLOYDB_HOST"
 
-# 2. Patch deployment with TIER=GOLD + AlloyDB env vars (also re-asserts BROADCAST_BUCKET)
+# 2. Patch deployment with MODE=full + AlloyDB env vars (also re-asserts BROADCAST_BUCKET)
 kubectl set env deployment/pothole-laureate -n laureate \
-  TIER=GOLD \
+  MODE=full \
   ALLOYDB_HOST="$ALLOYDB_HOST" \
   ALLOYDB_USER=postgres \
   ALLOYDB_PASSWORD=buildwithgemini2026 \
@@ -39,7 +39,7 @@ kubectl rollout status deployment/pothole-laureate -n laureate
 
 The best demo moment in the whole Quest. A judge submits an absurd pothole quote through your Streamlit app. The Pipeline-author re-triggers the DAG. Three minutes later the page refreshes; that quote is baked into the freshly-composed poem about whichever neighbourhood the judge picked.
 
-The form structure (added to the Streamlit sidebar in GOLD mode):
+The form structure (added to the Streamlit sidebar in `full` mode):
 
 - Neighbourhood (dropdown)
 - Severity (slider 1-5)
@@ -74,15 +74,15 @@ GKE Pods get an IP from your VPC's pod range when they schedule, so they're alre
 
 </Concept>
 
-### Step 2 — Patch the Deployment with `TIER=GOLD` + AlloyDB env vars
+### Step 2 — Patch the Deployment with `MODE=full` + AlloyDB env vars
 
 Add the env vars to the running Deployment in one command. Kubernetes does a rolling restart automatically.
 
-> **Important:** `kubectl set env` *merges* into the existing env list — it updates or appends the vars you name and leaves the rest alone. We list all six here anyway so the Gold env contract is explicit on one line; if you already set `BROADCAST_BUCKET` in Q2E-3 it would survive a narrower command too.
+> **Important:** `kubectl set env` *merges* into the existing env list — it updates or appends the vars you name and leaves the rest alone. We list all six here anyway so the env contract is explicit on one line; if you already set `BROADCAST_BUCKET` in Q2E-3 it would survive a narrower command too.
 
 ```bash
 kubectl set env deployment/pothole-laureate -n laureate \
-  TIER=GOLD \
+  MODE=full \
   ALLOYDB_HOST="$ALLOYDB_HOST" \
   ALLOYDB_USER=postgres \
   ALLOYDB_PASSWORD=buildwithgemini2026 \
@@ -144,7 +144,7 @@ gcloud composer environments run the-laureate-bureau \
 
 <Screenshot src="/quest/pothole-poet/img/streamlit_gold_ode.png" caption="Same neighbourhood, freshly composed ode after the audience submission — quote phrasing visible in the verse." />
 
-🎩 **The room understands what just happened.** That's Gold tier (Part A).
+🎩 **The room understands what just happened.** The interactive loop is live.
 
 ### Demo time
 
@@ -156,13 +156,13 @@ If you're also doing **Q6B** (HTTPS), demo on the `https://<ip>.nip.io/` URL —
 - <strong>Form submits without error but no row in AlloyDB.</strong> The Streamlit code is silently swallowing the exception &mdash; check Pod logs (<code>kubectl logs -n laureate -l app=pothole-laureate --tail=100</code>).
 - <strong>Form 500s with <code>connection refused</code>.</strong> The <code>ALLOYDB_HOST</code> env var didn&rsquo;t make it onto the Pod. Re-check with <code>kubectl describe deployment pothole-laureate -n laureate | grep -A6 Environment</code>.
 - <strong>DAG re-ran but the new ode doesn&rsquo;t mention your quote.</strong> The aggregation may have averaged your quote out. Submit 2&ndash;3 quotes to the same neighbourhood to dominate the dominant-mood / dominant-weather bucket the prompt sees.
-- <strong>Gold form works but the Guardian's broadcast banner disappeared.</strong> Only possible if someone explicitly removed it &mdash; <code>kubectl set env</code> merges, so it can&rsquo;t have happened from Step 2 alone. Check Pod env (<code>kubectl describe deployment pothole-laureate -n laureate | grep -A6 Environment</code>) and re-assert with <code>kubectl set env deployment/pothole-laureate -n laureate BROADCAST_BUCKET=&quot;$(gcloud config get-value project)-broadcast&quot;</code>.
+- <strong>Form works but the Guardian's broadcast banner disappeared.</strong> Only possible if someone explicitly removed it &mdash; <code>kubectl set env</code> merges, so it can&rsquo;t have happened from Step 2 alone. Check Pod env (<code>kubectl describe deployment pothole-laureate -n laureate | grep -A6 Environment</code>) and re-assert with <code>kubectl set env deployment/pothole-laureate -n laureate BROADCAST_BUCKET=&quot;$(gcloud config get-value project)-broadcast&quot;</code>.
 </Gotchas>
 
 <Shipped>
-Gold tier (Part A) achieved. <strong>The Office accepts public pothole submissions, the DAG re-runs, and the next composition cycle weaves audience input into the Laureate's verse.</strong> A judge submits a quote &mdash; three minutes later the room watches the page change. That's the moment.
+The interactive loop is live. <strong>The Office accepts public pothole submissions, the DAG re-runs, and the next composition cycle weaves audience input into the Laureate's verse.</strong> A judge submits a quote &mdash; three minutes later the room watches the page change. That's the moment.
 </Shipped>
 
-🥇 **Gold tier (Part A) achieved.** The Office now accepts public submissions, composes verse from them, and publishes results on the same page.
+**The interactive loop is live.** The Office now accepts public submissions, composes verse from them, and publishes results on the same page.
 
 If you have time, head to **Q6B** for HTTPS polish, or back to Quest 4 (Render) for visual polish.

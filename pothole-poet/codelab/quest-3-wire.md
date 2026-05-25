@@ -2,9 +2,9 @@
 
 <Objective lane="all">
 
-**🎯 What you'll do.** As a team: confirm Lane A's DAG has run successfully (BigQuery has 12 rows in `neighbourhood_odes`), then Lane D runs `kubectl set env deployment/pothole-laureate TIER=SILVER -n laureate`. Pods restart in ~60 seconds. Refresh the Bronze URL — it now serves real Gemini poems from BigQuery instead of bundled CSV. **That's Silver.**
+**🎯 What you'll do.** As a team: confirm Lane A's DAG has run successfully (BigQuery has 12 rows in `neighbourhood_odes`), then Lane D runs `kubectl set env deployment/pothole-laureate MODE=live -n laureate`. Pods restart in ~60 seconds. Refresh the URL — it now serves real Gemini poems from BigQuery instead of bundled CSV. **Foundation complete.**
 
-**🤝 Why it matters.** This is the **convergence moment** — four parallel lanes finally meet. There's no new infrastructure here, just one env var that flips Streamlit's data source. If anyone's lane isn't done, they finish *while the team waits and watches* — Silver isn't earned until BigQuery has poems and Streamlit reads them. Take a breath after this page; the rest of the day is decoration.
+**🤝 Why it matters.** This is the **convergence moment** — four parallel lanes finally meet. There's no new infrastructure here, just one env var that switches Streamlit's data source. If anyone's lane isn't done, they finish *while the team waits and watches* — Foundation isn't complete until BigQuery has poems and Streamlit reads them. Take a breath after this page; the rest of the day is about making the demo yours.
 
 </Objective>
 
@@ -28,9 +28,9 @@ trigger DAG           │                 │
                           │             │
                           ▼             ▼
                        confirm 12    redeploy with
-                          rows         TIER=SILVER
+                          rows         MODE=live
                           │             │
-                          └─── 🥈 ──────┘
+                          └── done ─────┘
 ```
 
 ---
@@ -59,7 +59,7 @@ gcloud composer environments run the-laureate-bureau \
 
 In BigQuery Studio, count the odes and read a few. There should be exactly 12 rows (one per neighbourhood) and each `ode` should be a real three-line poem.
 
-Read at least one poem out loud. If it makes the Airflow Lead smile, you've earned Silver-tier points before even shipping. Then tell the GKE / App Lead: *"Twelve odes are live. Swap your data source."*
+Read at least one poem out loud. Then tell the GKE / App Lead: *"Twelve odes are live. Swap your data source."*
 
 <Cheat title="Show the verification queries">
 
@@ -76,14 +76,14 @@ LIMIT 3;
 
 </Cheat>
 
-## Step 3 — GKE / App Lead: flip `TIER` to SILVER (~1 min)
+## Step 3 — GKE / App Lead: switch `MODE` to live (~1 min)
 
-No rebuild, no redeploy. The container code is unchanged — `app.py` reads `TIER` at runtime and switches data sources. We just patch the Deployment's env var and Kubernetes does a rolling restart.
+No rebuild, no redeploy. The container code is unchanged — `app.py` reads `MODE` at runtime and switches data sources. We just patch the Deployment's env var and Kubernetes does a rolling restart.
 
 <Cheat title="Show the env-flip command">
 
 ```bash
-kubectl set env deployment/pothole-laureate TIER=SILVER -n laureate
+kubectl set env deployment/pothole-laureate MODE=live -n laureate
 
 kubectl rollout status deployment/pothole-laureate -n laureate
 ```
@@ -94,13 +94,13 @@ The same two Pods bounce one at a time (rolling restart, zero downtime). The pub
 
 Open the Gateway IP in your **laptop's** browser tab (the workstation has no browser). The page now shows **real Gemini-composed poems** read live from BigQuery.
 
-<Screenshot src="/quest/pothole-poet/img/streamlit_silver.png" caption="Silver tier live: Streamlit page rendering real Gemini odes per neighbourhood, pulled from BigQuery." />
+<Screenshot src="/quest/pothole-poet/img/streamlit_silver.png" caption="Pipeline live: Streamlit page rendering real Gemini odes per neighbourhood, pulled from BigQuery." />
 
-🥈 **Silver shipped.** The Office is now fully operational.
+**Foundation complete.** The Office is now fully operational.
 
 ## Verify
 
-Confirm the Silver page actually rendered (and isn't a cached Bronze).
+Confirm the live page actually rendered (and isn't cached seed data).
 
 <Cheat title="Show the smoke check">
 
@@ -120,14 +120,14 @@ In your laptop's browser tab, switch neighbourhoods in the dropdown — each sho
 
 <Gotchas>
 - <strong>DAG is green but <code>neighbourhood_odes</code> shows 0 rows.</strong> Check the BigQuery <code>Job History</code> &mdash; the <code>ask_the_laureate</code> task may have skipped due to a stale federation cache. Re-trigger the DAG.
-- <strong>Streamlit still shows the CSV after the env flip.</strong> Confirm the rollout completed (<code>kubectl rollout status deployment/pothole-laureate -n laureate</code>). If pods bounced but the page still shows Bronze, hard-refresh the browser &mdash; Streamlit caches aggressively.
+- <strong>Streamlit still shows the CSV after the env switch.</strong> Confirm the rollout completed (<code>kubectl rollout status deployment/pothole-laureate -n laureate</code>). If pods bounced but the page still shows seed data, hard-refresh the browser &mdash; Streamlit caches aggressively.
 - <strong>Odes appear as raw JSON instead of poetry.</strong> The <code>AI.GENERATE</code> response wasn&rsquo;t unwrapped &mdash; check that <code>02_enrich.sql</code> reads <code>.result</code> off the AI.GENERATE call.
 </Gotchas>
 
 <Shipped>
-Silver tier is shipped. <strong>The pipeline is end-to-end live: AlloyDB &rarr; Airflow &rarr; BigQuery (with Gemini odes) &rarr; Streamlit on GKE Autopilot via Gateway API.</strong> Every neighbourhood has a real composed poem on the page. From here, you decide how the Office <em>looks</em> &mdash; or push for Gold.
+Foundation is complete. <strong>The pipeline is end-to-end live: AlloyDB &rarr; Airflow &rarr; BigQuery (with Gemini odes) &rarr; Streamlit on GKE Autopilot via Gateway API.</strong> Every neighbourhood has a real composed poem on the page. From here, you make it yours.
 </Shipped>
 
-The whole team gathers around the Gateway URL. The Foreman comes to confirm Silver tier.
+The whole team gathers around the Gateway URL. The Foreman comes to confirm the Foundation is live.
 
 ➡️ Next: **Quest 4 — Render the Poems** (sidebar on the left). Now you make it *yours*.

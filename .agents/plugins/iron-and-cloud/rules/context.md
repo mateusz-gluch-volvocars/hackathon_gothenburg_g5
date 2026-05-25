@@ -41,11 +41,10 @@ REGION="europe-west1"
 
 `PROJECT_ID` is human-readable (lowercase + digits + hyphens); `PROJECT_NUMBER` is digits-only (12 digits, e.g. `624958632298`). **They are different identifiers for the same project — mixing them up in Q2D-3 is the single most expensive mistake of the day.**
 
-## Tier convention
+## Two phases
 
-- 🥉 **Bronze** — Streamlit URL live serving bundled CSV. Requires Q1 + Q2D-5 + Q2E-1.
-- 🥈 **Silver** — Full pipeline live with Gemini-composed odes. Bronze + Q2A-3 + Q2B-3 + Q2C-2 + Q3 + Q2E-2.
-- 🥇 **Gold** — Silver + audience-submission loop (Q6A) and/or HTTPS via Cert Manager (Q6B) + alert/snooze loop (Q2E-3).
+- 🔧 **Foundation** — pipeline live end-to-end: AlloyDB → Airflow → BigQuery (Gemini odes) → Streamlit on GKE via Gateway. Requires Q1 + Q2 (all lanes) + Q3.
+- ✨ **Make it yours** — interactive form (Q6A), HTTPS (Q6B), alert/broadcast (Q2E-3), differentiation (Q7). Where each Garage's demo earns its identity.
 
 ## How to be helpful
 
@@ -57,18 +56,18 @@ REGION="europe-west1"
 - **Never propose destructive operations without a real cause.** No `rm -rf`, no `gcloud projects delete`, no `kubectl delete cluster`, no AlloyDB cluster deletion unless the participant explicitly asks for it and confirms.
 - **Stay in `europe-west1`.** If a command lacks a region flag, set it. If they propose a different region by accident, flag it before running.
 
-## After Gold — the open-ended build window (Quest 7)
+## After Foundation + Q6 — the open-ended build window (Quest 7)
 
-Once a Garage has shipped the canonical Gold steps (Q6A form, Q6B HTTPS, Q2E-3 alert + broadcast), they enter **Quest 7 — Differentiate to Win** (codelab page `~/quest/pothole-poet/codelab/quest-7-differentiate.md`). This is the hackathon's open-ended build window — every Garage's pipeline is identical underneath, so Q7 is where each Garage's demo earns its own identity and the prize goes to the most creative implementation.
+Once a Garage has shipped the core steps (Q6A form, Q6B HTTPS, Q2E-3 alert + broadcast), they enter **Quest 7 — Differentiate to Win** (codelab page `~/quest/pothole-poet/codelab/quest-7-differentiate.md`). This is the hackathon's open-ended build window — every Garage's pipeline is identical underneath, so Q7 is where each Garage's demo earns its own identity and the prize goes to the most creative implementation.
 
-When the participant asks *"what else can we build"*, *"how do we differentiate our demo"*, *"we have 30 minutes left, what now"*, *"how do we win the hackathon"*, or anything similar after canonical Gold is done — load the **`gold-build-helper`** skill. It carries:
+When the participant asks *"what else can we build"*, *"how do we differentiate our demo"*, *"we have 30 minutes left, what now"*, *"how do we win the hackathon"*, or anything similar after the core pipeline + polish is done — load the **`gold-build-helper`** skill. It carries:
 
-- A guarded entry check (refuses to start if Bronze / Silver / Q6A / Q6B / Q2E-3 are incomplete)
+- A guarded entry check (refuses to start if Foundation / Q6A / Q6B / Q2E-3 are incomplete)
 - A short inspiration menu (persona deepening, leaderboard, translation, roast mode, mood theming, citizen spotlight) plus a freeform path
 - The list of hard invariants any new direction must preserve
 - A HITL + time-box discipline that fits the 15–60 minute window before demo
 
-Do **not** propose Gold-build directions outside that skill's flow — the invariants check is what keeps a bonus feature from accidentally breaking the canonical Gold demo.
+Do **not** propose build directions outside that skill's flow — the invariants check is what keeps a bonus feature from accidentally breaking the demo.
 
 ## Don'ts
 
@@ -77,4 +76,4 @@ Do **not** propose Gold-build directions outside that skill's flow — the invar
 - Don't use the legacy `--connection_type=CLOUD_SQL` flag for AlloyDB — it rejects AlloyDB instance paths. Use the modern connector framework with `--connector_configuration` and `connector_id: "google-alloydb"`.
 - Don't use the legacy `gke-l7-gxlb` GatewayClass — pinned to `gke-l7-global-external-managed`.
 - Don't try to grant `roles/run.invoker` to `allUsers` via gcloud — the Volvo Cars org policy blocks it. That's a Foreman action from the Console.
-- Don't propose Cert Manager **DNS authorization** for the Gold-tier HTTPS step — DNS auth requires owning the parent zone, impossible on `nip.io`. Use **load balancer authorization** instead.
+- Don't propose Cert Manager **DNS authorization** for the HTTPS step — DNS auth requires owning the parent zone, impossible on `nip.io`. Use **load balancer authorization** instead.

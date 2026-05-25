@@ -1,10 +1,10 @@
 # Build context: pothole-poet/ (this directory), NOT pothole-poet/streamlit/.
 #
-# Why: app.py reads the Bronze-tier seed CSV via
+# Why: app.py reads the seed CSV via
 #   Path(__file__).parent.parent / "seed" / "pothole_reports.csv"
 # which mirrors the source layout where streamlit/ and seed/ are siblings.
-# Building from the parent keeps that layout inside the container, so Bronze
-# renders the bundled CSV without any GCP services attached.
+# Building from the parent keeps that layout inside the container, so seed
+# mode renders the bundled CSV without any GCP services attached.
 
 FROM python:3.12-slim
 

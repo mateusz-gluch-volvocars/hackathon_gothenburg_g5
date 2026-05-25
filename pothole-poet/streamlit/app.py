@@ -1,9 +1,9 @@
 """The Göteborg Pothole Poet Laureate Office — public-facing web app.
 
-Three modes via the TIER environment variable (default BRONZE):
-  - BRONZE : reads ../seed/pothole_reports.csv. No GCP services. Always demoable.
-  - SILVER : reads BigQuery pothole_laureate.neighbourhood_odes (DAG must have run).
-  - GOLD   : SILVER + a sidebar form that writes back to AlloyDB.
+Three modes via the MODE environment variable (default seed):
+  - seed : reads ../seed/pothole_reports.csv. No GCP services. Always demoable.
+  - live : reads BigQuery pothole_laureate.neighbourhood_odes (DAG must have run).
+  - full : live + a sidebar form that writes back to AlloyDB.
 
 TEAM: the bottom of this file is your canvas. The starter app gives you a
 header, metrics, the poem display, and the dataframe. Everything else —
@@ -20,7 +20,7 @@ import streamlit as st
 
 # ─── CONFIG ──────────────────────────────────────────────────────────────────
 
-TIER             = os.environ.get("TIER", "BRONZE")          # BRONZE | SILVER | GOLD
+MODE             = os.environ.get("MODE", "seed")             # seed | live | full
 PROJECT_ID       = os.environ.get("PROJECT_ID", "")
 BROADCAST_BUCKET = os.environ.get("BROADCAST_BUCKET", "")    # Guardian banner; empty = disabled
 BQ_DATASET       = "pothole_laureate"
@@ -62,16 +62,15 @@ st.markdown(
         border-left: 4px solid {PALETTE['copper']};
         white-space: pre-wrap;
       }}
-      .tier-chip {{
+      .mode-chip {{
         display: inline-block;
         padding: 0.25rem 0.75rem;
         border-radius: 999px;
         font-weight: 600;
         font-size: 0.85rem;
+        background: {PALETTE['pine']};
+        color: white;
       }}
-      .tier-bronze {{ background: #cd7f32; color: white; }}
-      .tier-silver {{ background: #c0c0c0; color: {PALETTE['charcoal']}; }}
-      .tier-gold   {{ background: #d4af37; color: {PALETTE['charcoal']}; }}
     </style>
     """,
     unsafe_allow_html=True,
@@ -99,8 +98,8 @@ def read_broadcast() -> str:
 # ─── DATA ────────────────────────────────────────────────────────────────────
 
 @st.cache_data(ttl=60)
-def load_bronze() -> pd.DataFrame:
-    """Bronze: aggregate the bundled CSV locally; placeholder poems."""
+def load_seed() -> pd.DataFrame:
+    """Seed mode: aggregate the bundled CSV locally; placeholder poems."""
     raw = pd.read_csv(CSV_PATH)
     g = raw.groupby("neighbourhood").agg(
         pothole_count=("id", "count"),
@@ -109,7 +108,7 @@ def load_bronze() -> pd.DataFrame:
         centroid_lng=("longitude", "mean"),
     ).reset_index()
     g["ode"] = g["neighbourhood"].apply(
-        lambda n: f"(Bronze placeholder)\nCitizens of {n} await composition.\nThe Laureate arrives in Silver."
+        lambda n: f"(Placeholder)\nCitizens of {n} await composition.\nThe Laureate composes once the pipeline is live."
     )
     g["dominant_weather"] = "—"
     g["dominant_mood"]    = "—"
@@ -118,8 +117,8 @@ def load_bronze() -> pd.DataFrame:
 
 
 @st.cache_data(ttl=60)
-def load_silver() -> pd.DataFrame:
-    """Silver/Gold: read enriched table from BigQuery."""
+def load_live() -> pd.DataFrame:
+    """Live/full mode: read enriched table from BigQuery."""
     from google.cloud import bigquery
     client = bigquery.Client(project=PROJECT_ID)
     sql = f"""
@@ -134,7 +133,7 @@ def load_silver() -> pd.DataFrame:
 
 
 def load_data() -> pd.DataFrame:
-    return load_bronze() if TIER == "BRONZE" else load_silver()
+    return load_seed() if MODE == "seed" else load_live()
 
 
 # ─── HEADER ─────────────────────────────────────────────────────────────────
@@ -151,11 +150,11 @@ st.caption("*Official commissioned verse on the state of the city's roads, est. 
 
 with st.sidebar:
     st.markdown(
-        f'**Tier:** <span class="tier-chip tier-{TIER.lower()}">{TIER}</span>',
+        f'**Mode:** <span class="mode-chip">{MODE}</span>',
         unsafe_allow_html=True,
     )
 
-    if TIER == "GOLD":
+    if MODE == "full":
         from alloydb_writer import insert_pothole_report
         st.markdown("---")
         st.subheader("🚧 Report a pothole")
@@ -212,7 +211,7 @@ m1, m2 = st.columns(2)
 m1.metric(f"Reports in {nb}", int(row["pothole_count"]))
 m2.metric("Average severity", f"{row['avg_severity']:.2f} / 5")
 
-if TIER != "BRONZE" and pd.notna(row.get("composed_at", None)):
+if MODE != "seed" and pd.notna(row.get("composed_at", None)):
     st.caption(
         f"Composed at: {row['composed_at']} · "
         f"Dominant weather: {row.get('dominant_weather', '—')} · "

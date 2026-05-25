@@ -4,7 +4,7 @@
 
 **🎯 What you'll do.** Trigger the `compose_the_odes` DAG manually from the Airflow UI (or one gcloud command) and watch both tasks finish (~30 sec for federation, ~1-2 min for the AI enrichment call). Verify BigQuery now has 12 rows in `pothole_laureate.neighbourhood_odes` — one Gemini-composed three-line ode per Göteborg neighbourhood.
 
-**🤝 Why it matters.** This is the moment the **whole pipeline lights up for the first time**. The Data Engineer's federation finally gets used, their table finally gets read, Gemini finally gets called, and BigQuery finally has poems. After this page, the App Dev / Guardian can flip Streamlit's `TIER` env to `SILVER` and the audience sees real AI verse instead of placeholder text. **You are the persona that earns Silver.**
+**🤝 Why it matters.** This is the moment the **whole pipeline lights up for the first time**. The Data Engineer's federation finally gets used, their table finally gets read, Gemini finally gets called, and BigQuery finally has poems. After this page, the App Dev / Guardian can switch Streamlit's `MODE` to `live` and the audience sees real AI verse instead of placeholder text. **You are the persona that completes the Foundation.**
 
 </Objective>
 
@@ -166,7 +166,7 @@ This pulls the recent execution logs, including any errors from the BigQuery job
 </Gotchas>
 
 <Shipped>
-The orchestration layer is fully live. <strong>The <code>compose_the_odes</code> DAG ran green end-to-end, and 12 Gemini-composed odes now sit in <code>pothole_laureate.neighbourhood_odes</code>.</strong> The App Dev / Guardian can now flip Streamlit to Silver tier.
+The orchestration layer is fully live. <strong>The <code>compose_the_odes</code> DAG ran green end-to-end, and 12 Gemini-composed odes now sit in <code>pothole_laureate.neighbourhood_odes</code>.</strong> The App Dev / Guardian can now switch Streamlit to live pipeline data.
 </Shipped>
 
 ⚙️ **Lane A done.** Tell the App Dev / Guardian:

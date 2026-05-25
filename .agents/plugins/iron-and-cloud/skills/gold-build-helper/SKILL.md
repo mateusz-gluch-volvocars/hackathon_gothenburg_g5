@@ -1,30 +1,29 @@
 ---
 name: gold-build-helper
-description: Drives Quest 7 (Differentiate to Win) — the open-ended build window after the team has shipped canonical Gold (Q6A form, Q6B HTTPS, Q2E-3 alert + broadcast). Helps the team pick a direction (small inspiration menu or freeform), preserves the pipeline's hard invariants, walks through agentic implementation with HITL on every write, time-boxes against the demo train clock, and verifies the end state. Use when the participant lands on Q7, asks to differentiate their demo, asks how to win the hackathon, says they want to build something beyond canonical Gold, or asks what to do with their remaining time before T+3:00.
+description: Drives Quest 7 (Differentiate to Win) — the open-ended build window after the team has shipped the Foundation pipeline + Make it yours polish (Q6A form, Q6B HTTPS, Q2E-3 alert + broadcast). Helps the team pick a direction (small inspiration menu or freeform), preserves the pipeline's hard invariants, walks through agentic implementation with HITL on every write, time-boxes against the demo train clock, and verifies the end state. Use when the participant lands on Q7, asks to differentiate their demo, asks how to win the hackathon, says they want to build something beyond the core pipeline, or asks what to do with their remaining time before T+3:00.
 ---
 
 # Gold build helper
 
 **Codelab counterpart:** Q7 — `~/quest/pothole-poet/codelab/quest-7-differentiate.md` (the participant-facing version of this skill — same menu, same invariants, narrative tone).
 
-This skill is the agentic side of **Quest 7 — Differentiate to Win**. Every Garage builds the same pipeline today; every Garage's canonical Gold demo (form + HTTPS + alert) follows the same shape. The hackathon prize goes to the Garage that uses this skill to push past the tutorial. Sixteen Garages, sixteen different demos — your job is to make this Garage's the one the judges remember.
+This skill is the agentic side of **Quest 7 — Differentiate to Win**. Every Garage builds the same pipeline today; every Garage's core demo (form + HTTPS + alert) follows the same shape. The hackathon prize goes to the Garage that uses this skill to push past the tutorial. Twenty-one Garages, twenty-one different demos — your job is to make this Garage's the one the judges remember.
 
 ## When to use this skill
 
 Trigger this skill ONLY when the participant has already shipped:
 
-1. **Bronze** — public URL serving the Office page (Q1 → Q2D-5).
-2. **Silver** — DAG running, BigQuery-composed odes live in the page (Q3 done).
-3. **Q6A** — Submit-a-Pothole form writing back to AlloyDB.
-4. **Q6B** — HTTPS via Cert Manager on `<ip>.nip.io`.
-5. **Q2E-3** — Guardian alert + broadcast banner.
+1. **Foundation** — public URL serving live Gemini-composed odes (Q1 → Q3 complete).
+2. **Q6A** — Submit-a-Pothole form writing back to AlloyDB.
+3. **Q6B** — HTTPS via Cert Manager on `<ip>.nip.io`.
+4. **Q2E-3** — Guardian alert + broadcast banner.
 
-If any of these is incomplete, do NOT start a Gold-build direction — point them at the missing codelab page instead. A Garage that ships a fancy capability on top of a half-broken Silver tier won't survive demo questions.
+If any of these is incomplete, do NOT start a differentiation direction — point them at the missing codelab page instead. A Garage that ships a fancy capability on top of an incomplete pipeline won't survive demo questions.
 
 If the team is unsure where they are, run this discovery (read-only, no permission needed):
 
 ```bash
-# Bronze + Silver: page reachable + odes table populated
+# Foundation: page reachable + odes table populated
 curl -s "http://$(kubectl get gateway pothole-gateway -n laureate -o jsonpath='{.status.addresses[0].value}')/_stcore/health"
 PROJECT_ID="$(gcloud config get-value project)"
 bq query --use_legacy_sql=false "SELECT COUNT(*) AS odes FROM \`$PROJECT_ID.pothole_laureate.neighbourhood_odes\`"
@@ -49,7 +48,7 @@ These are the load-bearing pieces of the pipeline. Any direction must leave them
 - **12 neighbourhoods.** Every Streamlit view must continue to show all 12 — or explicitly filter from the full 12 in a way the demo can revert. Hardcoding to fewer than 12 silently is a regression.
 - **Gemini model + endpoint.** `gemini-3-flash-preview` on the global endpoint (`locations/global`). Never propose a regional endpoint or an older model.
 - **GKE shape.** Pod runs in namespace `laureate` as ServiceAccount `pothole-laureate`. The WIF principal binding for BigQuery dataViewer + jobUser stays in place. The Gateway + HTTPRoute + HealthCheckPolicy stay attached.
-- **TIER env contract.** `TIER=GOLD` already drives Q6A's sidebar form rendering. A new direction adding UI should respect the same env-flag gating pattern rather than ripping it out.
+- **MODE env contract.** `MODE=full` already drives Q6A's sidebar form rendering. A new direction adding UI should respect the same env-flag gating pattern rather than ripping it out.
 - **`BROADCAST_BUCKET` env.** Q2E-3 wired this and the Streamlit app reads it for the Guardian banner. Don't clobber it in any new `kubectl set env` call — list it explicitly when re-running `set env`.
 - **No extra Google Cloud APIs.** The Garage project has a curated API list (AlloyDB, BigQuery, Composer, Vertex AI, Cloud Build, Cloud Run, GKE, etc.). Don't propose a direction that needs a new API (Cloud Text-to-Speech, Cloud Translation, Cloud Vision, Maps Platform, etc.) — it adds a Foreman-touch step and time the team doesn't have. Stick to capabilities reachable via what's already enabled.
 - **Don't pre-clone or re-clone.** The team is in `~/quest/`. Edit in place.
@@ -97,8 +96,8 @@ After the build, run a sanity sweep before declaring done:
 GATEWAY_IP=$(kubectl get gateway pothole-gateway -n laureate -o jsonpath='{.status.addresses[0].value}')
 curl -fs "http://$GATEWAY_IP/_stcore/health" && echo "page healthy"
 
-# Pod env still has Gold + broadcast + AlloyDB
-kubectl describe deployment pothole-laureate -n laureate | grep -E "TIER|BROADCAST_BUCKET|ALLOYDB_HOST"
+# Pod env still has full mode + broadcast + AlloyDB
+kubectl describe deployment pothole-laureate -n laureate | grep -E "MODE|BROADCAST_BUCKET|ALLOYDB_HOST"
 
 # BQ tables still queryable
 PROJECT_ID="$(gcloud config get-value project)"
@@ -231,7 +230,7 @@ If their idea is genuinely outside what the pipeline + enabled APIs support: tel
 ## Common pitfalls
 
 - **Container image cache.** A `kubectl rollout restart` only re-pulls the image if the digest changed. After `gcloud builds submit --tag …:latest`, the digest IS new even though the tag is the same — so the rollout does pick up the change. But if you used a pinned tag (e.g. `:2026-05-19`), bump it before re-deploying.
-- **`kubectl set env` and `BROADCAST_BUCKET`.** If a direction adds new env vars and you re-issue `set env`, list `BROADCAST_BUCKET` and `TIER` and `ALLOYDB_*` explicitly. `set env` merges, but verifying with `kubectl describe deployment ... | grep -A6 Environment` after every env change is cheap insurance.
+- **`kubectl set env` and `BROADCAST_BUCKET`.** If a direction adds new env vars and you re-issue `set env`, list `BROADCAST_BUCKET` and `MODE` and `ALLOYDB_*` explicitly. `set env` merges, but verifying with `kubectl describe deployment ... | grep -A6 Environment` after every env change is cheap insurance.
 - **BigQuery costs.** `AI.GENERATE` calls in the page-load path cost Gemini tokens per ode per render. Wrap them in `@st.cache_data` or move them into a DAG step so the demo doesn't burn through quota.
 - **Streamlit re-runs on every interaction.** If a direction adds a "click to generate" button, gate the generation behind the button — not at top of script — or every selectbox change triggers a fresh Gemini call.
 - **Demo runs out before build.** If you're past 70% of the time budget and < 50% complete, stop and ship a degraded version. The judge prefers a working smaller thing over a half-finished bigger thing.

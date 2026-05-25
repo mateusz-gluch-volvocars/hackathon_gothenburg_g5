@@ -18,12 +18,9 @@ This is the only page in Quest 1 where you're not setting something up — you'r
 
 Every cloud resource lives somewhere on a network. In Google Cloud, that "somewhere" is a **VPC** — a Virtual Private Cloud — which is your project's own private slice of the internet. Inside the VPC you have **subnets** (one per region), private IP ranges, firewall rules, and routes.
 
-Two things make Volvo Cars VPCs slightly different from the textbook public-cloud VPC:
+One thing worth knowing about how Volvo Cars uses VPCs: **public IPs are not given out without cause** and are handled with exceptions. For today's hackathon, all your infrastructure runs on private IPs inside the VPC. That's why we use **Cloud Workstations** to reach private infrastructure — your Workstation is already inside the VPC, so it has direct access to things like AlloyDB's private IP.
 
-1. **No external IPs on VMs.** A Volvo Cars org policy (`compute.vmExternalIpAccess`) blocks giving any VM a public IP address. Everything is private by default.
-2. **Private Google Access is on.** Without external IPs, how do private VMs reach `*.googleapis.com` (Artifact Registry, BigQuery, the OTLP endpoint, Cloud Build)? Private Google Access — a feature that routes Google-API traffic over Google's private backbone. Auto-enabled on the subnet you're about to look at.
-
-Those policies show up as "weird errors" later in the day if you forget about them. Trying to SSH directly into a GKE node from your laptop won't work (no public IP). The fix is always the same: use a tool that's already inside the VPC. Today, that tool is your Cloud Workstation.
+**Private Google Access** is enabled on the subnet, which means private resources can still reach `*.googleapis.com` (Artifact Registry, BigQuery, Cloud Build, etc.) over Google's private backbone — no public IP needed.
 
 ## 2. What it looks like when done
 

@@ -8,7 +8,7 @@
 
 </Objective>
 
-> Gold tier, Guardian piece · ~15 min · uses `gcloud` throughout (no Console clicking) so the API surface is visible — what tooling could automate next.
+> Guardian lane · ~15 min · uses `gcloud` throughout (no Console clicking) so the API surface is visible — what tooling could automate next.
 
 <QuickPath>
 
@@ -286,7 +286,7 @@ gcloud storage cat "gs://${PROJECT_ID}-broadcast/broadcast.txt"
 </Gotchas>
 
 <Shipped>
-Gold tier, Guardian piece. <strong>Your Garage now has a complete Flow-Guardian loop.</strong> Alerts fire when things break; you claim them via snooze; you broadcast known issues to teammates and users; the system auto-recovers and you clear the broadcast. The same on-call rhythm production teams run every day, in 15 minutes of `gcloud` commands.
+Guardian piece. <strong>Your Garage now has a complete Flow-Guardian loop.</strong> Alerts fire when things break; you claim them via snooze; you broadcast known issues to teammates and users; the system auto-recovers and you clear the broadcast. The same on-call rhythm production teams run every day, in 15 minutes of `gcloud` commands.
 </Shipped>
 
-🛡 Hand the keyboard to your App Dev side &mdash; Q3 (Silver TIER flip) and Q4/Q5 (feature ships) are next. The Guardian rhythm you just built is what watches the team through those changes.
+🛡 Hand the keyboard to your App Dev side &mdash; Q3 (MODE switch to live) and Q4/Q5 (feature ships) are next. The Guardian rhythm you just built is what watches the team through those changes.

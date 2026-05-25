@@ -124,7 +124,7 @@ kubectl logs -n laureate -l app=pothole-laureate --tail=10
 </Gotchas>
 
 <Shipped>
-The workload is live. <strong>Two Streamlit Pods are running in the cluster, holding the Bronze tier of the Office page, ready to serve traffic.</strong> Reachable from inside the cluster via DNS <code>pothole-laureate.laureate.svc.cluster.local:8080</code>. Not yet reachable from the internet &mdash; that&rsquo;s the next page.
+The workload is live. <strong>Two Streamlit Pods are running in the cluster, serving the Office page with seed data, ready to take traffic.</strong> Reachable from inside the cluster via DNS <code>pothole-laureate.laureate.svc.cluster.local:8080</code>. Not yet reachable from the internet &mdash; that&rsquo;s the next page.
 </Shipped>
 
 ☸ **Q2D-4 done.** Pods running, but the world can't see them yet.

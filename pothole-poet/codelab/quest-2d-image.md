@@ -13,7 +13,7 @@
 <QuickPath>
 
 ```bash
-# Build context is pothole-poet/ (NOT pothole-poet/streamlit/) so the Bronze
+# Build context is pothole-poet/ (NOT pothole-poet/streamlit/) so the
 # seed CSV is alongside the Streamlit app in the image — see the Concept block
 # below for the path mechanic.
 cd ~/quest/pothole-poet
@@ -56,9 +56,9 @@ gcloud builds submit \
 
 <Concept title="Why is the Dockerfile in pothole-poet/ and not in streamlit/?">
 
-The Bronze tier serves the bundled `seed/pothole_reports.csv` so the page works without AlloyDB or BigQuery. `app.py` reads it via `Path(__file__).parent.parent / "seed" / "pothole_reports.csv"` — i.e. a sibling of the `streamlit/` directory.
+Seed mode serves the bundled `seed/pothole_reports.csv` so the page works without AlloyDB or BigQuery. `app.py` reads it via `Path(__file__).parent.parent / "seed" / "pothole_reports.csv"` — i.e. a sibling of the `streamlit/` directory.
 
-Docker can only `COPY` files that are inside the build context, so building from `streamlit/` alone would leave the seed CSV out and Bronze would crash on import with `FileNotFoundError: '/seed/pothole_reports.csv'`. Building from the `pothole-poet/` parent keeps `streamlit/` and `seed/` as siblings inside the image — same layout as on disk, no path math in `app.py`.
+Docker can only `COPY` files that are inside the build context, so building from `streamlit/` alone would leave the seed CSV out and the app would crash on import with `FileNotFoundError: '/seed/pothole_reports.csv'`. Building from the `pothole-poet/` parent keeps `streamlit/` and `seed/` as siblings inside the image — same layout as on disk, no path math in `app.py`.
 
 </Concept>
 

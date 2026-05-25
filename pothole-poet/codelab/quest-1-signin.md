@@ -6,7 +6,7 @@
 
 **🤝 Why it matters.** GCP Console is your second window all day. Before you can do anything useful, you need to be signed in as the right person, looking at the right project. This page is two clicks and a glance — Q1-2 is where you actually start learning the navigation muscle memory.
 
-**🏆 How the day is judged.** Up to 30 Garages are running this same Quest in parallel. Everyone's pipeline will look identical by Silver tier. **The prize goes to the Garage whose Gold-tier demo is most creative and most differentiated from the rest** — and the leverage for that comes from **Antigravity CLI** (`agy`), which you'll meet in Q1-4. Start thinking about what your team's "voice" might be from the start of the day, not just at the end.
+**🏆 How the day is judged.** Up to 30 Garages are running this same Quest in parallel. Everyone's Foundation pipeline will look identical. **The prize goes to the Garage whose demo is most creative and most differentiated from the rest** — and the leverage for that comes from **Antigravity CLI** (`agy`), which you'll meet in Q1-4. Start thinking about what your team's "voice" might be from the start of the day, not just at the end.
 
 </Objective>
 

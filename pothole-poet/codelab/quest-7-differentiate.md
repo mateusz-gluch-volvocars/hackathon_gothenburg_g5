@@ -2,13 +2,13 @@
 
 <Objective lane="all">
 
-**🎯 What you'll do.** Use **Antigravity CLI** to push your Garage's demo past the canonical Gold steps. Pick one direction (persona deepening, leaderboard, translation, roast mode, mood theming, citizen spotlight) or describe a freeform feature; agentic implementation does the heavy lifting with HITL approval on every write. ~15–45 minutes depending on the direction.
+**🎯 What you'll do.** Use **Antigravity CLI** to push your Garage's demo past the core pipeline. Pick one direction (persona deepening, leaderboard, translation, roast mode, mood theming, citizen spotlight) or describe a freeform feature; agentic implementation does the heavy lifting with HITL approval on every write. ~15–45 minutes depending on the direction.
 
-**🤝 Why it matters.** Every Garage that reaches this page has a pipeline that looks identical underneath — AlloyDB → Airflow → BigQuery → GKE — and a canonical Gold demo (form + HTTPS + alert) of the same shape. **The hackathon prize goes to the most creative, most differentiated demo on the stage.** This is the Quest that wins it.
+**🤝 Why it matters.** Every Garage that reaches this page has a pipeline that looks identical underneath — AlloyDB → Airflow → BigQuery → GKE — and a demo (form + HTTPS + alert) of the same shape. **The hackathon prize goes to the most creative, most differentiated demo on the stage.** This is the Quest that wins it.
 
 </Objective>
 
-> All hands. ~15–45 min depending on direction picked. Requires Bronze + Silver + Q6A + Q6B + Q2E-3 already shipped.
+> All hands. ~15–45 min depending on direction picked. Requires Foundation + Q6A + Q6B + Q2E-3 already shipped.
 
 <QuickPath>
 
@@ -19,13 +19,13 @@ agy
 
 Then ask:
 
-> *"We've finished canonical Gold. We have ~30 minutes before demo. What can we build to make our demo stand out?"*
+> *"We've finished the core pipeline + polish. We have ~30 minutes before demo. What can we build to make our demo stand out?"*
 
-Antigravity CLI will check your tier state, ask what your team is good at + what kind of "wow" you want, and walk you through one direction with HITL on every write. The `gold-build-helper` skill in `~/quest/.agents/plugins/iron-and-cloud/skills/` is what powers the flow — same pattern as the other lane skills, just open-ended at the end.
+Antigravity CLI will check your pipeline state, ask what your team is good at + what kind of "wow" you want, and walk you through one direction with HITL on every write. The `gold-build-helper` skill in `~/quest/.agents/plugins/iron-and-cloud/skills/` is what powers the flow — same pattern as the other lane skills, just open-ended at the end.
 
 </QuickPath>
 
-You've cleared the canonical Gold path: form (Q6A) + HTTPS (Q6B) + alert/broadcast (Q2E-3). Your demo will work. **But every other Garage's demo will work too**, with the same shape — and the demo train is what the judges remember. Identical pipelines tell identical stories; the Garage that breaks away with something the judges haven't seen the previous fifteen times is the one that takes the prize.
+You've shipped the core pipeline + polish: form (Q6A) + HTTPS (Q6B) + alert/broadcast (Q2E-3). Your demo will work. **But every other Garage's demo will work too**, with the same shape — and the demo train is what the judges remember. Identical pipelines tell identical stories; the Garage that breaks away with something the judges haven't seen the previous fifteen times is the one that takes the prize.
 
 ---
 
@@ -67,7 +67,7 @@ These are the load-bearing pieces of the pipeline. The `gold-build-helper` skill
 - **12 neighbourhoods.** Any new view must keep showing all 12 (or explicitly filter from the full 12 in a way the demo can revert).
 - **Gemini 3 global endpoint.** Never accept a proposal that switches to a regional Gemini endpoint or an older model.
 - **GKE shape.** Pod runs in namespace `laureate` as ServiceAccount `pothole-laureate`. Gateway + HTTPRoute + HealthCheckPolicy stay attached.
-- **`TIER`, `BROADCAST_BUCKET`, `ALLOYDB_*` env vars.** `kubectl set env` merges, but if Antigravity CLI proposes a fresh `set env` call, the existing env vars must be listed alongside the new ones.
+- **`MODE`, `BROADCAST_BUCKET`, `ALLOYDB_*` env vars.** `kubectl set env` merges, but if Antigravity CLI proposes a fresh `set env` call, the existing env vars must be listed alongside the new ones.
 - **No new GCP APIs.** Curated list is already enabled. Don't approve a direction that needs Cloud TTS, Cloud Translation, Vision, Maps, etc. — it adds Foreman-touch steps you don't have time for.
 
 If Antigravity CLI proposes something that would break one of these, it'll flag it before any write. Read the warning before pressing `y`.

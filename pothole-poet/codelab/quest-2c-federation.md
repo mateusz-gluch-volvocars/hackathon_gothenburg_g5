@@ -162,7 +162,7 @@ bq query --use_legacy_sql=false \
 </Gotchas>
 
 <Shipped>
-The analytical layer is wired. <strong>BigQuery dataset <code>pothole_laureate</code> is live, the <code>alloydb_archive</code> federation connection returns 5000 rows from AlloyDB, and the <code>gemini</code> connection is bound for <code>AI.GENERATE</code>.</strong> The Pipeline-author can now run the DAG; the App Dev / Guardian can read from this dataset for Silver tier.
+The analytical layer is wired. <strong>BigQuery dataset <code>pothole_laureate</code> is live, the <code>alloydb_archive</code> federation connection returns 5000 rows from AlloyDB, and the <code>gemini</code> connection is bound for <code>AI.GENERATE</code>.</strong> The Pipeline-author can now run the DAG; the App Dev / Guardian can read from this dataset once the pipeline is live.
 </Shipped>
 
 📊 **Q2C-2 done.** Federation is live.
