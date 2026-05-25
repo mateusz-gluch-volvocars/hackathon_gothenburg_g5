@@ -4,7 +4,7 @@
 
 **🎯 What you'll do.** Wire the Streamlit Pod to ship **OpenTelemetry traces** straight to Google's new unified OTLP endpoint at `telemetry.googleapis.com`. Add three custom spans (`read_broadcast`, `load_live`, `load_seed`) and watch the BigQuery client's spans appear as their children. ~20 min, mostly waiting for the rebuild.
 
-**🤝 Why it matters.** Uptime checks tell you *if* the door is open. Traces tell you *what users do once they're inside* — which queries are slow, which dependencies fail, where time goes. Once your spans are landing in Cloud Trace your team has a single shared surface to answer "why was the page slow at 2:14pm?" without anyone having to guess.
+**🤝 Why it matters.** Uptime checks tell you *if* the door is open. Traces tell you *what users do once they're inside*, which queries are slow, which dependencies fail, where time goes. Once your spans are landing in Cloud Trace your team has a single shared surface to answer "why was the page slow at 2:14pm?" without anyone having to guess.
 
 </Objective>
 
@@ -53,7 +53,7 @@ gcloud trace traces list --limit=5 --format="value(traceId)"
 
 </QuickPath>
 
-Google rolled out a unified OpenTelemetry Protocol (OTLP) endpoint at `telemetry.googleapis.com` — one URL accepts traces, metrics, and logs in vendor-neutral OTLP format. Before this, each signal had its own Google API; now your app speaks the same protocol it would to any other backend, and Google handles the rest.
+Google rolled out a unified OpenTelemetry Protocol (OTLP) endpoint at `telemetry.googleapis.com`. one URL accepts traces, metrics, and logs in vendor-neutral OTLP format. Before this, each signal had its own Google API; now your app speaks the same protocol it would to any other backend, and Google handles the rest.
 
 For your Streamlit app this is **two changes**: a `setup_otel()` initialisation block at the top of `app.py`, and `with tracer.start_as_current_span(...)` wrappers around three functions. The BigQuery and Cloud Storage clients auto-emit their own spans that attach as children of yours.
 
@@ -63,7 +63,7 @@ For your Streamlit app this is **two changes**: a `setup_otel()` initialisation 
 
 OpenTelemetry export to `telemetry.googleapis.com` needs two project-level IAM roles on the Pod's identity: `roles/cloudtrace.agent` (lets the Pod write spans) and `roles/monitoring.metricWriter` (lets it write metrics).
 
-These can't live in the per-Garage Terraform module — the GKE Workload Identity Pool `<PROJECT_ID>.svc.id.goog` is only created when your Infra-Admin runs `gcloud container clusters create-auto` in Q2D-1. IAM rejects bindings to pool members that don't exist yet, so the Guardian binds them here, after the cluster is up.
+These can't live in the per-Garage Terraform module, the GKE Workload Identity Pool `<PROJECT_ID>.svc.id.goog` is only created when your Infra-Admin runs `gcloud container clusters create-auto` in Q2D-1. IAM rejects bindings to pool members that don't exist yet, so the Guardian binds them here, after the cluster is up.
 
 ```bash
 PRINCIPAL="principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/laureate/sa/pothole-laureate"
@@ -81,9 +81,9 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
 
 ✅ **Expect** (twice): `Updated IAM policy for project [...]` followed by the policy bindings showing your `principal://...` member with the new role.
 
-Same principal URI format as Q2D-3 — `PROJECT_NUMBER` in the `projects/` segment, `PROJECT_ID` in the `.svc.id.goog` pool name. If either is empty, re-export them from Q2D-1.
+Same principal URI format as Q2D-3. `PROJECT_NUMBER` in the `projects/` segment, `PROJECT_ID` in the `.svc.id.goog` pool name. If either is empty, re-export them from Q2D-1.
 
-> IAM propagation takes 2–7 minutes per Google's WIF docs. The OTel exporter retries silently — first traces may appear ~7 min after the rollout, not the ~60 s shown in Step 6.
+> IAM propagation takes 2–7 minutes per Google's WIF docs. The OTel exporter retries silently; first traces may appear ~7 min after the rollout, not the ~60 s shown in Step 6.
 
 ### Step 1 — Paste the `setup_otel()` block at the top of `app.py`
 
@@ -148,7 +148,7 @@ The shape: **load credentials → wrap them in a gRPC auth plugin → build a Tr
 
 <Concept title="Why in-process and not a sidecar collector?">
 
-Production deployments at scale often run a **Google-built OpenTelemetry Collector** (sidecar or DaemonSet) that handles auth, batching, and sampling — the app just speaks OTLP to localhost. For a hackathon Pod doing a few requests per minute, the in-process exporter is simpler: no extra YAML, no second container, all the auth + endpoint logic lives in one Python file you can read end-to-end. **In production you'd graduate to a collector** (or to the new managed-OTel-for-GKE preview), but the API surface in your app stays identical.
+Production deployments at scale often run a **Google-built OpenTelemetry Collector** (sidecar or DaemonSet) that handles auth, batching, and sampling, the app just speaks OTLP to localhost. For a hackathon Pod doing a few requests per minute, the in-process exporter is simpler: no extra YAML, no second container, all the auth + endpoint logic lives in one Python file you can read end-to-end. **In production you'd graduate to a collector** (or to the new managed-OTel-for-GKE preview), but the API surface in your app stays identical.
 
 </Concept>
 
@@ -170,7 +170,7 @@ def load_seed(...):
         # ... existing CSV-load body ...
 ```
 
-✅ **Expect:** No syntax errors. The BigQuery and Cloud Storage clients auto-emit their own spans — they'll attach as children of yours.
+✅ **Expect:** No syntax errors. The BigQuery and Cloud Storage clients auto-emit their own spans; they'll attach as children of yours.
 
 ### Step 3 — Flip on `OTEL_ENABLED` in the Deployment
 
@@ -201,7 +201,7 @@ grep -A1 OTEL_ENABLED k8s/deployment.yaml
 
 ### Step 4 — Build the new image and roll it out
 
-Build from the `pothole-poet/` parent directory (where the Dockerfile lives — see Q2D-2 Concept for why). The previous Step 3 sed ran inside `streamlit/`; `cd` up one level for the build:
+Build from the `pothole-poet/` parent directory (where the Dockerfile lives, see Q2D-2 Concept for why). The previous Step 3 sed ran inside `streamlit/`; `cd` up one level for the build:
 
 ```bash
 cd ~/quest/pothole-poet
@@ -231,7 +231,7 @@ Cloud Monitoring → Dashboards → Create. Add three charts:
 - `cloudtrace.googleapis.com/billing/spans_ingested` (Cloud Trace span count)
 - `kubernetes.io/container/cpu/core_usage_time` filtered to namespace `laureate` (Pod CPU)
 
-Save as `Pothole Laureate · Guardian view`. Keep it open in a tab during Q3+ — this becomes your "is anything weird happening right now?" surface.
+Save as `Pothole Laureate · Guardian view`. Keep it open in a tab during Q3+. this becomes your "is anything weird happening right now?" surface.
 
 ### Step 6 — Generate traffic and verify spans land
 
@@ -266,12 +266,12 @@ That's the moment you can answer *"why is the page slow today?"* without guessin
 - <strong>No traces appear, ever.</strong> Most likely: <code>cloudtrace.googleapis.com</code> isn&rsquo;t enabled on the project. <code>telemetry.googleapis.com</code> silently discards trace data when Cloud Trace API is disabled. Check: <code>gcloud services list --enabled | grep cloudtrace</code>. Fix: <code>gcloud services enable cloudtrace.googleapis.com</code>. (Per-Garage Terraform pre-enables it; flag your Garage owner if it&rsquo;s missing.)
 - <strong>"Permission denied" in Pod logs from OTel exporter.</strong> The Pod&rsquo;s WIF principal needs <code>roles/cloudtrace.agent</code> and <code>roles/monitoring.metricWriter</code>. Both are bound in Step 0 above; if the Pod logs show <code>permission denied</code>, re-run Step 0 and wait ~7 min for IAM propagation (per Google&rsquo;s WIF docs). Verify: <code>gcloud projects get-iam-policy $PROJECT_ID --flatten='bindings[].members' --filter='bindings.members:principal*pothole-laureate AND bindings.role:cloudtrace.agent' --format='value(bindings.role)'</code>.
 - <strong>Streamlit reloader keeps recreating the TracerProvider.</strong> Streamlit&rsquo;s file-watch reloader can re-import the app on file changes, which calls <code>setup_otel()</code> again. The OTel SDK warns about double initialisation but keeps working. Safe to ignore in dev.
-- <strong>Custom spans show up but BigQuery spans don&rsquo;t.</strong> The <code>google-cloud-bigquery</code> Python client has OpenTelemetry instrumentation built in &mdash; it auto-emits spans when a TracerProvider is configured before the client is constructed. There is <strong>no separate</strong> <code>opentelemetry-instrumentation-google-cloud-bigquery</code> package on PyPI; don&rsquo;t add one. If BQ child spans are missing, confirm <code>setup_otel()</code> runs before <code>bigquery.Client()</code> is first imported/called. (In <code>app.py</code> the setup block is at the top, above <code>load_live</code>, so this works by construction.)
-- <strong>gRPC connection errors in Pod logs.</strong> The Pod&rsquo;s outbound gRPC needs to reach <code>telemetry.googleapis.com:443</code>. GKE Autopilot reaches it via Private Google Access (auto-enabled on private-node subnets) &mdash; no Cloud NAT required. If you see connection refused, confirm <code>cloudtrace.googleapis.com</code> is enabled on the project (per-Garage Terraform pre-enables it).
+- <strong>Custom spans show up but BigQuery spans don&rsquo;t.</strong> The <code>google-cloud-bigquery</code> Python client has OpenTelemetry instrumentation built in; it auto-emits spans when a TracerProvider is configured before the client is constructed. There is <strong>no separate</strong> <code>opentelemetry-instrumentation-google-cloud-bigquery</code> package on PyPI; don&rsquo;t add one. If BQ child spans are missing, confirm <code>setup_otel()</code> runs before <code>bigquery.Client()</code> is first imported/called. (In <code>app.py</code> the setup block is at the top, above <code>load_live</code>, so this works by construction.)
+- <strong>gRPC connection errors in Pod logs.</strong> The Pod&rsquo;s outbound gRPC needs to reach <code>telemetry.googleapis.com:443</code>. GKE Autopilot reaches it via Private Google Access (auto-enabled on private-node subnets); no Cloud NAT required. If you see connection refused, confirm <code>cloudtrace.googleapis.com</code> is enabled on the project (per-Garage Terraform pre-enables it).
 </Gotchas>
 
 <Shipped>
 Guardian piece. <strong>Your Streamlit Pod is observable.</strong> Every page render produces a trace; every BigQuery query you make from the app is a child span; every Cloud Storage broadcast read is a child span. Your team's dashboards now have a real signal feed.
 </Shipped>
 
-🛡 Move to **Q2E-3** — set up the alert + broadcast + snooze loop, the full Guardian-of-the-day rhythm.
+🛡 Move to **Q2E-3**. set up the alert + broadcast + snooze loop, the full Guardian-of-the-day rhythm.

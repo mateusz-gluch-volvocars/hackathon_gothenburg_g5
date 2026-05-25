@@ -4,7 +4,7 @@
 
 **🎯 What you'll do.** Run a single `gcloud container clusters create-auto` command to spin up a regional GKE Autopilot cluster called `laureate-cluster` with `--enable-private-nodes`. ~6-8 minutes of waiting. While it provisions, capture `PROJECT_ID` + `PROJECT_NUMBER` (you'll need both for Q2D-3).
 
-**🤝 Why it matters.** This cluster is **the runtime your Streamlit app will live on for the rest of the day**. Every other Q2D page (image build, identity binding, deploy, gateway) targets this cluster. The `--enable-private-nodes` flag is non-negotiable in your Garage's project — the Volvo Cars org policy blocks public-IP nodes — and forgetting it costs you 8 minutes when the create fails halfway. Get the click right the first time.
+**🤝 Why it matters.** This cluster is **the runtime your Streamlit app will live on for the rest of the day**. Every other Q2D page (image build, identity binding, deploy, gateway) targets this cluster. The `--enable-private-nodes` flag is non-negotiable in your Garage's project, the Volvo Cars org policy blocks public-IP nodes, and forgetting it costs you 8 minutes when the create fails halfway. Get the click right the first time.
 
 </Objective>
 
@@ -33,7 +33,7 @@ gcloud container clusters describe laureate-cluster \
 
 </QuickPath>
 
-Your Streamlit app needs a **runtime** — somewhere a container can run, reachable from the public internet, with the ability to call other GCP services on the Garage's behalf. **GKE Autopilot** is Google's managed Kubernetes mode: production-grade orchestration with the operational overhead stripped out.
+Your Streamlit app needs a **runtime**. somewhere a container can run, reachable from the public internet, with the ability to call other GCP services on the Garage's behalf. **GKE Autopilot** is Google's managed Kubernetes mode: production-grade orchestration with the operational overhead stripped out.
 
 ---
 
@@ -51,11 +51,11 @@ echo "PROJECT_ID=$PROJECT_ID  PROJECT_NUMBER=$PROJECT_NUMBER"
 
 ✅ **Expect:** Both values printed. `PROJECT_NUMBER` is all digits (12 digits, looks like `624958632298`); `PROJECT_ID` is human-readable (lowercase + digits + hyphens, matches the value on your workbench card).
 
-> Both values are needed for the Workload Identity binding in Q2D-3. **They are different identifiers for the same project** — mixing them up in Q2D-3 is the single most expensive mistake in the day. Capture them both now and never substitute one for the other.
+> Both values are needed for the Workload Identity binding in Q2D-3. **They are different identifiers for the same project**. mixing them up in Q2D-3 is the single most expensive mistake in the day. Capture them both now and never substitute one for the other.
 
 ### Step 2 — Create the cluster
 
-The single command below creates a regional Autopilot cluster with private nodes (the project's org policy forbids public-IP nodes — outbound to Google APIs goes via Private Google Access, no NAT involved).
+The single command below creates a regional Autopilot cluster with private nodes (the project's org policy forbids public-IP nodes; outbound to Google APIs goes via Private Google Access, no NAT involved).
 
 ```bash
 gcloud container clusters create-auto laureate-cluster \
@@ -70,33 +70,33 @@ gcloud container clusters create-auto laureate-cluster \
 
 <Cheat title="Or create the cluster via the Console UI">
 
-If you prefer clicking over typing, here's the Console path. The CLI command above does exactly the same thing — use whichever you're more comfortable with.
+If you prefer clicking over typing, here's the Console path. The CLI command above does exactly the same thing, use whichever you're more comfortable with.
 
 1. Open the GKE page: `https://console.cloud.google.com/kubernetes/list/overview?project=<your-project-id>`
 
-<Screenshot src="/quest/pothole-poet/img/gke_clusters_landing.png" caption="Kubernetes Engine landing page — click Create to start the cluster wizard." />
+<Screenshot src="/quest/pothole-poet/img/gke_clusters_landing.png" caption="Kubernetes Engine landing page, click Create to start the cluster wizard." />
 
 2. Click **Create**. GKE defaults to **Autopilot** mode (if it asks, pick Autopilot, not Standard).
 
 3. On the **Cluster basics** page: set **Name** to `laureate-cluster` and **Region** to `europe-west1`. Leave everything else default.
 
-<Screenshot src="/quest/pothole-poet/img/gke_cluster_basics.png" caption="Cluster basics — set Name to laureate-cluster, Region to europe-west1." />
+<Screenshot src="/quest/pothole-poet/img/gke_cluster_basics.png" caption="Cluster basics, set Name to laureate-cluster, Region to europe-west1." />
 
-4. Click **Next: Fleet registration**. Your cluster is auto-registered to your project's fleet. No changes needed — click through.
+4. Click **Next: Fleet registration**. Your cluster is auto-registered to your project's fleet. No changes needed, click through.
 
-<Screenshot src="/quest/pothole-poet/img/gke_fleet_registration.png" caption="Fleet registration — auto-registered to your project. Click Next." />
+<Screenshot src="/quest/pothole-poet/img/gke_fleet_registration.png" caption="Fleet registration, auto-registered to your project. Click Next." />
 
 5. On the **Networking** page: confirm **Enable Private nodes** is checked (it should be by default for your Garage's project). Leave the VPC and subnet on defaults (`garage-vpc`).
 
-<Screenshot src="/quest/pothole-poet/img/gke_networking.png" caption="Networking — confirm Enable Private nodes is checked. This is required by the Volvo Cars org policy." />
+<Screenshot src="/quest/pothole-poet/img/gke_networking.png" caption="Networking; confirm Enable Private nodes is checked. This is required by the Volvo Cars org policy." />
 
 6. On the **Advanced settings** page: expand the **Security** section to see the default settings (no changes needed). Scroll down to see **Operations** (logging/monitoring enabled by default).
 
-<Screenshot src="/quest/pothole-poet/img/gke_advanced_security.png" caption="Advanced settings — Security defaults. No changes needed." />
+<Screenshot src="/quest/pothole-poet/img/gke_advanced_security.png" caption="Advanced settings. Security defaults. No changes needed." />
 
 7. Scroll to the bottom and click **Create**.
 
-<Screenshot src="/quest/pothole-poet/img/gke_advanced_create.png" caption="Bottom of Advanced settings — click Create. The cluster takes ~6-8 minutes to provision." />
+<Screenshot src="/quest/pothole-poet/img/gke_advanced_create.png" caption="Bottom of Advanced settings, click Create. The cluster takes ~6-8 minutes to provision." />
 
 </Cheat>
 
@@ -104,30 +104,29 @@ If you prefer clicking over typing, here's the Console path. The CLI command abo
 
 A Standard GKE cluster gives you Kubernetes plus a pile of operational chores: sizing nodes, patching them, configuring autoscalers, hardening images, deciding bin-packing strategies. **Autopilot** removes all of that. You write Pod specs; Google provisions the right node shapes on demand and bills you per-pod (CPU/memory/storage you actually requested), not per-node.
 
-The trade is some flexibility — no SSH to nodes, no privileged Pods, no kernel modules, a fixed set of allowed images. For typical web workloads (including this one) those constraints don't matter and the operational savings are large. Autopilot is Google's recommended default for new clusters.
+The trade is some flexibility, no SSH to nodes, no privileged Pods, no kernel modules, a fixed set of allowed images. For typical web workloads (including this one) those constraints don't matter and the operational savings are large. Autopilot is Google's recommended default for new clusters.
 
 </Concept>
 
 <Concept title="What does --enable-private-nodes actually do?">
 
-By default, GKE nodes get a public IP and become directly reachable from the internet. **Private nodes** keep them on internal-only IPs — no public surface to scan, no risk of a misconfigured Pod accidentally accepting outside traffic. This Quest enforces it (the project's `compute.vmExternalIpAccess` org policy refuses to provision public-IP nodes at all).
+By default, GKE nodes get a public IP and become directly reachable from the internet. **Private nodes** keep them on internal-only IPs, no public surface to scan, no risk of a misconfigured Pod accidentally accepting outside traffic. This Quest enforces it (the project's `compute.vmExternalIpAccess` org policy refuses to provision public-IP nodes at all).
 
-Private nodes still need a way to reach Google APIs — pulling images from Artifact Registry, talking to BigQuery, fetching tokens from the metadata server. **Private Google Access** handles that: it's auto-enabled on Autopilot's private-node subnet, and routes traffic to any `*.googleapis.com` endpoint over Google's internal network without a public IP. No NAT, no firewall plumbing.
+Private nodes still need a way to reach Google APIs, pulling images from Artifact Registry, talking to BigQuery, fetching tokens from the metadata server. **Private Google Access** handles that: it's auto-enabled on Autopilot's private-node subnet, and routes traffic to any `*.googleapis.com` endpoint over Google's internal network without a public IP. No NAT, no firewall plumbing.
 
-**There is no general-purpose internet egress.** The per-Garage Terraform module deliberately omits Cloud NAT to mimic a secure corporate environment — your Pods can reach Google APIs and that's it. If your app needs to call a third-party webhook or a non-Google public API, it won't work; route that traffic via a Google service (e.g. Cloud Functions / Workflows with their own egress) instead.
 
 </Concept>
 
 ### Step 3 — While you wait (~6-8 min): be useful
 
 a) **Skim the Streamlit code.** In your Workstation IDE, open `pothole-poet/streamlit/app.py`. Note:
-- The `MODE` env var at the top — controls `seed` / `live` / `full` mode.
-- The `# TEAM CANVAS` block near the bottom — that's where Quest 4 lives. **Don't edit it now.**
-- `pothole-poet/Dockerfile` — vanilla Python + Streamlit, listens on 8080. It lives one directory up from `streamlit/` so the seed CSV is in the build context.
+- The `MODE` env var at the top; controls `seed` / `live` / `full` mode.
+- The `# TEAM CANVAS` block near the bottom; that's where Quest 4 lives. **Don't edit it now.**
+- `pothole-poet/Dockerfile`. vanilla Python + Streamlit, listens on 8080. It lives one directory up from `streamlit/` so the seed CSV is in the build context.
 
 b) **Look at the manifests.** In `pothole-poet/streamlit/k8s/`, you'll see five YAMLs you'll apply across Q2D-3 to Q2D-5: `namespace-and-sa.yaml`, `deployment.yaml`, `service.yaml`, `gateway.yaml`, `httproute.yaml`. We'll explain each as you apply it.
 
-c) **Pair with the Data Engineer.** They're standing up AlloyDB + the BigQuery dataset (`pothole_laureate`) + the AlloyDB federation. Once both work, your data path is ready end-to-end — your Pod will read `pothole_laureate.neighbourhood_odes` once the Pipeline-author's DAG populates it.
+c) **Pair with the Data Engineer.** They're standing up AlloyDB + the BigQuery dataset (`pothole_laureate`) + the AlloyDB federation. Once both work, your data path is ready end-to-end; your Pod will read `pothole_laureate.neighbourhood_odes` once the Pipeline-author's DAG populates it.
 
 ### Step 4 — Verify cluster is RUNNING
 
@@ -143,8 +142,8 @@ In the Console (`https://console.cloud.google.com/kubernetes/list/overview?proje
 <Gotchas>
 - <strong>Create command fails with <code>org policy compute.vmExternalIpAccess</code>.</strong> You forgot <code>--enable-private-nodes</code>. Re-run with the flag.
 - <strong>Stuck on PROVISIONING for &gt;12 min.</strong> Check the Console's <strong>Kubernetes Engine &rarr; Operations</strong> tab for an error. Past 15 min, flag a Sherpa.
-- <strong><code>command not found: gcloud</code>.</strong> You&rsquo;re in a Cloud Shell, not the Workstation. Open the Workstation terminal instead &mdash; <code>gcloud</code> is preinstalled there.
-- <strong><code>Insufficient quota</code> errors.</strong> Autopilot uses E2 nodes from the project&rsquo;s default quota. If hit, flag a Sherpa &mdash; the platform pre-allocates enough but a stale Garage may still be holding nodes.
+- <strong><code>command not found: gcloud</code>.</strong> You&rsquo;re in a Cloud Shell, not the Workstation. Open the Workstation terminal instead. <code>gcloud</code> is preinstalled there.
+- <strong><code>Insufficient quota</code> errors.</strong> Autopilot uses E2 nodes from the project&rsquo;s default quota. If hit, flag a Sherpa, the platform pre-allocates enough but a stale Garage may still be holding nodes.
 - <strong><code>PROJECT_NUMBER</code> empty in Step 1.</strong> Make sure <code>gcloud config get-value project</code> returns your Garage&rsquo;s project_id (from your workbench card). If it&rsquo;s blank or a different project, run <code>gcloud config set project &lt;your-project-id&gt;</code> first.
 </Gotchas>
 

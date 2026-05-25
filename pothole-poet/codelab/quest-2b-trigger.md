@@ -2,7 +2,7 @@
 
 <Objective lane="pipeline">
 
-**🎯 What you'll do.** Trigger the `compose_the_odes` DAG manually from the Airflow UI (or one gcloud command) and watch both tasks finish (~30 sec for federation, ~1-2 min for the AI enrichment call). Verify BigQuery now has 12 rows in `pothole_laureate.neighbourhood_odes` — one Gemini-composed three-line ode per Göteborg neighbourhood.
+**🎯 What you'll do.** Trigger the `compose_the_odes` DAG manually from the Airflow UI (or one gcloud command) and watch both tasks finish (~30 sec for federation, ~1-2 min for the AI enrichment call). Verify BigQuery now has 12 rows in `pothole_laureate.neighbourhood_odes`. one Gemini-composed three-line ode per Göteborg neighbourhood.
 
 **🤝 Why it matters.** This is the moment the **whole pipeline lights up for the first time**. The Data Engineer's federation finally gets used, their table finally gets read, Gemini finally gets called, and BigQuery finally has poems. After this page, the App Dev / Guardian can switch Streamlit's `MODE` to `live` and the audience sees real AI verse instead of placeholder text. **You are the persona that completes the Foundation.**
 
@@ -32,13 +32,13 @@ bq query --use_legacy_sql=false --format=prettyjson \
 
 DAG is in the bucket, parsed, sitting ready in the Airflow UI. Now we trigger it manually (don't wait for the scheduled run) and watch the AI moment unfold.
 
-Here's what will happen when you trigger: Airflow runs the two tasks in order. First, `federate_pothole_reports` submits a BigQuery SQL job that pulls AlloyDB data via the federation connection the Data Engineer created. When that finishes, `ask_the_laureate` submits a second BigQuery SQL job that aggregates the data and calls Gemini via `AI.GENERATE` to compose 12 poems. Both jobs execute inside BigQuery's engine — the Airflow worker just submits them and waits.
+Here's what will happen when you trigger: Airflow runs the two tasks in order. First, `federate_pothole_reports` submits a BigQuery SQL job that pulls AlloyDB data via the federation connection the Data Engineer created. When that finishes, `ask_the_laureate` submits a second BigQuery SQL job that aggregates the data and calls Gemini via `AI.GENERATE` to compose 12 poems. Both jobs execute inside BigQuery's engine, the Airflow worker just submits them and waits.
 
 ---
 
 ### Step 1 — Unpause the DAG (if paused)
 
-New DAGs in Airflow start **paused** by default — the scheduler won't run them until you unpause.
+New DAGs in Airflow start **paused** by default, the scheduler won't run them until you unpause.
 
 In the Airflow UI **DAGs** tab, find `compose_the_odes`. If the toggle next to its name shows a **pause icon** (⏸ or a blue slider), click it to **unpause**. If the toggle is already in the "on" position, skip this step.
 
@@ -48,7 +48,7 @@ In the Airflow UI **DAGs** tab, find `compose_the_odes`. If the toggle next to i
 
 In the Airflow UI, click into `compose_the_odes`, then click the **Trigger DAG** button (top-right ▶ play icon). Confirm in the dialog.
 
-<Screenshot src="/quest/pothole-poet/img/airflow_trigger_button.png" caption="Inside the DAG view — the Trigger DAG button is the play icon (▶) in the top-right area." />
+<Screenshot src="/quest/pothole-poet/img/airflow_trigger_button.png" caption="Inside the DAG view, the Trigger DAG button is the play icon (▶) in the top-right area." />
 
 ✅ **Expect:** The DAG run appears in the Grid view with a yellow ⏳ "running" status.
 
@@ -60,7 +60,7 @@ gcloud composer environments run the-laureate-bureau \
   dags trigger -- compose_the_odes
 ```
 
-> **Expect a ~30-second pause before output.** This command tunnels through Google's secure control plane to reach the Airflow worker inside a GKE cluster. The delay is normal — don't press Ctrl+C thinking it's hung.
+> **Expect a ~30-second pause before output.** This command tunnels through Google's secure control plane to reach the Airflow worker inside a GKE cluster. The delay is normal; don't press Ctrl+C thinking it's hung.
 
 The CLI returns after the trigger is submitted; check the UI for run status.
 
@@ -72,8 +72,8 @@ In the **Grid view** (the default view when you click into a DAG), each square r
 
 Both tasks should turn green:
 
-- `federate_pothole_reports` (~30 sec) — pulls AlloyDB rows into BigQuery via the federation connection.
-- `ask_the_laureate` (~30-60 sec) — Gemini composes 12 odes via `AI.GENERATE`.
+- `federate_pothole_reports` (~30 sec), pulls AlloyDB rows into BigQuery via the federation connection.
+- `ask_the_laureate` (~30-60 sec). Gemini composes 12 odes via `AI.GENERATE`.
 
 ✅ **Expect:** Two green squares in the Grid view. If either goes red, click into it and read the logs.
 
@@ -81,11 +81,11 @@ Both tasks should turn green:
 
 Click any task square to open the **task instance view**. Airflow 3 takes you straight to a tabbed page showing the task name, status badge, start/end dates, and duration in the header, with the **Logs** tab open by default.
 
-<Screenshot src="/quest/pothole-poet/img/airflow_task_detail.png" caption="Airflow 3 task instance view — header shows task name, status, and timing; tabs below give access to Logs, Rendered Templates, XCom, and more." />
+<Screenshot src="/quest/pothole-poet/img/airflow_task_detail.png" caption="Airflow 3 task instance view, header shows task name, status, and timing; tabs below give access to Logs, Rendered Templates, XCom, and more." />
 
-If a task failed, the Logs tab shows the full execution output. Scroll to the bottom for the actual error — look for lines marked `ERROR` or `FAILED`. You can filter by log level using the dropdown above the log output. Common errors are covered in the gotchas at the bottom of this page.
+If a task failed, the Logs tab shows the full execution output. Scroll to the bottom for the actual error, look for lines marked `ERROR` or `FAILED`. You can filter by log level using the dropdown above the log output. Common errors are covered in the gotchas at the bottom of this page.
 
-<Screenshot src="/quest/pothole-poet/img/airflow_task_logs.png" caption="Logs tab showing a successful ask_the_laureate run — 'BigQuery job completed successfully. 12 rows' confirms the odes landed." />
+<Screenshot src="/quest/pothole-poet/img/airflow_task_logs.png" caption="Logs tab showing a successful ask_the_laureate run. 'BigQuery job completed successfully. 12 rows' confirms the odes landed." />
 
 <Concept title="The AI moment">
 
@@ -114,7 +114,7 @@ LIMIT 3;
 
 If the poem mentions cinnamon buns, weather, Eurovision, or Carl, you've made the Laureate proud.
 
-<Screenshot src="/quest/pothole-poet/img/bq_neighbourhood_odes.png" caption="BigQuery Studio showing the neighbourhood_odes query result — real Gemini-composed poetry for each Gothenburg neighbourhood." />
+<Screenshot src="/quest/pothole-poet/img/bq_neighbourhood_odes.png" caption="BigQuery Studio showing the neighbourhood_odes query result, real Gemini-composed poetry for each Gothenburg neighbourhood." />
 
 ### Step 5 — Verify the full set
 
@@ -157,12 +157,13 @@ This pulls the recent execution logs, including any errors from the BigQuery job
 
 <Gotchas>
 - <strong><code>federate_pothole_reports</code> fails: <code>connection alloydb_archive not found</code>.</strong> The Data Engineer&rsquo;s BigQuery sub-lane (Q2C-2) hasn&rsquo;t created the federation connection yet. Wait for them, then re-trigger.
-- <strong><code>ask_the_laureate</code> fails on <code>AI.GENERATE</code> with <code>permission denied</code>.</strong> The <code>gemini</code> connection&rsquo;s service account is missing <code>roles/aiplatform.user</code>. Should be pre-bound by the platform &mdash; flag a Sherpa.
-- <strong><code>gemini-3-flash</code> not found error.</strong> Gemini 3 is global-endpoint only. The DAG SQL uses the full URL <code>https://aiplatform.googleapis.com/v1/projects/&lt;project&gt;/locations/global/publishers/google/models/gemini-3-flash-preview</code> &mdash; if you edited it and dropped the URL form, restore it.
+- <strong><code>ask_the_laureate</code> fails on <code>AI.GENERATE</code> with <code>permission denied</code>.</strong> The <code>gemini</code> connection&rsquo;s service account is missing <code>roles/aiplatform.user</code>. Should be pre-bound by the platform; flag a Sherpa.
+- <strong><code>gemini-3-flash</code> not found error.</strong> Gemini 3 is global-endpoint only. The DAG SQL uses the full URL <code>https://aiplatform.googleapis.com/v1/projects/&lt;project&gt;/locations/global/publishers/google/models/gemini-3-flash-preview</code>. if you edited it and dropped the URL form, restore it.
 - <strong>DAG ran green but <code>neighbourhood_odes</code> shows 0 rows.</strong> The federation cache may be stale (the staging table was empty). Re-trigger the DAG.
-- <strong>Odes appear as raw JSON, not poetry.</strong> The <code>AI.GENERATE</code> response wasn&rsquo;t unwrapped &mdash; check that <code>02_enrich.sql</code> reads <code>.result</code> off the AI.GENERATE call.
+- <strong>Odes appear as raw JSON, not poetry.</strong> The <code>AI.GENERATE</code> response wasn&rsquo;t unwrapped; check that <code>02_enrich.sql</code> reads <code>.result</code> off the AI.GENERATE call.
 - <strong>Trigger button greyed out or DAG not firing.</strong> The DAG may still be paused. Go back to the DAGs list and click the toggle next to <code>compose_the_odes</code> to unpause (Step 1 on this page).
-- <strong>CLI command hangs for 30+ seconds.</strong> Normal. <code>gcloud composer environments run</code> tunnels through Google&rsquo;s control plane to reach the Airflow worker &mdash; the initial connection takes ~30 seconds. Don&rsquo;t press Ctrl+C.
+- <strong>CLI command hangs for 30+ seconds.</strong> Normal. <code>gcloud composer environments run</code> tunnels through Google&rsquo;s control plane to reach the Airflow worker, the initial connection takes ~30 seconds. Don&rsquo;t press Ctrl+C.
+- <strong>Any task goes red and the Airflow UI logs are unclear.</strong> Open the Logs Explorer (Q1-5) and filter: Resource Type = <code>cloud_composer_environment</code>, then add <code>labels.workflow=compose_the_odes</code> in the Query pane. Composer Gen 3 stores all task logs exclusively in Cloud Logging; this is often more detailed than what the Airflow UI shows.
 </Gotchas>
 
 <Shipped>

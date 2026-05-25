@@ -1,32 +1,66 @@
 # ☸ Quest 2D-3 — Bind Pod Identity to BigQuery
 
+<Screenshot src="/quest/pothole-poet/img/wif_identity_map.png" caption="Workload Identity Federation: Keyless connection between Volvo GKE Pods and BigQuery via Google Cloud IAM" />
+
 <Objective lane="infra">
 
-**🎯 What you'll do.** Create a Kubernetes namespace + ServiceAccount, then tell Google Cloud "this Kubernetes identity is allowed to read BigQuery" by binding two IAM roles to it. No key files, no secrets — just an identity mapping. ~5 minutes if you get the principal URI exactly right; possibly 30 if you confuse `PROJECT_NUMBER` with `PROJECT_ID`.
+**🎯 What you'll do.** Give your Streamlit app permission to read BigQuery, without passwords or key files. You'll create an identity for your app and then grant that identity two specific BigQuery roles. ~5 minutes hands-on.
 
-**🤝 Why it matters.** This is **how your Pod authenticates to BigQuery without ever touching a key file**. The principal URI is the single most error-prone string in the entire Quest. Get it wrong and Streamlit returns `AccessDenied` the moment you switch `MODE` to `live` in Q3 — and you waste the convergence moment debugging IAM instead of demoing poems.
+**🤝 Why it matters.** Right now your app has no way to reach the poems in BigQuery. After this page, it does, using the modern keyless approach Google Cloud recommends. This is the bridge between "container deployed" and "app shows live data."
 
 </Objective>
 
 > Lane D · 3 of 5. ~5 minutes hands-on.
 
-<Concept title="Why can't the Pod just access BigQuery automatically?">
+## The problem: your app can't reach BigQuery yet
 
-On GKE Autopilot, every Pod is **locked out of Google Cloud APIs by default**. Unlike a VM where the Compute Engine service account might have broad access, Autopilot uses **Workload Identity Federation** — which is always enabled and cannot be turned off. This means:
+Your Streamlit app runs inside a container (a **Pod**) on GKE. That Pod needs to query BigQuery to fetch the neighbourhood odes. But right now it can't. On GKE Autopilot, **every Pod starts with zero Google Cloud permissions**. It can't read BigQuery, it can't write to Cloud Storage, it can't do anything outside its own container. This is by design: no app gets access unless you explicitly grant it.
 
-- Your Pod gets a Kubernetes identity (a ServiceAccount), but that identity starts with **zero Google Cloud permissions**.
-- The Pod cannot fall back to the node's credentials — Autopilot blocks that path entirely.
-- You must explicitly tell Google Cloud: *"this specific Kubernetes identity is allowed to do these specific things."*
+So the question is: **how does your app prove to BigQuery that it's allowed to read data?**
 
-That's what this page does. You're creating a permission mapping between a Kubernetes identity and Google Cloud IAM roles. Think of it like a badge system: you're issuing a badge (`pothole-laureate`) and then programming the door locks (BigQuery) to accept that badge.
+## Two ways to solve it (and why you're using the better one)
+
+**The old way: key files.** You create a service-account JSON key (essentially a password file), store it as a Kubernetes Secret, and mount it inside the container. The app reads the file and presents it to BigQuery. This works, but the key is a static credential that never expires. If someone accidentally commits it to git, copies it to a laptop, or logs it in an error message, anyone who finds it has permanent access to your BigQuery data. You also have to remember to rotate it. Most production security incidents involving GCP start with a leaked service-account key.
+
+**The modern way: Workload Identity Federation (WIF).** Instead of giving your app a secret file, you give it an **identity**, a name that Google Cloud recognizes. Then you tell BigQuery: "when something with this identity asks to read data, allow it." There is no key file. The Pod proves who it is using a **short-lived token** (valid for minutes, not forever) that GKE's infrastructure creates and refreshes automatically. If the Pod is deleted, the token disappears with it. Nothing to leak, nothing to rotate.
+
+**This is the approach you'll use on this page.** It's the same idea as how you log into Google Cloud with your Volvo corporate account. You don't carry a key file around; your identity is verified through a federation trust, and you get short-lived session credentials. WIF does the same thing for your app.
+
+## What you're doing, concretely
+
+Two things:
+
+1. **Creating an identity for your app.** A Kubernetes ServiceAccount named `pothole-laureate` in a namespace called `laureate`. Think of it as your app's employee badge inside the cluster.
+
+2. **Granting that identity two BigQuery permissions.** You'll bind two IAM roles to the identity using a **principal URI** (a long address string that tells Google Cloud exactly which Kubernetes identity you mean):
+   - **`roles/bigquery.dataViewer`** lets the Pod see tables and read rows
+   - **`roles/bigquery.jobUser`** lets the Pod run queries
+
+After this, when your Pod starts and tries to call BigQuery, here's what happens behind the scenes:
+
+```
+Pod starts → GKE gives it a short-lived token proving "I am pothole-laureate"
+    → Pod presents token to BigQuery
+        → BigQuery checks IAM: "does pothole-laureate have dataViewer + jobUser?"
+            → Yes → query runs, poems returned
+```
+
+No key file in the picture. The token refreshes automatically. If you delete the Pod, the credentials vanish with it.
+
+<Concept title="If you've used Azure AD or corporate SSO, it's the same idea">
+
+In a corporate environment, you don't log into every internal tool with a separate password. Your identity is managed centrally (Azure AD, Okta, etc.), and each tool checks with the identity provider: "is this person allowed in?" Your access is scoped to specific roles, and your session token expires.
+
+WIF works identically, but for apps instead of people. The Kubernetes cluster is the identity provider. Google Cloud IAM is the access-control layer. The principal URI is the "username" that connects the two worlds. The only difference is that you have to construct that username (the URI) yourself, and get it exactly right.
 
 </Concept>
 
-<Concept title="🤖 Or drive this with Antigravity CLI (strongly recommended for this step)">
+<Concept title="🤖 Or drive this with Antigravity CLI">
 
-This is the **single most expensive mistake of the hackathon day** if you confuse `PROJECT_ID` with `PROJECT_NUMBER` in the principal URI. Antigravity CLI's **`wif-binding-helper`** skill reads both identifiers fresh from `gcloud`, constructs the URI in the right shape, and proposes both `add-iam-policy-binding` commands for your approval. Launch it from any terminal:
+The principal URI is the easy part to get wrong. Antigravity CLI's **`wif-binding-helper`** skill reads both project identifiers fresh from `gcloud`, builds the URI for you, and proposes both binding commands for your approval. Make sure you're in the Quest repo so the workspace plugin loads:
 
 ```bash
+cd ~/quest
 agy
 ```
 
@@ -34,7 +68,7 @@ then ask:
 
 > *"Bind the pothole-laureate Kubernetes ServiceAccount to the BigQuery dataViewer and jobUser roles via direct Workload Identity."*
 
-The QuickPath below is what the skill runs under the hood. Either path lands the same bindings; the agentic path just makes the principal URI bulletproof.
+Either path (manual or agentic) lands the same bindings. The agentic path just removes the chance of a typo.
 
 </Concept>
 
@@ -72,25 +106,28 @@ gcloud projects get-iam-policy $PROJECT_ID \
 
 </QuickPath>
 
-This page has **one big idea** and **one dangerous string**.
+## The one trap on this page
 
-The big idea: your Pod needs to read BigQuery, but you should never mount a service-account JSON key as a Kubernetes Secret. Instead, you use **Workload Identity Federation** — Google's recommended way to let GKE pods call Google Cloud APIs. You bind IAM roles directly to the Kubernetes ServiceAccount the Pod runs as.
+The identity binding uses a long string called a **principal URI**. It contains two project identifiers that look similar but are different things:
 
-The dangerous string: the **principal URI**. It contains both your `PROJECT_NUMBER` (all digits) and `PROJECT_ID` (human-readable) in different positions. Swap them and the binding silently succeeds but every Pod request fails.
+- **`PROJECT_NUMBER`** is all digits (e.g. `624958632298`). Goes after `projects/`.
+- **`PROJECT_ID`** is human-readable (e.g. `vcc-ic-g01`). Goes before `.svc.id.goog`.
+
+**Swap them and the binding silently succeeds but nothing works.** The command won't show an error, but when your app tries to query BigQuery it gets `AccessDenied`. This is the single most common mistake of the day. The steps below make sure you get it right.
 
 ---
 
 ### Step 1 — Confirm your project identifiers
 
-The principal URI needs both `PROJECT_NUMBER` and `PROJECT_ID`. They are **two different identifiers for the same project** and they go in **different positions** in the URI. You set them in Q2D-1 Step 1 — confirm they're still in your shell:
+You set these in Q2D-1 Step 1. Confirm they're still in your shell:
 
 ```bash
 echo "PROJECT_NUMBER=$PROJECT_NUMBER  PROJECT_ID=$PROJECT_ID"
 ```
 
 ✅ **Expect:**
-- `PROJECT_NUMBER` is **all digits** — a 12-digit number like `624958632298`
-- `PROJECT_ID` is **human-readable** — lowercase + digits + hyphens, matches your workbench card
+- `PROJECT_NUMBER` is **all digits**, a 12-digit number like `624958632298`
+- `PROJECT_ID` is **human-readable**, lowercase + digits + hyphens, matches your workbench card
 
 If either is empty, re-set them:
 
@@ -111,7 +148,7 @@ gcloud container clusters get-credentials laureate-cluster \
 
 ### Step 3 — Create the namespace and ServiceAccount
 
-Every Kubernetes workload runs inside a **namespace** (a logical boundary) and *as* a **ServiceAccount** (an identity). You're creating both now — the namespace `laureate` and the ServiceAccount `pothole-laureate` inside it.
+Every Kubernetes workload runs inside a **namespace** (a logical boundary) and *as* a **ServiceAccount** (an identity). You're creating both now: the namespace `laureate` and the ServiceAccount `pothole-laureate` inside it.
 
 ```bash
 cd ~/quest/pothole-poet/streamlit
@@ -126,7 +163,7 @@ serviceaccount/pothole-laureate created
 
 <Concept title="What's inside the manifest?">
 
-The file you just applied is minimal — it only defines the two resources:
+The file you just applied is minimal. It only defines the two resources:
 
 ```yaml
 apiVersion: v1
@@ -141,13 +178,13 @@ metadata:
   namespace: laureate
 ```
 
-The namespace groups all your Quest resources. The ServiceAccount is the identity your Pod will run as — and the identity you're about to grant BigQuery access to. In Q2D-4, the Deployment manifest references `serviceAccountName: pothole-laureate` to ensure every Pod runs with this identity.
+The namespace groups all your Quest resources. The ServiceAccount is the identity your Pod will run as, and the identity you're about to grant BigQuery access to. In Q2D-4, the Deployment manifest references `serviceAccountName: pothole-laureate` to ensure every Pod runs with this identity.
 
 </Concept>
 
 ### Step 4 — Build the principal URI and bind both roles
 
-This is the critical step. You're constructing a **principal URI** — a long string that uniquely identifies your Kubernetes ServiceAccount to Google Cloud IAM — and then binding two BigQuery roles to it.
+This is the critical step. You're constructing a **principal URI**, a long string that uniquely identifies your Kubernetes ServiceAccount to Google Cloud IAM, and then binding two BigQuery roles to it.
 
 First, understand the URI structure:
 
@@ -157,9 +194,9 @@ principal://iam.googleapis.com/projects/PROJECT_NUMBER/locations/global/workload
                                         all digits here                                      human-readable here
 ```
 
-- `projects/<PROJECT_NUMBER>` — IAM resolves projects by number internally (numbers are immutable).
-- `<PROJECT_ID>.svc.id.goog` — the workload identity pool, always named after the project ID.
-- `subject/ns/laureate/sa/pothole-laureate` — "the ServiceAccount named `pothole-laureate` in namespace `laureate`."
+- `projects/<PROJECT_NUMBER>` is where IAM resolves projects by number internally (numbers are immutable).
+- `<PROJECT_ID>.svc.id.goog` is the workload identity pool, always named after the project ID.
+- `subject/ns/laureate/sa/pothole-laureate` means "the ServiceAccount named `pothole-laureate` in namespace `laureate`."
 
 Now build it and bind:
 
@@ -185,21 +222,21 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
 
 ✅ **Expect** (twice): `Updated IAM policy for project [...]`
 
-> You need **both** roles: `dataViewer` lets the Pod see tables and read rows, `jobUser` lets it run queries. Either one alone fails with a different error — missing `dataViewer` returns "table not found", missing `jobUser` returns "access denied on query execution".
+> You need **both** roles: `dataViewer` lets the Pod see tables and read rows, `jobUser` lets it run queries. Either one alone fails with a different error. Missing `dataViewer` returns "table not found", missing `jobUser` returns "access denied on query execution".
 
 <Concept title="Why --condition=None?">
 
-Without this flag, `gcloud` drops into an interactive prompt asking you to type an IAM condition expression. In a scripted workflow (or a hackathon where you're copying commands), this looks like the command is hung. `--condition=None` means "unconditional binding — this identity always has this role."
+Without this flag, `gcloud` drops into an interactive prompt asking you to type an IAM condition expression. In a scripted workflow (or a hackathon where you're copying commands), this looks like the command is hung. `--condition=None` means "unconditional binding, this identity always has this role."
 
 </Concept>
 
 <Concept title="How does Workload Identity Federation actually work?">
 
-Every Pod runs *as* a Kubernetes ServiceAccount. Autopilot automatically mounts a **projected token** into every Pod — a short-lived JWT that proves "I am `pothole-laureate` in namespace `laureate`."
+Every Pod runs *as* a Kubernetes ServiceAccount. Autopilot automatically mounts a **projected token** into every Pod, a short-lived JWT that proves "I am `pothole-laureate` in namespace `laureate`."
 
 When your Pod's Google client library asks for credentials, the **GKE metadata server** (a Google-managed component on every node) intercepts the call. It exchanges the Kubernetes projected token for a short-lived Google access token via the Security Token Service, and hands it back to the Pod. The token auto-refreshes; the Pod never sees a static key; Cloud Audit Logs show the federated principal.
 
-This is why no annotation or intermediate Google Service Account is needed — the direct principal URI approach is Google's current recommendation (as of May 2026). The older approach (creating a Google SA, annotating the KSA, binding `workloadIdentityUser`) still works but adds unnecessary moving parts.
+This is why no annotation or intermediate Google Service Account is needed. The direct principal URI approach is Google's current recommendation (as of May 2026). The older approach (creating a Google SA, annotating the KSA, binding `workloadIdentityUser`) still works but adds unnecessary moving parts.
 
 </Concept>
 
@@ -220,12 +257,12 @@ roles/bigquery.dataViewer
 roles/bigquery.jobUser
 ```
 
-If you see both lines, the identity is wired. If you see nothing, the principal URI was wrong — go back to Step 4 and check `PROJECT_NUMBER` vs `PROJECT_ID`.
+If you see both lines, the identity is wired. If you see nothing, the principal URI was wrong. Go back to Step 4 and check `PROJECT_NUMBER` vs `PROJECT_ID`.
 
 <Gotchas>
-- <strong>Cryptic <code>permission denied</code> when the Pod queries BigQuery later.</strong> 9 times out of 10, you mixed up <code>PROJECT_NUMBER</code> and <code>PROJECT_ID</code> in the principal URI. Re-run Step 1; <code>PROJECT_NUMBER</code> must be all digits. If in doubt, re-run Step 4 from scratch &mdash; re-binding with the same principal and role is idempotent (safe to repeat).
+- <strong>Cryptic <code>permission denied</code> when the Pod queries BigQuery later.</strong> 9 times out of 10, you mixed up <code>PROJECT_NUMBER</code> and <code>PROJECT_ID</code> in the principal URI. Re-run Step 1; <code>PROJECT_NUMBER</code> must be all digits. If in doubt, re-run Step 4 from scratch; re-binding with the same principal and role is idempotent (safe to repeat).
 - <strong>gcloud hangs after typing the bind command.</strong> You forgot <code>--condition=None</code>. gcloud is waiting for you to type a condition expression interactively. Ctrl-C, re-run with the flag.
-- <strong>IAM binding takes 2-7 minutes to propagate.</strong> Per Google's WIF docs: &ldquo;New bindings take two to seven minutes to apply.&rdquo; If your first Pod startup in Q2D-4 hits permission errors, wait 5 minutes and try again. The GKE metadata server also takes a few seconds on fresh Pod starts &mdash; client libraries retry transparently.
+- <strong>IAM binding takes 2-7 minutes to propagate.</strong> Per Google's WIF docs: &ldquo;New bindings take two to seven minutes to apply.&rdquo; If your first Pod startup in Q2D-4 hits permission errors, wait 5 minutes and try again. The GKE metadata server also takes a few seconds on fresh Pod starts; client libraries retry transparently.
 - <strong><code>kubectl: command not found</code>.</strong> Run <code>gcloud components install kubectl</code> once. Pre-installed on Workstations.
 - <strong>Bindings show in <code>get-iam-policy</code> but the Pod still can&rsquo;t read.</strong> Check the namespace (<code>laureate</code>) and KSA name (<code>pothole-laureate</code>) match the Deployment manifest in Q2D-4 exactly. A typo on either side breaks the principal match silently.
 - <strong>Two empty lines from the verify command instead of two roles.</strong> The <code>--filter</code> uses a substring match on <code>pothole-laureate</code>. If the principal URI used a different KSA name (typo), the filter finds nothing. Re-echo <code>$PRINCIPAL</code> and check the <code>sa/</code> segment.

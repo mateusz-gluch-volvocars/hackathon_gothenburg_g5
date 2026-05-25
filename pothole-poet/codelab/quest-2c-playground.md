@@ -2,9 +2,9 @@
 
 <Objective lane="data">
 
-**🎯 What you'll do.** Two phases of analyst work. **Phase A (~30 min)** runs against the 6 pre-loaded reference tables and starts immediately — crew leaderboards, freeze-thaw correlation, citizen power-user ranking, `AI.GENERATE` straight from SQL on the social-sentiment corpus, per-capita SLA analysis. **Phase B (~15 min)** unlocks once Q3 finishes and the DAG has landed today's `pothole_reports_raw` + `neighbourhood_odes` — you join today's data into the historical baseline.
+**🎯 What you'll do.** Two phases of analyst work. **Phase A (~30 min)** runs against the 6 pre-loaded reference tables and starts immediately: crew leaderboards, freeze-thaw correlation, citizen power-user ranking, `AI.GENERATE` straight from SQL on the social-sentiment corpus, per-capita SLA analysis. **Phase B (~15 min)** unlocks once Q3 finishes and the DAG has landed today's `pothole_reports_raw` + `neighbourhood_odes`. you join today's data into the historical baseline.
 
-**🤝 Why it matters.** The other lanes deliver a demo (the live odes); this page delivers analytical insight. By the end the BigQuery Lead has answered the question their day-job warehouse can't trivially answer — *call an LLM directly from a SELECT, classify free text against ground truth, and join three years of historical context to today's events in one query* — backed by data they wrote queries against. Phase A in particular **never blocks on the Pipeline lane**, so you have ~30 minutes of real work the moment Q2C-1 ends.
+**🤝 Why it matters.** The other lanes deliver a demo (the live odes); this page delivers analytical insight. By the end the BigQuery Lead has answered the question their day-job warehouse can't trivially answer. *call an LLM directly from a SELECT, classify free text against ground truth, and join three years of historical context to today's events in one query*. backed by data they wrote queries against. Phase A in particular **never blocks on the Pipeline lane**, so you have ~30 minutes of real work the moment Q2C-1 ends.
 
 </Objective>
 
@@ -58,7 +58,7 @@ FROM live FULL OUTER JOIN hist USING (severity) ORDER BY severity;
 
 </QuickPath>
 
-🛠 **For the daily analyst.** The 6 pre-loaded tables (`neighbourhoods`, `crews`, `citizens`, `weather_daily`, `work_orders`, `social_sentiment`) are queryable **right now** — no waiting on AlloyDB or the DAG. Five Phase-A queries below, then three Phase-B queries that join today's pipeline data into the historical context. Each one shows a muscle BigQuery flexes that PowerBI/Snowflake don't trivially match: AI in SQL, `QUALIFY`, native window functions, AI ground-truth comparison, `APPROX_TOP_COUNT`.
+🛠 **For the daily analyst.** The 6 pre-loaded tables (`neighbourhoods`, `crews`, `citizens`, `weather_daily`, `work_orders`, `social_sentiment`) are queryable **right now**, no waiting on AlloyDB or the DAG. Five Phase-A queries below, then three Phase-B queries that join today's pipeline data into the historical context. Each one shows a muscle BigQuery flexes that PowerBI/Snowflake don't trivially match: AI in SQL, `QUALIFY`, native window functions, AI ground-truth comparison, `APPROX_TOP_COUNT`.
 
 ---
 
@@ -82,11 +82,11 @@ GROUP BY c.crew_name, c.base_neighbourhood, c.motto
 ORDER BY sla_breach_pct ASC;
 ```
 
-✅ **Expect:** 12 rows. The motto column is gratuitous but earns its place — "Botany is our cover story" is more memorable than `crew-linnaeus-tools`.
+✅ **Expect:** 12 rows. The motto column is gratuitous but earns its place. "Botany is our cover story" is more memorable than `crew-linnaeus-tools`.
 
 <Concept title="Why COUNTIF instead of SUM(CASE WHEN ...)">
 
-`COUNTIF(condition)` is BigQuery shorthand for `COUNT(CASE WHEN condition THEN 1 END)`. Half the keystrokes, same plan. Shows up in `APPROX_COUNT_DISTINCT`, `APPROX_QUANTILES`, `APPROX_TOP_COUNT` — BQ's "approximation family" that's much faster than exact aggregation when you only need a leaderboard, not an audit. Worth knowing exists.
+`COUNTIF(condition)` is BigQuery shorthand for `COUNT(CASE WHEN condition THEN 1 END)`. Half the keystrokes, same plan. Shows up in `APPROX_COUNT_DISTINCT`, `APPROX_QUANTILES`, `APPROX_TOP_COUNT`. BQ's "approximation family" that's much faster than exact aggregation when you only need a leaderboard, not an audit. Worth knowing exists.
 
 </Concept>
 
@@ -110,7 +110,7 @@ WHERE w.date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)
 GROUP BY w.freeze_thaw_event;
 ```
 
-✅ **Expect:** 2 rows. The analyst's job here is to *measure* whether freeze-thaw days actually correlate with more pothole work — and to be honest about the answer. In the current seed, `work_orders.severity` and the daily job rate are not modelled against `freeze_thaw_event`, so the two `avg_jobs_per_day` values typically come out within ±0.1 of each other. The query mechanics are sound; the result is "no detectable effect in this dataset" — and saying that out loud is itself the muscle to build.
+✅ **Expect:** 2 rows. The analyst's job here is to *measure* whether freeze-thaw days actually correlate with more pothole work, and to be honest about the answer. In the current seed, `work_orders.severity` and the daily job rate are not modelled against `freeze_thaw_event`, so the two `avg_jobs_per_day` values typically come out within ±0.1 of each other. The query mechanics are sound; the result is "no detectable effect in this dataset", and saying that out loud is itself the muscle to build.
 
 ### Step 3 — Citizen power-users by tone (citizens, QUALIFY)
 
@@ -133,15 +133,15 @@ ORDER BY home_neighbourhood, tone;
 
 ✅ **Expect:** Up to 144 rows (12 neighbourhoods × 12 tones). Each row is the "loudest voice in this corner of the city".
 
-<Concept title="QUALIFY — the WHERE for window functions">
+<Concept title="QUALIFY. the WHERE for window functions">
 
-Standard SQL forces you to wrap window functions in a subquery before you can filter on them. `QUALIFY` lets you filter on a window function in the same SELECT — same way `HAVING` filters on aggregates. Snowflake has it, BigQuery has it; PowerBI's M layer doesn't expose anything equivalent. If you only learn one BQ-specific thing today, learn this.
+Standard SQL forces you to wrap window functions in a subquery before you can filter on them. `QUALIFY` lets you filter on a window function in the same SELECT. same way `HAVING` filters on aggregates. Snowflake has it, BigQuery has it; PowerBI's M layer doesn't expose anything equivalent. If you only learn one BQ-specific thing today, learn this.
 
 </Concept>
 
 ### Step 4 — Call Gemini from SQL on social_sentiment ⭐
 
-The headline flex. `AI.GENERATE` is a regular scalar function — call it inside a `SELECT`, pipe in any string from any column or aggregate, get text back. No Python, no API client, no orchestration. The analyst writes the prompt, BQ handles auth and dispatch through the pre-provisioned `gemini` connection.
+The headline flex. `AI.GENERATE` is a regular scalar function; call it inside a `SELECT`, pipe in any string from any column or aggregate, get text back. No Python, no API client, no orchestration. The analyst writes the prompt, BQ handles auth and dispatch through the pre-provisioned `gemini` connection.
 
 Replace `<your-project-id>` (Ctrl+H in Studio):
 
@@ -167,7 +167,7 @@ WHERE neighbourhood = 'Hisingen'
 
 <Concept title="The sentiment_seed column is your answer key">
 
-`social_sentiment.sentiment_seed` is ground truth — when the row was generated, it was tagged `frustrated`, `resigned`, `hopeful`, or `sarcastic`. That makes this dataset suitable for evaluating Gemini, not just calling it: have the model classify each post, compare to the seed, compute accuracy. The pattern (LLM as classifier with held-out labels) is one of the few reliable ways to put an LLM in production without flying blind.
+`social_sentiment.sentiment_seed` is ground truth, when the row was generated, it was tagged `frustrated`, `resigned`, `hopeful`, or `sarcastic`. That makes this dataset suitable for evaluating Gemini, not just calling it: have the model classify each post, compare to the seed, compute accuracy. The pattern (LLM as classifier with held-out labels) is one of the few reliable ways to put an LLM in production without flying blind.
 
 </Concept>
 
@@ -195,13 +195,13 @@ SELECT
 FROM sample s;
 ```
 
-Then wrap that in another query computing `AVG(CASE WHEN gemini_classification = ground_truth THEN 1.0 ELSE 0.0 END)` to get accuracy. ~70-90% is normal — disagreements are often genuinely ambiguous posts, which is its own finding.
+Then wrap that in another query computing `AVG(CASE WHEN gemini_classification = ground_truth THEN 1.0 ELSE 0.0 END)` to get accuracy. ~70-90% is normal; disagreements are often genuinely ambiguous posts, which is its own finding.
 
 </Cheat>
 
 ### Step 5 — Per-capita SLA breach (neighbourhoods × work_orders)
 
-The dim-table flex — same fact table as Step 1, but normalised by neighbourhood attributes instead of by crew.
+The dim-table flex; same fact table as Step 1, but normalised by neighbourhood attributes instead of by crew.
 
 ```sql
 SELECT
@@ -217,7 +217,7 @@ GROUP BY n.neighbourhood, n.population, n.road_km
 ORDER BY breaches_per_road_km DESC;
 ```
 
-✅ **Expect:** 12 rows. Hisingen has the most absolute breaches (it's huge); Haga or Centrum has the highest per-km (small dense districts). The two rankings disagree — that's the point.
+✅ **Expect:** 12 rows. Hisingen has the most absolute breaches (it's huge); Haga or Centrum has the highest per-km (small dense districts). The two rankings disagree; that's the point.
 
 ### Step 6 — (optional, ~10 min) Plot it in a Studio Notebook
 
@@ -253,7 +253,7 @@ plt.show()
 
 The DAG creates two new tables in `pothole_laureate` when Q3 finishes: `pothole_reports_raw` (5,000 federated citizen reports) and `neighbourhood_odes` (12 Gemini-composed verses). Refresh Explorer; they appear under the same dataset as the pre-loaded tables. Now your Phase A muscle memory applies to today's data.
 
-### Step 7 — Today's severity vs. the 3-year baseline (pothole_reports_raw × work_orders)
+### Step 7 — Today's severity vs, the 3-year baseline (pothole_reports_raw × work_orders)
 
 ```sql
 WITH live AS (
@@ -297,7 +297,7 @@ GROUP BY c.tone
 ORDER BY avg_severity_today DESC;
 ```
 
-✅ **Expect:** Up to 12 rows (one per tone). The seed generator assigns citizen `tone` independently of `severity_iron_marks` (severity is picked from neighbourhood-level weights *before* a citizen is selected), so `avg_severity_today` typically lands within ~0.2 across all tones — a flat-ish leaderboard. That null result is itself the finding worth reporting: *"chronic-reporter tone does not appear to bias today's severity ratings in this dataset."* ~10% of today's reports are anonymous (`citizen_id IS NULL`) and won't be in this output — surface them with a separate `WHERE r.citizen_id IS NULL` query.
+✅ **Expect:** Up to 12 rows (one per tone). The seed generator assigns citizen `tone` independently of `severity_iron_marks` (severity is picked from neighbourhood-level weights *before* a citizen is selected), so `avg_severity_today` typically lands within ~0.2 across all tones, a flat-ish leaderboard. That null result is itself the finding worth reporting: *"chronic-reporter tone does not appear to bias today's severity ratings in this dataset."* ~10% of today's reports are anonymous (`citizen_id IS NULL`) and won't be in this output; surface them with a separate `WHERE r.citizen_id IS NULL` query.
 
 ### Step 9 — Ode mood vs. social-sentiment baseline (neighbourhood_odes × social_sentiment)
 
@@ -331,36 +331,36 @@ LEFT JOIN sentiment_dom s USING (neighbourhood)
 ORDER BY o.neighbourhood;
 ```
 
-✅ **Expect:** 12 rows. Some neighbourhoods will be aligned; some divergent. The ode column shows you exactly what Gemini said — useful when explaining a divergent row to a stakeholder ("Hisingen citizens have been resigned for a year, but today's reporters are vengeful — what changed in the last 90 days?").
+✅ **Expect:** 12 rows. Some neighbourhoods will be aligned; some divergent. The ode column shows you exactly what Gemini said, useful when explaining a divergent row to a stakeholder ("Hisingen citizens have been resigned for a year, but today's reporters are vengeful, what changed in the last 90 days?").
 
 ### Step 10 — (optional, ~10 min) Ask Data Canvas about today's data
 
-**Data Canvas** is BQ Studio's NL-to-SQL surface — drop a table on a canvas, type a question in plain English, Gemini writes the SQL and renders the chart. Best on flat columns; works well on `pothole_reports_raw`.
+**Data Canvas** is BQ Studio's NL-to-SQL surface: drop a table on a canvas, type a question in plain English, Gemini writes the SQL and renders the chart. Best on flat columns; works well on `pothole_reports_raw`.
 
 In Studio, **+** dropdown → **Create new** → **Data canvas** → region `europe-west1` → name `pothole-poet-explore`. **Search** → drag `pothole_reports_raw`. Try:
 
 1. *"Show today's reports broken down by weather, as a stacked bar per neighbourhood."*
-2. *"Which citizens filed more than 3 reports today and what tones are they?"* — note: needs the `citizens` table dragged in as a second node.
-3. *"Summarise the top 5 swallowed objects in Hisingen using one Gemini sentence."* — Data Canvas knows about `AI.GENERATE`; see if it composes a sensible call.
+2. *"Which citizens filed more than 3 reports today and what tones are they?"*. note: needs the `citizens` table dragged in as a second node.
+3. *"Summarise the top 5 swallowed objects in Hisingen using one Gemini sentence."*. Data Canvas knows about `AI.GENERATE`; see if it composes a sensible call.
 
-Inspect the SQL each step. When the chart is good, save the canvas — the App Lead can pull screenshots into Streamlit later.
+Inspect the SQL each step. When the chart is good, save the canvas, the App Lead can pull screenshots into Streamlit later.
 
 ---
 
 <Gotchas>
 - <strong>AI.GENERATE returns NULL or errors with <code>permission denied</code>.</strong> The <code>gemini</code> connection&rsquo;s service account is missing <code>roles/aiplatform.user</code>. Pre-provisioning binds it; if it&rsquo;s missing, flag a Sherpa rather than rebinding by hand.
-- <strong>AI.GENERATE returns <code>404 model not found</code>.</strong> You used the regional endpoint name (<code>europe-west1</code>) instead of the global one. Gemini 3 is global-endpoint only &mdash; the URL <strong>must</strong> contain <code>locations/global</code>.
+- <strong>AI.GENERATE returns <code>404 model not found</code>.</strong> You used the regional endpoint name (<code>europe-west1</code>) instead of the global one. Gemini 3 is global-endpoint only, the URL <strong>must</strong> contain <code>locations/global</code>.
 - <strong>QUALIFY: <code>syntax error</code>.</strong> You&rsquo;re on a SQL dialect setting that&rsquo;s not GoogleSQL. Studio defaults are right; if you set <code>--use_legacy_sql=true</code> anywhere, undo it.
 - <strong>Notebook fails to start.</strong> Pick the <strong>europe-west1</strong> runtime; <code>us-central1</code> works but is slower.
-- <strong>Data Canvas isn&rsquo;t available in <code>europe-west1</code>.</strong> Fall back to <code>us-central1</code> for the canvas runtime &mdash; the dataset stays in <code>europe-west1</code>.
+- <strong>Data Canvas isn&rsquo;t available in <code>europe-west1</code>.</strong> Fall back to <code>us-central1</code> for the canvas runtime, the dataset stays in <code>europe-west1</code>.
 - <strong>Phase B queries return zero rows.</strong> The DAG hasn&rsquo;t run yet, or it failed. Refresh Explorer; if <code>pothole_reports_raw</code> isn&rsquo;t there, it&rsquo;s a Pipeline-lane problem, not yours.
 - <strong>STRING_AGG with LIMIT inside AI.GENERATE prompt times out.</strong> You asked Gemini to read 5,000 posts. Cap the LIMIT to ~50; the model&rsquo;s context isn&rsquo;t the bottleneck, latency is.
 </Gotchas>
 
 <Shipped>
-You&rsquo;ve flexed five Phase-A muscles BigQuery makes easy that the Snowflake/PowerBI stack doesn&rsquo;t &mdash; <code>QUALIFY</code> for window-function filtering, <code>AI.GENERATE</code> as a scalar function, ground-truth evaluation of an LLM in pure SQL, <code>APPROX_TOP_COUNT</code> for cheap ranking, <code>COUNTIF</code> for terse conditional counts &mdash; and three Phase-B joins that fold today&rsquo;s pipeline data into 3 years of historical context. The Garage now has analytical answers, not just a demo.
+You&rsquo;ve flexed five Phase-A muscles BigQuery makes easy that the Snowflake/PowerBI stack doesn&rsquo;t. <code>QUALIFY</code> for window-function filtering, <code>AI.GENERATE</code> as a scalar function, ground-truth evaluation of an LLM in pure SQL, <code>APPROX_TOP_COUNT</code> for cheap ranking, <code>COUNTIF</code> for terse conditional counts, and three Phase-B joins that fold today&rsquo;s pipeline data into 3 years of historical context. The Garage now has analytical answers, not just a demo.
 </Shipped>
 
-📊 **Lane C done.** Tell the Pipeline-author the federation is wired and your queries are ready, then drift over to the App Lead and pair on Streamlit — they may want screenshots of your Phase B alignment query for the demo tile.
+📊 **Lane C done.** Tell the Pipeline-author the federation is wired and your queries are ready, then drift over to the App Lead and pair on Streamlit; they may want screenshots of your Phase B alignment query for the demo tile.
 
 ➡️ Next: **Quest 3 — Wire the Pipeline** (sidebar on the left). The team converges.

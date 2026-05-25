@@ -2,9 +2,9 @@
 
 <Objective lane="all">
 
-**🎯 What you'll do.** As a team: confirm Lane A's DAG has run successfully (BigQuery has 12 rows in `neighbourhood_odes`), then Lane D runs `kubectl set env deployment/pothole-laureate MODE=live -n laureate`. Pods restart in ~60 seconds. Refresh the URL — it now serves real Gemini poems from BigQuery instead of bundled CSV. **Foundation complete.**
+**🎯 What you'll do.** As a team: confirm Lane A's DAG has run successfully (BigQuery has 12 rows in `neighbourhood_odes`), then Lane D runs `kubectl set env deployment/pothole-laureate MODE=live -n laureate`. Pods restart in ~60 seconds. Refresh the URL. it now serves real Gemini poems from BigQuery instead of bundled CSV. **Foundation complete.**
 
-**🤝 Why it matters.** This is the **convergence moment** — four parallel lanes finally meet. There's no new infrastructure here, just one env var that switches Streamlit's data source. If anyone's lane isn't done, they finish *while the team waits and watches* — Foundation isn't complete until BigQuery has poems and Streamlit reads them. Take a breath after this page; the rest of the day is about making the demo yours.
+**🤝 Why it matters.** This is the **convergence moment**. four parallel lanes finally meet. There's no new infrastructure here, just one env var that switches Streamlit's data source. If anyone's lane isn't done, they finish *while the team waits and watches*. Foundation isn't complete until BigQuery has poems and Streamlit reads them. Take a breath after this page; the rest of the day is about making the demo yours.
 
 </Objective>
 
@@ -41,9 +41,9 @@ In the Composer environment's **DAGs** tab, click `compose_the_odes` → **Trigg
 
 Both tasks should go green:
 - `federate_pothole_reports` (~30 sec)
-- `ask_the_laureate` (~30–60 sec — Gemini composes 12 odes)
+- `ask_the_laureate` (~30–60 sec. Gemini composes 12 odes)
 
-If `ask_the_laureate` fails, click into it and read the logs. Most common: `gemini` connection is missing the `roles/aiplatform.user` binding (should be pre-bound by the platform — flag a Sherpa).
+If `ask_the_laureate` fails, click into it and read the logs. Most common: `gemini` connection is missing the `roles/aiplatform.user` binding (should be pre-bound by the platform; flag a Sherpa).
 
 <Cheat title="Show how to trigger from the CLI instead">
 
@@ -78,7 +78,7 @@ LIMIT 3;
 
 ## Step 3 — GKE / App Lead: switch `MODE` to live (~1 min)
 
-No rebuild, no redeploy. The container code is unchanged — `app.py` reads `MODE` at runtime and switches data sources. We just patch the Deployment's env var and Kubernetes does a rolling restart.
+No rebuild, no redeploy. The container code is unchanged. `app.py` reads `MODE` at runtime and switches data sources. We just patch the Deployment's env var and Kubernetes does a rolling restart.
 
 <Cheat title="Show the env-flip command">
 
@@ -88,7 +88,7 @@ kubectl set env deployment/pothole-laureate MODE=live -n laureate
 kubectl rollout status deployment/pothole-laureate -n laureate
 ```
 
-The same two Pods bounce one at a time (rolling restart, zero downtime). The public URL doesn't change — same Gateway, same IP, same image, just new env.
+The same two Pods bounce one at a time (rolling restart, zero downtime). The public URL doesn't change; same Gateway, same IP, same image, just new env.
 
 </Cheat>
 
@@ -112,16 +112,17 @@ curl -s "http://$GATEWAY_IP/" | grep -o "Today's Ode" | head -1
 # ✅ Returns: Today's Ode
 ```
 
-In your laptop's browser tab, switch neighbourhoods in the dropdown — each shows a different real poem.
+In your laptop's browser tab, switch neighbourhoods in the dropdown, each shows a different real poem.
 
 </Cheat>
 
 ## Done
 
 <Gotchas>
-- <strong>DAG is green but <code>neighbourhood_odes</code> shows 0 rows.</strong> Check the BigQuery <code>Job History</code> &mdash; the <code>ask_the_laureate</code> task may have skipped due to a stale federation cache. Re-trigger the DAG.
-- <strong>Streamlit still shows the CSV after the env switch.</strong> Confirm the rollout completed (<code>kubectl rollout status deployment/pothole-laureate -n laureate</code>). If pods bounced but the page still shows seed data, hard-refresh the browser &mdash; Streamlit caches aggressively.
-- <strong>Odes appear as raw JSON instead of poetry.</strong> The <code>AI.GENERATE</code> response wasn&rsquo;t unwrapped &mdash; check that <code>02_enrich.sql</code> reads <code>.result</code> off the AI.GENERATE call.
+- <strong>DAG is green but <code>neighbourhood_odes</code> shows 0 rows.</strong> Check the BigQuery <code>Job History</code>. the <code>ask_the_laureate</code> task may have skipped due to a stale federation cache. Re-trigger the DAG.
+- <strong>Streamlit still shows the CSV after the env switch.</strong> Confirm the rollout completed (<code>kubectl rollout status deployment/pothole-laureate -n laureate</code>). If pods bounced but the page still shows seed data, hard-refresh the browser. Streamlit caches aggressively.
+- <strong>Odes appear as raw JSON instead of poetry.</strong> The <code>AI.GENERATE</code> response wasn&rsquo;t unwrapped; check that <code>02_enrich.sql</code> reads <code>.result</code> off the AI.GENERATE call.
+- <strong>Page loads but shows errors or stale data after switching to <code>MODE=live</code>.</strong> Open the Logs Explorer (Q1-5) and filter: Resource Type = <code>k8s_container</code>, namespace = <code>laureate</code>, Severity = Error. Common causes: BigQuery client exceptions (WIF binding from Q2D-3 is wrong) or the <code>pothole_laureate</code> dataset is not populated yet.
 </Gotchas>
 
 <Shipped>

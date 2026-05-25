@@ -12,9 +12,10 @@
 
 <Concept title="🤖 Or drive this with Antigravity CLI">
 
-**Antigravity CLI** has an **`alloydb-seed-helper`** skill that does this end-to-end: resolves the AlloyDB private IP, inspects the live `pothole_reports` schema, pre-flights the CSV row count, proposes the `\copy` for your approval, and verifies the 5000-row load. Launch it from any terminal:
+**Antigravity CLI** has an **`alloydb-seed-helper`** skill that does this end-to-end: resolves the AlloyDB private IP, inspects the live `pothole_reports` schema, pre-flights the CSV row count, proposes the `\copy` for your approval, and verifies the 5000-row load. Make sure you're in the Quest repo so the workspace plugin loads:
 
 ```bash
+cd ~/quest
 agy
 ```
 
@@ -22,7 +23,7 @@ then ask:
 
 > *"Seed the AlloyDB pothole_reports table from the seed CSV in my repo."*
 
-Read-only checks run on their own; the `\copy` itself pauses for your `y`. The QuickPath below is exactly what the skill runs under the hood — pick whichever you prefer.
+Read-only checks run on their own; the `\copy` itself pauses for your `y`. The QuickPath below is exactly what the skill runs under the hood, pick whichever you prefer.
 
 </Concept>
 
@@ -54,7 +55,7 @@ The CSV lives in your Workstation. AlloyDB Studio can't read your local filesyst
 
 ### Step 1 — Get the cluster's private IP
 
-The cluster's private IP lives on the primary instance's **Connect** panel. It looks like `10.x.x.x` — the cluster name itself won't work as a host.
+The cluster's private IP lives on the primary instance's **Connect** panel. It looks like `10.x.x.x`. the cluster name itself won't work as a host.
 
 ```bash
 ALLOYDB_HOST="$(gcloud alloydb instances describe pothole-archive-primary \
@@ -91,7 +92,7 @@ psql "host=$ALLOYDB_HOST user=postgres dbname=postgres sslmode=require" \
 
 <Concept title="Why \copy from the terminal, not Studio?">
 
-`\copy` is a **psql client-side** command — it reads a file from wherever the psql binary is running and streams it to the server. AlloyDB Studio is a browser app: there is no client-side filesystem to read from. Studio can run server-side `COPY` (no backslash) but that needs the file to already exist on the AlloyDB server, which you can't put files on.
+`\copy` is a **psql client-side** command; it reads a file from wherever the psql binary is running and streams it to the server. AlloyDB Studio is a browser app: there is no client-side filesystem to read from. Studio can run server-side `COPY` (no backslash) but that needs the file to already exist on the AlloyDB server, which you can't put files on.
 
 Your Workstation has the CSV at `~/quest/pothole-poet/seed/pothole_reports.csv` and a real psql binary. So `psql` from the terminal is the right tool: it reads the local CSV and streams it over the SSL connection to AlloyDB.
 
@@ -99,7 +100,7 @@ Your Workstation has the CSV at `~/quest/pothole-poet/seed/pothole_reports.csv` 
 
 <Concept title="What does sslmode=require do?">
 
-AlloyDB rejects unencrypted connections — every client must use TLS. `sslmode=require` is the psql way of saying *"demand TLS, but don't verify the server certificate."* For a private IP inside your VPC that's fine: the network path is already private and the AlloyDB control plane issues valid certs.
+AlloyDB rejects unencrypted connections; every client must use TLS. `sslmode=require` is the psql way of saying *"demand TLS, but don't verify the server certificate."* For a private IP inside your VPC that's fine: the network path is already private and the AlloyDB control plane issues valid certs.
 
 For higher-assurance environments you'd use `sslmode=verify-full` and provide the cluster's CA cert, but that's outside today's scope.
 
@@ -133,9 +134,9 @@ LIMIT 5;
 ```
 
 <Gotchas>
-- <strong><code>psql: command not found</code>.</strong> Shouldn&rsquo;t happen &mdash; <code>psql</code> 16 is baked into the Iron &amp; Cloud workstation image. If it&rsquo;s genuinely missing, your workstation may be running an outdated image &mdash; flag a Sherpa.
+- <strong><code>psql: command not found</code>.</strong> Shouldn&rsquo;t happen. <code>psql</code> 16 is baked into the Iron &amp; Cloud workstation image. If it&rsquo;s genuinely missing, your workstation may be running an outdated image; flag a Sherpa.
 - <strong><code>could not connect to server</code> or connection times out.</strong> <code>ALLOYDB_HOST</code> must be the cluster&rsquo;s <strong>private IP</strong> (a <code>10.x.x.x</code>), not the cluster name. Re-run the <code>gcloud alloydb instances describe</code> from Step 1.
-- <strong><code>psql \copy</code> says <code>permission denied</code>.</strong> You&rsquo;re likely in <strong>AlloyDB Studio</strong> &mdash; <code>\copy</code> only works from a real shell. Studio has no filesystem.
+- <strong><code>psql \copy</code> says <code>permission denied</code>.</strong> You&rsquo;re likely in <strong>AlloyDB Studio</strong>. <code>\copy</code> only works from a real shell. Studio has no filesystem.
 - <strong><code>SSL connection required</code>.</strong> Add <code>sslmode=require</code> to the connection string. AlloyDB rejects unencrypted connections.
 - <strong><code>COPY 0</code> instead of <code>COPY 5000</code>.</strong> Either the CSV path is wrong (<code>ls -la /home/user/quest/pothole-poet/seed/pothole_reports.csv</code> to confirm) or you forgot <code>HEADER true</code> and the column header row was treated as data and rejected.
 - <strong>Re-running the seed shows "duplicate key value".</strong> The CSV has <code>id</code> values; re-running collides on the primary key. To re-seed cleanly: <code>TRUNCATE pothole_reports;</code> first, then re-run Step 2.
@@ -149,6 +150,6 @@ The Garage&rsquo;s operational database is live. <strong>AlloyDB cluster <code>p
 
 > *"Pothole archive is planted. Cluster `pothole-archive`, primary instance `pothole-archive-primary`, in `europe-west1`. 5,000 rows, 12 neighbourhoods."*
 
-If the Airflow Lead's Composer is still creating, sit with them and read `pothole-poet/airflow/compose_the_odes.py` together — that's the DAG that'll harvest your potholes shortly.
+If the Airflow Lead's Composer is still creating, sit with them and read `pothole-poet/airflow/compose_the_odes.py` together; that's the DAG that'll harvest your potholes shortly.
 
 ➡️ Next: head to **Quest 3 — Wire the Pipeline** when the rest of the lanes finish (sidebar on the left). Wait there for the others.

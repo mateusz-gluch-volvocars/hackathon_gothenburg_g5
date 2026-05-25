@@ -8,7 +8,7 @@
 
 </Objective>
 
-> Guardian lane · ~15 min · uses `gcloud` throughout (no Console clicking) so the API surface is visible — what tooling could automate next.
+> Guardian lane · ~15 min · uses `gcloud` throughout (no Console clicking) so the API surface is visible, what tooling could automate next.
 
 <QuickPath>
 
@@ -84,7 +84,7 @@ echo "Pipeline healthy · restored at $(date -u +%H:%MZ)" \
 
 </QuickPath>
 
-Your Q2E-1 uptime check tells you *if* the door is open. Q2E-2 traces tell you *what users do*. **Q2E-3 is what you do when the door closes.** A real Guardian doesn't just watch — they coordinate. They claim a failure so two people don't debug it in parallel. They broadcast "yes I see it, working on it" so the rest of the team doesn't waste time. They snooze the alert so the email firehose stops while they fix.
+Your Q2E-1 uptime check tells you *if* the door is open. Q2E-2 traces tell you *what users do*. **Q2E-3 is what you do when the door closes.** A real Guardian doesn't just watch; they coordinate. They claim a failure so two people don't debug it in parallel. They broadcast "yes I see it, working on it" so the rest of the team doesn't waste time. They snooze the alert so the email firehose stops while they fix.
 
 We use `gcloud` here on purpose. Each Console click hides what's happening; the gcloud surface makes it explicit, and shows you what a runbook script would look like if you wanted to automate this loop in the future.
 
@@ -94,7 +94,7 @@ We use `gcloud` here on purpose. Each Console click hides what's happening; the 
 
 The Streamlit Pod reads `gs://<project>-broadcast/broadcast.txt` on every page render (cached 30 s). Until the Pod's WIF principal has read access, `read_broadcast()` silently returns `""` and the banner never appears.
 
-This binding can't be pre-provisioned in Terraform — the GKE Workload Identity Pool `<project>.svc.id.goog` is only created when participants run Q2D-1. Bind it now, the same way Q2D-3 binds the BQ roles and Q2E-2 binds the OTel roles.
+This binding can't be pre-provisioned in Terraform, the GKE Workload Identity Pool `<project>.svc.id.goog` is only created when participants run Q2D-1. Bind it now, the same way Q2D-3 binds the BQ roles and Q2E-2 binds the OTel roles.
 
 ```bash
 PROJECT_ID="$(gcloud config get-value project)"
@@ -194,17 +194,17 @@ echo "Pipeline healthy — Guardian: @your-handle" \
   | gcloud storage cp - "gs://${PROJECT_ID}-broadcast/broadcast.txt"
 ```
 
-✅ **Expect** (in the Streamlit UI within 30 sec): A yellow banner at the top reading `🛡 Guardian broadcast · Pipeline healthy — Guardian: @your-handle`.
+✅ **Expect** (in the Streamlit UI within 30 sec): A yellow banner at the top reading `🛡 Guardian broadcast · Pipeline healthy. Guardian: @your-handle`.
 
 <Concept title="Why a GCS object instead of a database?">
 
-Three reasons. (1) **Decoupling**: the broadcast doesn&rsquo;t need your Data Engineer&rsquo;s AlloyDB to be up &mdash; if AlloyDB is the thing that&rsquo;s broken, you still need to broadcast about it. (2) **Simplicity**: one `gcloud storage cp` writes; one `storage.Bucket.get` reads. No schema, no migration, no auth dance. (3) **Operational surface**: the Guardian might want to script `broadcast` from a runbook on their laptop &mdash; gcloud + GCS is the smallest possible primitive for that.
+Three reasons. (1) **Decoupling**: the broadcast doesn&rsquo;t need your Data Engineer&rsquo;s AlloyDB to be up; if AlloyDB is the thing that&rsquo;s broken, you still need to broadcast about it. (2) **Simplicity**: one `gcloud storage cp` writes; one `storage.Bucket.get` reads. No schema, no migration, no auth dance. (3) **Operational surface**: the Guardian might want to script `broadcast` from a runbook on their laptop, gcloud + GCS is the smallest possible primitive for that.
 
 </Concept>
 
 ### Step 4 — Run the failure → snooze loop
 
-Trigger a failure — kill the Streamlit Pod:
+Trigger a failure: kill the Streamlit Pod:
 
 ```bash
 kubectl delete pod -l app=pothole-laureate -n laureate
@@ -278,15 +278,15 @@ gcloud storage cat "gs://${PROJECT_ID}-broadcast/broadcast.txt"
 ✅ **Expect:** Each command prints one line.
 
 <Gotchas>
-- <strong>Alert policy creation returns "permission denied" on <code>monitoring.alertPolicies.create</code>.</strong> Workstation runner SA needs <code>roles/monitoring.editor</code>. Should be there via <code>roles/editor</code>. Confirm with <code>gcloud auth list</code> &mdash; you may be authed as your personal user, not the SA.
+- <strong>Alert policy creation returns "permission denied" on <code>monitoring.alertPolicies.create</code>.</strong> Workstation runner SA needs <code>roles/monitoring.editor</code>. Should be there via <code>roles/editor</code>. Confirm with <code>gcloud auth list</code>. you may be authed as your personal user, not the SA.
 - <strong>Email notification never arrives.</strong> Check the channel was actually selected on the policy: <code>gcloud alpha monitoring policies describe $POLICY_ID --format='value(notificationChannels)'</code>. Should not be empty.
 - <strong>Snooze list is empty after creating one.</strong> The <code>gcloud alpha monitoring snoozes list</code> defaults to listing snoozes ending within 14 days. Should be fine for our 30-min test, but if your snooze ended already it won&rsquo;t appear. Re-create with a longer end-time.
 - <strong>Broadcast doesn&rsquo;t appear in Streamlit.</strong> The Pod&rsquo;s <code>BROADCAST_BUCKET</code> env var must be set (Terraform-provisioned, but check after any <code>kubectl set env</code> in Q3/Q4 since Kubernetes <em>replaces</em> the env list rather than merging). Restore with: <code>kubectl set env deployment/pothole-laureate BROADCAST_BUCKET="$(gcloud config get-value project)-broadcast" -n laureate</code>.
-- <strong>"Snoozes don&rsquo;t have a delete operation."</strong> Correct &mdash; you terminate a snooze by updating its end-time to now. Snoozes auto-clean after their end-time passes.
+- <strong>"Snoozes don&rsquo;t have a delete operation."</strong> Correct; you terminate a snooze by updating its end-time to now. Snoozes auto-clean after their end-time passes.
 </Gotchas>
 
 <Shipped>
 Guardian piece. <strong>Your Garage now has a complete Flow-Guardian loop.</strong> Alerts fire when things break; you claim them via snooze; you broadcast known issues to teammates and users; the system auto-recovers and you clear the broadcast. The same on-call rhythm production teams run every day, in 15 minutes of `gcloud` commands.
 </Shipped>
 
-🛡 Hand the keyboard to your App Dev side &mdash; Q3 (MODE switch to live) and Q4/Q5 (feature ships) are next. The Guardian rhythm you just built is what watches the team through those changes.
+🛡 Hand the keyboard to your App Dev side. Q3 (MODE switch to live) and Q4/Q5 (feature ships) are next. The Guardian rhythm you just built is what watches the team through those changes.

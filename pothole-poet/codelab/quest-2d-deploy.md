@@ -2,9 +2,9 @@
 
 <Objective lane="guardian">
 
-**🎯 What you'll do.** `kubectl apply -f` the Deployment + Service manifests from `streamlit/k8s/`. Wait for two Pods to reach `Running`. The Service is `ClusterIP` with a NEG annotation — internal-only for now, no public URL yet. ~5 minutes including the image pull from Artifact Registry.
+**🎯 What you'll do.** `kubectl apply -f` the Deployment + Service manifests from `streamlit/k8s/`. Wait for two Pods to reach `Running`. The Service is `ClusterIP` with a NEG annotation, internal-only for now, no public URL yet. ~5 minutes including the image pull from Artifact Registry.
 
-**🤝 Why it matters.** This is the **first time your code actually runs on real infrastructure**. The two Pods need to be Running before the next page (Gateway) can route traffic to them. The NEG annotation on the Service is what lets Google's global load balancer plug straight into your Pods — it's not magic, but it does have to be set right *now*, not later.
+**🤝 Why it matters.** This is the **first time your code actually runs on real infrastructure**. The two Pods need to be Running before the next page (Gateway) can route traffic to them. The NEG annotation on the Service is what lets Google's global load balancer plug straight into your Pods; it's not magic, but it does have to be set right *now*, not later.
 
 </Objective>
 
@@ -54,7 +54,7 @@ sed -i "s/REPLACE_PROJECT_ID/$PROJECT_ID/g" k8s/deployment.yaml
 grep -q REPLACE_PROJECT_ID k8s/deployment.yaml && echo "WARN: substitution failed" || echo "✅ substitution clean"
 ```
 
-> Re-running `sed` is harmless — once the placeholder is gone there's nothing left to substitute. If you see "WARN: substitution failed", check that `$PROJECT_ID` is set (`echo $PROJECT_ID`).
+> Re-running `sed` is harmless, once the placeholder is gone there's nothing left to substitute. If you see "WARN: substitution failed", check that `$PROJECT_ID` is set (`echo $PROJECT_ID`).
 
 ### Step 2 — Apply Deployment + Service
 
@@ -66,13 +66,13 @@ kubectl apply -f k8s/deployment.yaml -f k8s/service.yaml
 - `deployment.apps/pothole-laureate created`
 - `service/pothole-laureate created`
 
-<Concept title="Deployment vs Pod vs Service — what's what?">
+<Concept title="Deployment vs Pod vs Service: what's what?">
 
 A **Pod** is the unit of execution: one or more containers sharing a network namespace. You almost never create Pods directly.
 
 A **Deployment** is a controller that says "keep N Pods of this template alive." If a Pod crashes, the Deployment replaces it. If you change the Deployment's image, it does a rolling update.
 
-A **Service** is a stable network endpoint. It selects Pods by label and load-balances traffic across them. ClusterIP (which we use) means "reachable only from inside the cluster" — that's fine because the Gateway will be the public entry point.
+A **Service** is a stable network endpoint. It selects Pods by label and load-balances traffic across them. ClusterIP (which we use) means "reachable only from inside the cluster"; that's fine because the Gateway will be the public entry point.
 
 </Concept>
 
@@ -84,7 +84,7 @@ You'll see this annotation on the Service:
 cloud.google.com/neg: '{"exposed_ports": {"8080":{}}}'
 ```
 
-**NEG** = Network Endpoint Group. It tells the GKE Gateway controller to use **container-native load balancing** — the Google LB sends traffic directly to Pod IPs, skipping the kube-proxy hop. Faster, fewer moving parts. Required for the Gateway in Q2D-5 to work properly.
+**NEG** = Network Endpoint Group. It tells the GKE Gateway controller to use **container-native load balancing**. the Google LB sends traffic directly to Pod IPs, skipping the kube-proxy hop. Faster, fewer moving parts. Required for the Gateway in Q2D-5 to work properly.
 
 </Concept>
 
@@ -116,15 +116,16 @@ kubectl logs -n laureate -l app=pothole-laureate --tail=10
 - `URL: http://0.0.0.0:8080`
 
 <Gotchas>
-- <strong>Pods stuck <code>Pending</code> for &gt;3 min.</strong> Autopilot is provisioning a node &mdash; first Pod on a fresh cluster takes 30-90 sec extra. Past 3 min: <code>kubectl describe pod &lt;pod-name&gt; -n laureate | grep -A20 Events</code> &mdash; the bottom of the output shows the actual scheduling failure.
+- <strong>Pods stuck <code>Pending</code> for &gt;3 min.</strong> Autopilot is provisioning a node; first Pod on a fresh cluster takes 30-90 sec extra. Past 3 min: <code>kubectl describe pod &lt;pod-name&gt; -n laureate | grep -A20 Events</code>. the bottom of the output shows the actual scheduling failure.
 - <strong><code>ImagePullBackOff</code>.</strong> Either you forgot to push the image (Q2D-2) or the <code>sed</code> didn&rsquo;t substitute. Re-check with: <code>grep REPLACE_PROJECT_ID k8s/deployment.yaml</code> (should be empty) and <code>gcloud artifacts docker images list europe-west1-docker.pkg.dev/$PROJECT_ID/laureate</code>.
-- <strong>Pods <code>CrashLoopBackOff</code>, logs say <code>permission denied</code> on BigQuery.</strong> Q2D-3 IAM binding has the wrong principal &mdash; usually <code>PROJECT_ID</code>/<code>PROJECT_NUMBER</code> mixed up. Re-run the Q2D-3 sanity check.
+- <strong>Pods <code>CrashLoopBackOff</code>, logs say <code>permission denied</code> on BigQuery.</strong> Q2D-3 IAM binding has the wrong principal, usually <code>PROJECT_ID</code>/<code>PROJECT_NUMBER</code> mixed up. Re-run the Q2D-3 sanity check.
 - <strong>Pods Ready but only one of two.</strong> Autopilot may take longer for the second Pod if it needs a new node. Wait 1-2 min more.
 - <strong>Pods Ready but logs are empty.</strong> First-time Streamlit logs can take ~10 sec to flush. Re-run <code>kubectl logs</code> with <code>--tail=50</code>.
+- <strong>Pod keeps crashing and <code>kubectl logs</code> only shows the last restart.</strong> Open the Logs Explorer (Q1-5) and filter: Resource Type = <code>k8s_container</code>, then namespace = <code>laureate</code> in the Fields pane. Cloud Logging retains logs from previous Pod restarts that <code>kubectl logs</code> does not.
 </Gotchas>
 
 <Shipped>
-The workload is live. <strong>Two Streamlit Pods are running in the cluster, serving the Office page with seed data, ready to take traffic.</strong> Reachable from inside the cluster via DNS <code>pothole-laureate.laureate.svc.cluster.local:8080</code>. Not yet reachable from the internet &mdash; that&rsquo;s the next page.
+The workload is live. <strong>Two Streamlit Pods are running in the cluster, serving the Office page with seed data, ready to take traffic.</strong> Reachable from inside the cluster via DNS <code>pothole-laureate.laureate.svc.cluster.local:8080</code>. Not yet reachable from the internet; that&rsquo;s the next page.
 </Shipped>
 
 ☸ **Q2D-4 done.** Pods running, but the world can't see them yet.

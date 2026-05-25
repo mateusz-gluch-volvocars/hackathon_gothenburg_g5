@@ -2,9 +2,9 @@
 
 <Objective lane="all">
 
-**🎯 What you'll do.** Polish the visual palette and swap the Laureate's voice. The voice is **one prompt change** in `airflow/sql/02_enrich.sql` — make Gemini compose as a pirate captain, IKEA assembly manual, ABBA chorus, somber Bergman narrator, anything. Re-trigger the DAG (~3 min) and watch every poem regenerate in the new voice. ~15 minutes.
+**🎯 What you'll do.** Polish the visual palette and swap the Laureate's voice. The voice is **one prompt change** in `airflow/sql/02_enrich.sql`. make Gemini compose as a pirate captain, IKEA assembly manual, ABBA chorus, somber Bergman narrator, anything. Re-trigger the DAG (~3 min) and watch every poem regenerate in the new voice. ~15 minutes.
 
-**🤝 Why it matters.** This is the **second-loudest demo moment**. Generic AI poems are forgettable; pirate-captain pothole poems are unforgettable. Pick a voice that lands the joke for the room you're presenting to — judges will remember "the Garage that did the IKEA-manual potholes" three weeks after they've forgotten everything else. **The persona you pick here is also the foundation you'll deepen during the open build window (Quest 7)** — ask Antigravity CLI to apply the same voice across the whole app (page title, sidebar, theme color, analyst prompts), not just the ode.
+**🤝 Why it matters.** This is the **second-loudest demo moment**. Generic AI poems are forgettable; pirate-captain pothole poems are unforgettable. Pick a voice that lands the joke for the room you're presenting to; judges will remember "the Garage that did the IKEA-manual potholes" three weeks after they've forgotten everything else. **The persona you pick here is also the foundation you'll deepen during the open build window (Quest 7)**. ask Antigravity CLI to apply the same voice across the whole app (page title, sidebar, theme color, analyst prompts), not just the ode.
 
 </Objective>
 
@@ -59,7 +59,7 @@ Open it. Find the `prompt =>` block. The default is *"a melancholic Swedish bure
 4. Wait ~60 seconds. Refresh the Streamlit page.
 5. The Laureate now speaks differently.
 
-<Screenshot src="/quest/pothole-poet/img/streamlit_voiceswap.png" caption="Streamlit page after a voice swap — same neighbourhoods, different tone (e.g. pirate captain, IKEA manual, ABBA chorus)." />
+<Screenshot src="/quest/pothole-poet/img/streamlit_voiceswap.png" caption="Streamlit page after a voice swap; same neighbourhoods, different tone (e.g, pirate captain, IKEA manual, ABBA chorus)." />
 
 ## B. Polish the Office's look
 
@@ -74,7 +74,7 @@ PALETTE = {
 }
 ```
 
-Swap any colour. Swap the page emoji. Change the title. The header caption is one line below the title — rewrite it in your Office's voice.
+Swap any colour. Swap the page emoji. Change the title. The header caption is one line below the title; rewrite it in your Office's voice.
 
 If you want a logo, drop an SVG in `streamlit/` and `st.image()` it in the header.
 
@@ -101,7 +101,7 @@ kubectl rollout status deployment/pothole-laureate -n laureate
 <Gotchas>
 - <strong>Re-triggered the DAG but odes look the same.</strong> Did you re-upload <code>02_enrich.sql</code> to <code>$DAGS_BUCKET/sql/</code>? The DAG reads from the bucket, not your local copy.
 - <strong>Gemini truncates long prompts.</strong> Keep the prompt under ~600 chars. The Laureate compresses the conceit; you don&rsquo;t need to over-specify.
-- <strong>Palette swap doesn&rsquo;t apply after rollout.</strong> Streamlit caches CSS aggressively &mdash; hard-refresh in the browser. If the colour <em>still</em> doesn&rsquo;t change, confirm the new image rolled out: <code>kubectl describe deployment pothole-laureate -n laureate | grep Image</code>.
+- <strong>Palette swap doesn&rsquo;t apply after rollout.</strong> Streamlit caches CSS aggressively; hard-refresh in the browser. If the colour <em>still</em> doesn&rsquo;t change, confirm the new image rolled out: <code>kubectl describe deployment pothole-laureate -n laureate | grep Image</code>.
 - <strong>Voice change made the JSON parser brittle.</strong> If you switched to a heavily formatted style (e.g. lists, JSON), the downstream renderer may struggle. Stick to plain prose with a 3-line constraint.
 </Gotchas>
 

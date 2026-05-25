@@ -4,7 +4,7 @@
 
 **🎯 What you'll do.** Stand up a **Cloud Monitoring uptime check** on the Streamlit Gateway in ~10 min. One gcloud command (or Console click-through, your choice). This is the first piece of the **App Dev / Guardian** lane: until something is being watched, nobody on your Garage knows whether the URL is actually staying alive.
 
-**🤝 Why it matters.** Every operational dashboard worth running starts with the question "is the thing up?". A green uptime check is your team's heartbeat — your Pipeline-author can see it; your Data Engineer can see it; your Infra-Admin can see it. The Guardian lane exists so somebody on the team owns the answer.
+**🤝 Why it matters.** Every operational dashboard worth running starts with the question "is the thing up?". A green uptime check is your team's heartbeat; your Pipeline-author can see it; your Data Engineer can see it; your Infra-Admin can see it. The Guardian lane exists so somebody on the team owns the answer.
 
 </Objective>
 
@@ -79,15 +79,15 @@ The 2026 GKE Console added a "Create uptime check" button on the Service detail 
 
 1. Console → **Kubernetes Engine** → **Services & Ingress** → click `pothole-laureate` (in the `laureate` namespace).
 2. Scroll to the **Endpoints** card → click **Create uptime check**.
-3. Fill in the form — the IP and path are pre-populated. Click **Test** before saving (one-shot probe). Click **Create**.
+3. Fill in the form, the IP and path are pre-populated. Click **Test** before saving (one-shot probe). Click **Create**.
 
-Note the Console says "URL" where gcloud says `uptime-url` — same resource type.
+Note the Console says "URL" where gcloud says `uptime-url`. same resource type.
 
 </Cheat>
 
 <Concept title="Why does the Guardian start before the Gateway is ready?">
 
-Pure pacing. Your Infra-Admin's Q2D-5 (Gateway provisioning + PROGRAMMED state) takes 5–15 min on a fresh Autopilot cluster. If you wait until that's done, you've burned 15 min idle. Instead, set the uptime check up *now* — the moment the Gateway flips to PROGRAMMED, your check goes green, and you've already saved your team 10 minutes.
+Pure pacing. Your Infra-Admin's Q2D-5 (Gateway provisioning + PROGRAMMED state) takes 5–15 min on a fresh Autopilot cluster. If you wait until that's done, you've burned 15 min idle. Instead, set the uptime check up *now*. the moment the Gateway flips to PROGRAMMED, your check goes green, and you've already saved your team 10 minutes.
 
 This is the Guardian rhythm: **be ready before things break, be available before things go live.**
 
@@ -101,7 +101,7 @@ gcloud monitoring uptime list-configs \
   --format="value(name,httpCheck.path)"
 ```
 
-✅ **Expect:** One line — the check's full name + `/_stcore/health`.
+✅ **Expect:** One line, the check's full name + `/_stcore/health`.
 
 ### Step 4 — Watch it go green
 
@@ -116,18 +116,18 @@ Open **Console → Monitoring → Uptime checks** → click `pothole-laureate-up
 The check fires every minute, but it can take a few min for all 6 regions to converge. While you wait:
 
 1. **Read the Guardian role description** in `help.mdx` (the help link at the top of this page). Skim the "Flow-Guardian" glossary entry so you know what rhythm Q2E-3 is going to make you do.
-2. **Decide a Guardian-of-the-day handle** — pick something short (`@anna`, `@karl`). You'll use it in the broadcast banner in Q2E-3.
-3. **Pre-position for Q2E-2** — open `streamlit/app.py` in your Workstation IDE. You'll be pasting an OpenTelemetry init block at the top.
+2. **Decide a Guardian-of-the-day handle**. pick something short (`@anna`, `@karl`). You'll use it in the broadcast banner in Q2E-3.
+3. **Pre-position for Q2E-2**. open `streamlit/app.py` in your Workstation IDE. You'll be pasting an OpenTelemetry init block at the top.
 
 <Gotchas>
-- <strong>"Connection refused" on every region.</strong> The Gateway exists but isn&rsquo;t PROGRAMMED yet. <code>kubectl describe gateway pothole-gateway -n laureate</code> &mdash; look for <code>PROGRAMMED: False</code> in the Conditions block. Wait, or ask your Infra-Admin to check Q2D-5.
+- <strong>"Connection refused" on every region.</strong> The Gateway exists but isn&rsquo;t PROGRAMMED yet. <code>kubectl describe gateway pothole-gateway -n laureate</code>. look for <code>PROGRAMMED: False</code> in the Conditions block. Wait, or ask your Infra-Admin to check Q2D-5.
 - <strong>Some regions green, others red, in the first 3 min.</strong> Cloud Monitoring rolls out checks region-by-region; give it 3-5 minutes for the global edge to converge before assuming something is broken.
 - <strong>Path returns 404 instead of 200.</strong> The Streamlit health endpoint is <code>/_stcore/health</code> not <code>/health</code>. Edit the check, change the path, save.
-- <strong>"You don&rsquo;t have permission to create uptime checks".</strong> Workstation runner SA needs <code>roles/monitoring.editor</code> &mdash; should be there via <code>roles/editor</code>. <code>gcloud auth list</code> to confirm you&rsquo;re authed correctly.
+- <strong>"You don&rsquo;t have permission to create uptime checks".</strong> Workstation runner SA needs <code>roles/monitoring.editor</code>. should be there via <code>roles/editor</code>. <code>gcloud auth list</code> to confirm you&rsquo;re authed correctly.
 </Gotchas>
 
 <Shipped>
 Guardian piece. <strong>Your team's first heartbeat is live.</strong> The Gateway has a watcher; if it goes down, the next two pages (Q2E-2 OTel + Q2E-3 alert) build on this signal so your Garage knows about failures before anyone refreshes the page.
 </Shipped>
 
-🛡 Move to **Q2E-2** — wire OpenTelemetry into the Streamlit Pod so you see what users actually do, not just whether the door is open.
+🛡 Move to **Q2E-2**. wire OpenTelemetry into the Streamlit Pod so you see what users actually do, not just whether the door is open.

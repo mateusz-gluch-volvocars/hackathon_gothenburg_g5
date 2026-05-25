@@ -4,7 +4,7 @@
 
 **🎯 What you'll do.** Open AlloyDB Studio, paste the contents of `pothole-poet/alloydb/schema.sql`, and hit RUN. Creates one table (`pothole_reports`) with the columns and indexes the rest of the pipeline expects. Under a minute of hands-on work.
 
-**🤝 Why it matters.** Without this table the next page (seed) has nowhere to put 5,000 rows, and your own BigQuery federation query (Q2C-2) has nothing to read against. The schema is small but every column matters — the Pipeline-author's DAG groups by `neighbourhood`, ranks by `severity`, and pulls `reporter_quote` and `swallowed_object` straight into Gemini's prompt.
+**🤝 Why it matters.** Without this table the next page (seed) has nowhere to put 5,000 rows, and your own BigQuery federation query (Q2C-2) has nothing to read against. The schema is small but every column matters, the Pipeline-author's DAG groups by `neighbourhood`, ranks by `severity`, and pulls `reporter_quote` and `swallowed_object` straight into Gemini's prompt.
 
 </Objective>
 
@@ -30,7 +30,7 @@ psql "host=$ALLOYDB_HOST user=postgres dbname=postgres sslmode=require" \
 
 </QuickPath>
 
-The cluster is up and empty. Time to install the table that holds citizen pothole reports. The walkthrough below uses **AlloyDB Studio** — an in-browser SQL editor that ships with AlloyDB. No psql install, no client setup; just a query tab and a RUN button.
+The cluster is up and empty. Time to install the table that holds citizen pothole reports. The walkthrough below uses **AlloyDB Studio**. an in-browser SQL editor that ships with AlloyDB. No psql install, no client setup; just a query tab and a RUN button.
 
 ---
 
@@ -92,18 +92,18 @@ WHERE table_name = 'pothole_reports'
 ORDER BY ordinal_position;
 ```
 
-✅ **Expect:** 11 rows — `id, reported_at, neighbourhood, latitude, longitude, severity_iron_marks, weather, reporter_mood, swallowed_object, reporter_quote, citizen_id`.
+✅ **Expect:** 11 rows. `id, reported_at, neighbourhood, latitude, longitude, severity_iron_marks, weather, reporter_mood, swallowed_object, reporter_quote, citizen_id`.
 
 <Gotchas>
-- <strong>Studio sign-in fails: <code>connection refused</code> or timeout.</strong> Cluster isn&rsquo;t fully READY yet &mdash; wait 30 sec and retry. If still failing past 2 min, the primary instance may still be initialising.
+- <strong>Studio sign-in fails: <code>connection refused</code> or timeout.</strong> Cluster isn&rsquo;t fully READY yet; wait 30 sec and retry. If still failing past 2 min, the primary instance may still be initialising.
 - <strong>Wrong password error.</strong> Re-set with <code>gcloud alloydb users set-password postgres --cluster=pothole-archive --region=europe-west1</code>.
-- <strong>Schema run partial.</strong> Re-run the whole file. The schema uses <code>CREATE TABLE IF NOT EXISTS</code> and <code>CREATE EXTENSION IF NOT EXISTS</code> &mdash; idempotent.
+- <strong>Schema run partial.</strong> Re-run the whole file. The schema uses <code>CREATE TABLE IF NOT EXISTS</code> and <code>CREATE EXTENSION IF NOT EXISTS</code>. idempotent.
 - <strong>Created a new database by accident.</strong> No harm done, but the rest of the Quest assumes <code>postgres</code> as the database name. Use <code>postgres</code> from now on.
 - <strong><code>permission denied for schema public</code>.</strong> You signed in as a different user than <code>postgres</code>. Sign out and back in.
 </Gotchas>
 
 <Shipped>
-The schema is installed. <strong>The <code>pothole_reports</code> table exists in the <code>postgres</code> database with all 10 expected columns and two indexes.</strong> Empty so far &mdash; next page fills it with 5,000 rows.
+The schema is installed. <strong>The <code>pothole_reports</code> table exists in the <code>postgres</code> database with all 10 expected columns and two indexes.</strong> Empty so far, next page fills it with 5,000 rows.
 </Shipped>
 
 🛢 **Q2A-2 done.** Schema installed.

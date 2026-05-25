@@ -4,7 +4,7 @@
 
 **🎯 What you'll do.** Add **real HTTPS** to your Gateway via Certificate Manager **load-balancer authorization** on a `<your-ip>.nip.io` hostname. ~15 min of work + ~10–30 min cert provisioning wait you can spend on something else.
 
-**🤝 Why it matters.** The Foundation URL was plain HTTP. For demo polish the URL needs a green padlock — judges notice. TLS termination is platform substrate, not feature work, which is why this page belongs to **Infra-Admin**, not the App Dev / Guardian who's busy with the Q6A form.
+**🤝 Why it matters.** The Foundation URL was plain HTTP. For demo polish the URL needs a green padlock; judges notice. TLS termination is platform substrate, not feature work, which is why this page belongs to **Infra-Admin**, not the App Dev / Guardian who's busy with the Q6A form.
 
 </Objective>
 
@@ -65,11 +65,11 @@ echo "Hostname: $NIP_HOST"
 
 <Concept title="Why nip.io and load balancer authorization?">
 
-Google-managed certs need to prove you own the domain. The usual mechanism is **DNS authorization** — you add a CNAME record to the parent domain. That requires you to *own* the parent domain, which we don't (no hackathon-owned DNS zone).
+Google-managed certs need to prove you own the domain. The usual mechanism is **DNS authorization**. you add a CNAME record to the parent domain. That requires you to *own* the parent domain, which we don't (no hackathon-owned DNS zone).
 
 **nip.io** is a free wildcard DNS service: `35.190.42.17.nip.io` automatically resolves to `35.190.42.17`. So if your Gateway IP is `35.190.42.17`, the hostname `35.190.42.17.nip.io` already points at your Gateway, no DNS work needed.
 
-**Load balancer authorization** uses **HTTP-01 validation** — Certificate Manager hits port 80 on the LB IP to verify control. It's automatic, requires no DNS changes. Since `<ip>.nip.io` resolves to the IP, the challenge succeeds. No DNS authorization, no parent-zone control, no shared DNS infra.
+**Load balancer authorization** uses **HTTP-01 validation**. Certificate Manager hits port 80 on the LB IP to verify control. It's automatic, requires no DNS changes. Since `<ip>.nip.io` resolves to the IP, the challenge succeeds. No DNS authorization, no parent-zone control, no shared DNS infra.
 
 </Concept>
 
@@ -112,7 +112,7 @@ grep -q REPLACE_CERTMAP_NAME k8s/gold/gateway-https.yaml \
   && echo "WARN: substitution failed" || echo "✅ substitution clean"
 ```
 
-> If "WARN" appears, the placeholder wasn't found — check `cat k8s/gold/gateway-https.yaml | grep certmap` to see what's there. A silent sed failure here means HTTPS will load with the wrong cert (browser warning).
+> If "WARN" appears, the placeholder wasn't found; check `cat k8s/gold/gateway-https.yaml | grep certmap` to see what's there. A silent sed failure here means HTTPS will load with the wrong cert (browser warning).
 
 Apply:
 
@@ -135,7 +135,7 @@ echo "✅ cert ACTIVE"
 
 ✅ **Expect** (eventually): `✅ cert ACTIVE`
 
-While you wait, help your team — the Guardian may have alerts firing, the App Dev may be wrestling with a Q6A form bug, the Pipeline-author may be tuning DAG cadence.
+While you wait, help your team, the Guardian may have alerts firing, the App Dev may be wrestling with a Q6A form bug, the Pipeline-author may be tuning DAG cadence.
 
 ### Step 5 — Visit the HTTPS URL
 
@@ -147,13 +147,13 @@ Open `https://<your-nip-host>/` in your **laptop's** browser (replace with the v
 
 <Gotchas>
 - <strong>Cert stuck on PROVISIONING for &gt;30 min.</strong> Either the Gateway isn&rsquo;t serving HTTP on :80 (the HTTP-01 challenge fails) or the IP doesn&rsquo;t actually resolve to your Gateway. Test: <code>curl http://$NIP_HOST/_stcore/health</code> should return <code>ok</code>; if not, fix that first.
-- <strong>Browser warning: cert is for the wrong domain.</strong> The <code>sed</code> didn&rsquo;t substitute the map name &mdash; the Gateway is using a different (or no) cert. Re-run Step 3 and verify with the grep check.
-- <strong>Confused about which authorization type.</strong> Don&rsquo;t use <code>--dns-authorizations</code> on the cert &mdash; that requires owning the parent zone. Omitting it (as in Step 2 above) defaults to load balancer authorization, which is what works for nip.io.
+- <strong>Browser warning: cert is for the wrong domain.</strong> The <code>sed</code> didn&rsquo;t substitute the map name, the Gateway is using a different (or no) cert. Re-run Step 3 and verify with the grep check.
+- <strong>Confused about which authorization type.</strong> Don&rsquo;t use <code>--dns-authorizations</code> on the cert; that requires owning the parent zone. Omitting it (as in Step 2 above) defaults to load balancer authorization, which is what works for nip.io.
 - <strong>Guardian's uptime check now failing on HTTP.</strong> If your Q2E-1 uptime check was set to follow the Gateway IP on HTTP, the HTTPS-only redirect (if you added one) may make it fail. Either keep both listeners open, or re-point the uptime check at <code>https://$NIP_HOST/</code>.
 </Gotchas>
 
 <Shipped>
-HTTPS is live. <strong>The Pothole Poet now serves over a real HTTPS URL with a Google-managed certificate, with no domain ownership required.</strong> The green padlock costs nothing on judging day &mdash; nip.io + LB authorization is a pattern worth keeping in your back pocket for any internal demo.
+HTTPS is live. <strong>The Pothole Poet now serves over a real HTTPS URL with a Google-managed certificate, with no domain ownership required.</strong> The green padlock costs nothing on judging day. nip.io + LB authorization is a pattern worth keeping in your back pocket for any internal demo.
 </Shipped>
 
 **HTTPS is live.** Pair this with Q6A and your demo URL is `https://<ip>.nip.io/` with a fresh ode for whichever neighbourhood the judge picked.
