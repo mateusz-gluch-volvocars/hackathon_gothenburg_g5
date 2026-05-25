@@ -135,8 +135,7 @@ ORDER BY home_neighbourhood, tone;
 
 <Concept title="QUALIFY. the WHERE for window functions">
 
-Standard SQL forces you to wrap window functions in a subquery before you can filter on them. `QUALIFY` lets you filter on a window function in the same SELECT. same way `HAVING` filters on aggregates. Snowflake has it, BigQuery has it; PowerBI's M layer doesn't expose anything equivalent. If you only learn one BQ-specific thing today, learn this.
-
+Standard SQL forces you to wrap window functions in a subquery before you can filter on them. `QUALIFY` lets you filter on a window function in the same SELECT. same way `HAVING` filters on aggregates. 
 </Concept>
 
 ### Step 4 — Call Gemini from SQL on social_sentiment ⭐
