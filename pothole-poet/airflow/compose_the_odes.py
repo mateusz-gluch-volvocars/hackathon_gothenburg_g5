@@ -33,7 +33,13 @@ from airflow.sdk import Asset
 # sql/ folder uploaded alongside it ends up at /home/airflow/gcs/dags/sql/.
 SQL_DIR = Path(__file__).parent / "sql"
 
-neighbourhood_odes = Asset("bigquery://pothole_laureate/neighbourhood_odes")
+neighbourhood_odes = Asset(
+    "bigquery://{project}/pothole_laureate/neighbourhood_odes".format(
+        project=os.environ.get("GCP_PROJECT")
+        or os.environ.get("GOOGLE_CLOUD_PROJECT")
+        or "unknown"
+    )
+)
 
 # ---------------------------------------------------------------------------
 # Helpers
