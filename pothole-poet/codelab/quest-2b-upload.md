@@ -95,6 +95,43 @@ From the Composer console: click your environment → **OPEN DAGS FOLDER** → d
 
 </Cheat>
 
+<Concept title="Why does verify_federation import inside the function body?">
+
+Open `compose_the_odes.py` and find the `verify_federation` function. Notice the `from google.cloud import bigquery` line is *inside* the function, not at the top of the file.
+
+This is intentional. Airflow's scheduler **parses** the DAG file (runs all top-level Python) every 30 seconds to build the task graph, but it never *executes* task code at parse time. Imports at the top of the file run during every parse cycle. Imports inside a `@task` function only run when that task actually executes on a worker.
+
+For lightweight standard-library imports the difference doesn't matter. For heavy libraries like `google.cloud.bigquery` (which initializes HTTP clients and credential chains), importing at parse time wastes scheduler resources and can cause import errors if a library upgrade is mid-deploy. The rule from teams running Airflow at scale: **business logic and heavy imports go inside the task function, not at module level.**
+
+</Concept>
+
+<Concept title="What is the Asset declaration for?">
+
+Near the top of `compose_the_odes.py` you'll see:
+
+```python
+from airflow.sdk import Asset
+
+neighbourhood_odes = Asset("bigquery://pothole_laureate/neighbourhood_odes")
+```
+
+and on the final task:
+
+```python
+ask_the_laureate = BigQueryInsertJobOperator(
+    ...,
+    outlets=[neighbourhood_odes],
+)
+```
+
+This declares that the DAG *produces* a data asset called `neighbourhood_odes`. When the task finishes successfully, Airflow marks the asset as "updated" in the **Assets** tab of the UI.
+
+With one DAG, the declaration is a signal, not a trigger. But in a production environment with dozens of pipelines, assets are how Airflow 3 connects them: a `delivery` pipeline can schedule itself to run whenever the `verified_build` asset is updated by the `gate_out` pipeline. Instead of cron-based scheduling ("run every hour and hope the upstream data is fresh"), asset-aware scheduling means "run when the data I need actually changes."
+
+We have one pipeline today; the pattern is here so you recognize it when you see it at scale.
+
+</Concept>
+
 ### Step 3 — Verify the upload
 
 ```bash
@@ -132,7 +169,7 @@ Open the Airflow UI:
 </Gotchas>
 
 <Shipped>
-The DAG is in the bucket and parsed by Airflow. <strong><code>compose_the_odes</code> appears in the Airflow UI, ready to trigger.</strong> Two tasks defined: <code>federate_pothole_reports</code> and <code>ask_the_laureate</code>.
+The DAG is in the bucket and parsed by Airflow. <strong><code>compose_the_odes</code> appears in the Airflow UI, ready to trigger.</strong> Three tasks defined: <code>federate_pothole_reports</code> (federation), <code>verify_federation</code> (row-count guard), and <code>ask_the_laureate</code> (AI enrichment).
 </Shipped>
 
 ⚙️ **Q2B-2 done.** DAG uploaded and parsed.

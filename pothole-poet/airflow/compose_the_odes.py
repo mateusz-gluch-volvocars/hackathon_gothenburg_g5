@@ -1,10 +1,17 @@
-"""compose_the_odes — the Pothole Poet's hourly composition cycle.
+"""compose_the_odes: the Pothole Poet's hourly composition cycle.
 
-Two tasks:
-  1. federate_pothole_reports — pull raw events from AlloyDB into a BigQuery
-     staging table via Lakehouse federation.
-  2. ask_the_laureate — aggregate per neighbourhood and ask Gemini 3 Flash
-     (via BigQuery's AI.GENERATE) to compose a three-line ode for each.
+Three tasks, two patterns:
+
+  1. federate_pothole_reports (Operator): pull raw events from AlloyDB into
+     a BigQuery staging table via Lakehouse federation.
+  2. verify_federation (@task): fail fast if the staging table is empty
+     (AlloyDB not seeded yet). Returns the row count via XCOM.
+  3. ask_the_laureate (Operator): aggregate per neighbourhood and ask
+     Gemini 3 Flash (via BigQuery AI.GENERATE) to compose a three-line ode.
+
+The hybrid approach is intentional: Operators for service-native work (submit
+SQL to BigQuery, let BigQuery do the heavy lifting), @task for Python-native
+work (validation, lightweight queries, metadata). Real-world DAGs mix both.
 
 Runs hourly. Tag a manual run from the DAGs UI to test.
 """
@@ -14,11 +21,23 @@ import os
 from pathlib import Path
 
 from airflow import models
+from airflow.decorators import task
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
+from airflow.sdk import Asset
+
+# ---------------------------------------------------------------------------
+# Paths & assets
+# ---------------------------------------------------------------------------
 
 # In Composer Gen 3, this DAG is uploaded to /home/airflow/gcs/dags/, and the
 # sql/ folder uploaded alongside it ends up at /home/airflow/gcs/dags/sql/.
 SQL_DIR = Path(__file__).parent / "sql"
+
+neighbourhood_odes = Asset("bigquery://pothole_laureate/neighbourhood_odes")
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
 
 def _read_sql(name: str) -> str:
@@ -37,8 +56,37 @@ def _read_sql(name: str) -> str:
     return text.replace("${PROJECT_ID}", project_id)
 
 
+# ---------------------------------------------------------------------------
+# Validation task (TaskFlow API)
+# ---------------------------------------------------------------------------
+
+
+@task(retries=0)
+def verify_federation() -> dict:
+    """Fail fast if the staging table is empty."""
+    from google.cloud import bigquery
+
+    client = bigquery.Client()
+    row = next(iter(
+        client.query(
+            "SELECT COUNT(*) AS n FROM `pothole_laureate.pothole_reports_raw`"
+        ).result()
+    ))
+    if row.n == 0:
+        raise ValueError(
+            "Federation pulled 0 rows. The AlloyDB Lead must finish Q2A-3 "
+            "(Seed) before you re-trigger this DAG."
+        )
+    return {"federated_rows": row.n}
+
+
+# ---------------------------------------------------------------------------
+# DAG
+# ---------------------------------------------------------------------------
+
 with models.DAG(
     dag_id="compose_the_odes",
+    doc_md=__doc__,
     description=(
         "Federate pothole reports from AlloyDB into BigQuery and ask Gemini "
         "to compose a three-line poem for each Gothenburg neighbourhood."
@@ -50,8 +98,6 @@ with models.DAG(
     tags=["pothole-poet", "quest-1"],
     default_args={
         "owner": "the-laureate-bureau",
-        "retries": 1,
-        "retry_delay": datetime.timedelta(minutes=2),
     },
 ) as dag:
 
@@ -63,6 +109,8 @@ with models.DAG(
                 "useLegacySql": False,
             }
         },
+        retries=2,
+        retry_delay=datetime.timedelta(minutes=1),
     )
 
     ask_the_laureate = BigQueryInsertJobOperator(
@@ -73,6 +121,9 @@ with models.DAG(
                 "useLegacySql": False,
             }
         },
+        outlets=[neighbourhood_odes],
+        retries=1,
+        retry_delay=datetime.timedelta(minutes=2),
     )
 
-    federate_pothole_reports >> ask_the_laureate
+    federate_pothole_reports >> verify_federation() >> ask_the_laureate

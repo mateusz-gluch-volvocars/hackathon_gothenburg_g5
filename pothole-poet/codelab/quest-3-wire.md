@@ -39,11 +39,12 @@ The pipeline goes live. Three short steps, one per lane.
 
 In the Composer environment's **DAGs** tab, click `compose_the_odes` → **Trigger DAG** (top-right play icon).
 
-Both tasks should go green:
+All three tasks should go green:
 - `federate_pothole_reports` (~30 sec)
-- `ask_the_laureate` (~30–60 sec. Gemini composes 12 odes)
+- `verify_federation` (~5 sec; fails if AlloyDB wasn't seeded)
+- `ask_the_laureate` (~30-60 sec; Gemini composes 12 odes)
 
-If `ask_the_laureate` fails, click into it and read the logs. Most common: `gemini` connection is missing the `roles/aiplatform.user` binding (should be pre-bound by the platform; flag a Sherpa).
+If `verify_federation` fails, the AlloyDB Lead needs to finish Q2A-3 (Seed), then re-trigger. If `ask_the_laureate` fails, click into it and read the logs. Most common: `gemini` connection is missing the `roles/aiplatform.user` binding (should be pre-bound by the platform; flag a Sherpa).
 
 <Cheat title="Show how to trigger from the CLI instead">
 

@@ -101,23 +101,34 @@ Q2D uses a different identity model. Workload Identity Federation directly on a 
 
 ### Step 2 — While you wait (~25 min): be useful
 
-a) **Read the DAG.** In your Workstation IDE, open `pothole-poet/airflow/compose_the_odes.py`. Two tasks. ~70 lines. As you read, look for answers to these:
+a) **Read the DAG.** In your Workstation IDE, open `pothole-poet/airflow/compose_the_odes.py`. Three tasks, two patterns, ~95 lines. As you read, look for answers to these:
 
-   - Which Python class runs each task? (Hint: both use the same one.)
+   - The DAG uses **two task patterns**: `BigQueryInsertJobOperator` (an Operator) and `@task` (a Python function). Which tasks use which, and why?
    - Where does the SQL come from: is it inline or read from files?
-   - Look at the very last line: `federate_pothole_reports >> ask_the_laureate`. What does `>>` do?
+   - Look at the `verify_federation` function. Why does it `import bigquery` **inside** the function body instead of at the top of the file?
+   - Look at the very last line: `federate_pothole_reports >> verify_federation() >> ask_the_laureate`. What does `>>` do?
 
 <Concept title="The >> operator, how Airflow chains tasks">
 
 In Python, `>>` is normally a bitwise right-shift. Airflow overloads it to mean **"runs before"**. So:
 
 ```python
-federate_pothole_reports >> ask_the_laureate
+federate_pothole_reports >> verify_federation() >> ask_the_laureate
 ```
 
-tells the scheduler: *"Do not start `ask_the_laureate` until `federate_pothole_reports` completes successfully."* It's the equivalent of drawing an arrow between two boxes on a flowchart. If the first task fails, the second never runs. Airflow marks it as `upstream_failed`.
+tells the scheduler: *"Run these three tasks in order; each one waits for the previous to finish successfully."* It's the equivalent of drawing arrows between boxes on a flowchart. If any task fails, everything downstream is marked `upstream_failed` and never runs.
 
-Both tasks use `BigQueryInsertJobOperator`, which tells BigQuery to run a SQL job. The Airflow worker doesn't process data itself; it just submits the job to BigQuery and waits for the result. The heavy lifting happens inside BigQuery's engine.
+</Concept>
+
+<Concept title="Two task patterns in one DAG: Operators vs. @task">
+
+The DAG deliberately mixes two patterns:
+
+- **`BigQueryInsertJobOperator`** for `federate_pothole_reports` and `ask_the_laureate`. These tasks submit a SQL job to BigQuery and wait for the result. The Airflow worker doesn't process data; BigQuery's engine does. Operators are the right choice when a managed service does the heavy lifting.
+
+- **`@task` decorator** for `verify_federation`. This is a plain Python function that runs inside the Composer worker. It queries BigQuery directly via the Python client to check the row count and fails fast if the staging table is empty. The return value is automatically stored as **XCOM** (Airflow's mechanism for passing small data between tasks). Python functions are the right choice for validation, lightweight queries, or any logic that isn't a single API call to a managed service.
+
+Real-world DAGs at scale (like those at HaleyTek, which runs 367 Airflow pipelines for Volvo's infotainment CI) mix both patterns: `@task` for workspace and validation logic, Operators for service-native operations.
 
 </Concept>
 
