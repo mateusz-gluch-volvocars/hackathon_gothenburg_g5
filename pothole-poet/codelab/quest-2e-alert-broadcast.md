@@ -20,7 +20,7 @@ EMAIL="$(gcloud config get-value account)"
 # 0. Let the Pod read the broadcast bucket. Bind storage.objectViewer to the
 #    WIF principal — same principal URI as the BQ + OTel bindings (Q2D-3, Q2E-2).
 PRINCIPAL="principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/laureate/sa/pothole-laureate"
-gcloud storage buckets add-iam-policy-binding "gs://${PROJECT_ID}-broadcast" \
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   --member="$PRINCIPAL" --role="roles/storage.objectViewer"
 
 # 1. Email notification channel
@@ -97,12 +97,12 @@ PROJECT_ID="$(gcloud config get-value project)"
 PROJECT_NUMBER="$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')"
 PRINCIPAL="principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/laureate/sa/pothole-laureate"
 
-gcloud storage buckets add-iam-policy-binding "gs://${PROJECT_ID}-broadcast" \
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   --member="$PRINCIPAL" \
   --role="roles/storage.objectViewer"
 ```
 
-✅ **Expect:** `Updated IAM policy for bucket [gs://<project>-broadcast].` with the new principal + role.
+✅ **Expect:** `Updated IAM policy for project [<project>].` with the new principal + role listed.
 
 > IAM propagation takes 2–7 minutes per Google's WIF docs. If the first banner you write in Step 3 doesn't show up immediately, wait and refresh.
 
