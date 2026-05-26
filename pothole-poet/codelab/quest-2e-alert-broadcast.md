@@ -2,9 +2,9 @@
 
 <Objective lane="guardian">
 
-**🎯 What you'll do.** Wire the **alert policy** on top of your Q2E-1 uptime check, post a **broadcast banner** that Streamlit renders to citizens, then **snooze the alert** when you claim a failure. The full Flow-Guardian rhythm, in five `gcloud` commands. ~15 min.
+**🎯 What you'll do.** Wire the **alert policy** on top of your Q2E-1 uptime check, post a **broadcast banner** that Streamlit renders to citizens, then **snooze the alert** when you claim a failure. ~15 min.
 
-**🤝 Why it matters.** This is the **complete** Guardian loop: an alert fires → you claim it (snooze) → you broadcast a "known issue" to your team and users → you fix the thing → you clear the snooze. It's the smallest version of the on-call rotation pattern that real operations teams run every day.
+**🤝 Why it matters.** This is the **complete** Guardian loop: alert fires → you claim it (snooze) → broadcast "known issue" → fix → clear. The same on-call pattern production teams run daily.
 
 </Objective>
 
@@ -84,17 +84,13 @@ echo "Pipeline healthy · restored at $(date -u +%H:%MZ)" \
 
 </QuickPath>
 
-Your Q2E-1 uptime check tells you *if* the door is open. Q2E-2 traces tell you *what users do*. **Q2E-3 is what you do when the door closes.** A real Guardian doesn't just watch; they coordinate. They claim a failure so two people don't debug it in parallel. They broadcast "yes I see it, working on it" so the rest of the team doesn't waste time. They snooze the alert so the email firehose stops while they fix.
-
-We use `gcloud` here on purpose. Each Console click hides what's happening; the gcloud surface makes it explicit, and shows you what a runbook script would look like if you wanted to automate this loop in the future.
+Q2E-1 tells you something's down. Q2E-2 shows what users experienced. This page is what you *do* about it: claim the failure (snooze), broadcast to your team, fix, clear.
 
 ---
 
 ### Step 0 — Let the Pod read the broadcast bucket
 
-The Streamlit Pod reads `gs://<project>-broadcast/broadcast.txt` on every page render (cached 30 s). Until the Pod's WIF principal has read access, `read_broadcast()` silently returns `""` and the banner never appears.
-
-This binding can't be pre-provisioned in Terraform, the GKE Workload Identity Pool `<project>.svc.id.goog` is only created when participants run Q2D-1. Bind it now, the same way Q2D-3 binds the BQ roles and Q2E-2 binds the OTel roles.
+The Streamlit Pod reads `gs://<project>-broadcast/broadcast.txt` on every page render (cached 30 s). Until the Pod's WIF principal has read access, the banner never appears. Bind it now, same pattern as Q2D-3 and Q2E-2.
 
 ```bash
 PROJECT_ID="$(gcloud config get-value project)"
@@ -173,6 +169,12 @@ gcloud alpha monitoring policies create --policy-from-file=/tmp/uptime-alert.jso
 
 ✅ **Expect:** `Created alert policy [projects/<id>/alertPolicies/<id>].`
 
+<Concept title="Could this alert use PromQL instead?">
+
+Yes. Cloud Monitoring supports PromQL-based alerting policies, and if your team uses Prometheus alerting rules in Grafana Cloud you can migrate them directly. We use the JSON filter format here because it's the verified pattern for uptime-check alerts. For production, consider PromQL-based policies so your alerting rules are portable between Cloud Monitoring and Grafana.
+
+</Concept>
+
 Verify it registered:
 
 ```bash
@@ -185,9 +187,7 @@ gcloud alpha monitoring policies list \
 
 ### Step 3 — Wire the broadcast banner
 
-The bucket `<project>-broadcast` was pre-provisioned by Terraform. Your Streamlit app already reads `broadcast.txt` from it on every render (cached 30s). So the act of "broadcasting" is just writing to that one object.
-
-Test it with a healthy banner:
+The bucket `<project>-broadcast` is pre-provisioned. Broadcasting = writing one object to it:
 
 ```bash
 echo "Pipeline healthy — Guardian: @your-handle" \
@@ -195,12 +195,6 @@ echo "Pipeline healthy — Guardian: @your-handle" \
 ```
 
 ✅ **Expect** (in the Streamlit UI within 30 sec): A yellow banner at the top reading `🛡 Guardian broadcast · Pipeline healthy. Guardian: @your-handle`.
-
-<Concept title="Why a GCS object instead of a database?">
-
-Three reasons. (1) **Decoupling**: the broadcast doesn&rsquo;t need your Data Engineer&rsquo;s AlloyDB to be up; if AlloyDB is the thing that&rsquo;s broken, you still need to broadcast about it. (2) **Simplicity**: one `gcloud storage cp` writes; one `storage.Bucket.get` reads. No schema, no migration, no auth dance. (3) **Operational surface**: the Guardian might want to script `broadcast` from a runbook on their laptop, gcloud + GCS is the smallest possible primitive for that.
-
-</Concept>
 
 ### Step 4 — Run the failure → snooze loop
 
@@ -254,17 +248,7 @@ echo "Pipeline healthy · restored at $(date -u +%H:%MZ)" \
   | gcloud storage cp - "gs://${PROJECT_ID}-broadcast/broadcast.txt"
 ```
 
-The uptime check turns green again on its next probe. The snooze is moot; you can leave it to expire or terminate it manually:
-
-```bash
-SNOOZE_ID="$(gcloud alpha monitoring snoozes list \
-  --filter="displayName~Investigating.*Pod" \
-  --format='value(name)' | head -1)"
-
-# Snoozes don't have a delete; you update them with end-time=now to terminate.
-gcloud alpha monitoring snoozes update "$SNOOZE_ID" \
-  --end-time="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-```
+The uptime check turns green on its next probe. The snooze expires on its own; leave it or terminate early by setting `end-time` to now.
 
 ### Step 5 — Verify everything is wired
 
@@ -286,9 +270,9 @@ gcloud storage cat "gs://${PROJECT_ID}-broadcast/broadcast.txt"
 </Gotchas>
 
 <Shipped>
-Guardian piece. <strong>Your Garage now has a complete Flow-Guardian loop.</strong> Alerts fire when things break; you claim them via snooze; you broadcast known issues to teammates and users; the system auto-recovers and you clear the broadcast. The same on-call rhythm production teams run every day, in 15 minutes of `gcloud` commands.
+<strong>Your Garage has a complete Guardian loop.</strong> Alerts fire, you claim via snooze, broadcast to the team, fix, and clear.
 </Shipped>
 
-🛡 **Guardian lane done.** Rejoin your team. If they are waiting at Q3 (convergence), head there now. If Q3 is already done, pick up wherever the team is (Q4/Q5/Q6).
+🛡 **Guardian lane done.** Head to Q3 if your team is waiting, or join wherever they are.
 
 ➡️ Next: **Quest 3 — Wire the Pipeline** (sidebar on the left).

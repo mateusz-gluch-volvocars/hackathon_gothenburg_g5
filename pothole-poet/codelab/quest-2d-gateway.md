@@ -131,7 +131,7 @@ http://<your-gateway-ip>/
 
 **Your Garage's public URL is live.**
 
-<Screenshot src="/quest/pothole-poet/img/streamlit_bronze.png" caption="Streamlit page served via GKE Gateway: header, 12 neighbourhoods, dataframe view (seed data)." />
+<Screenshot src="/quest/pothole-poet/img/streamlit_seed.png" caption="Streamlit page served via GKE Gateway: seed mode with city stats, neighbourhood selector, and placeholder ode." />
 
 ### Step 6 — While you wait for the rest of the Garage
 

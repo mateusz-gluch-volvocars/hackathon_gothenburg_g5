@@ -2,9 +2,9 @@
 
 <Objective lane="guardian">
 
-**🎯 What you'll do.** Wire the Streamlit Pod to ship **OpenTelemetry traces** straight to Google's new unified OTLP endpoint at `telemetry.googleapis.com`. Add three custom spans (`read_broadcast`, `load_live`, `load_seed`) and watch the BigQuery client's spans appear as their children. ~20 min, mostly waiting for the rebuild.
+**🎯 What you'll do.** Add **OpenTelemetry tracing and metrics** to your Streamlit app, shipping both signals to `telemetry.googleapis.com`. Traces land in Cloud Trace for debugging; metrics land in Cloud Monitoring as PromQL-queryable Prometheus time series. One setup, one endpoint, one rebuild. ~20 min.
 
-**🤝 Why it matters.** Uptime checks tell you *if* the door is open. Traces tell you *what users do once they're inside*, which queries are slow, which dependencies fail, where time goes. Once your spans are landing in Cloud Trace your team has a single shared surface to answer "why was the page slow at 2:14pm?" without anyone having to guess.
+**🤝 Why it matters.** Your uptime check (Q2E-1) tells you *if* the app is up. Traces tell you *what happens inside each request*. Metrics tell you *how the app is performing over time*: request rate, latency, broken down by code path, queryable in the same PromQL you use in Grafana.
 
 </Objective>
 
@@ -23,7 +23,7 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
 gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="$PRINCIPAL" --role="roles/monitoring.metricWriter" --condition=None
 
-# 1. Edit app.py — paste the setup_otel() block + wrap 3 functions (see Steps 1-2)
+# 1. Edit app.py — paste setup_otel() (traces + metrics) + wrap 3 functions (Steps 1-2)
 cd ~/quest/pothole-poet/streamlit
 
 # 2. Uncomment OTEL_ENABLED in deployment.yaml
@@ -44,26 +44,52 @@ kubectl set image deployment/pothole-laureate \
   -n laureate
 kubectl rollout status deployment/pothole-laureate -n laureate
 
-# 4. Generate traffic + verify spans land
+# 4. Generate traffic + verify both signals
 for i in 1 2 3 4 5; do curl -s "http://$GATEWAY_IP/" >/dev/null; sleep 1; done
-sleep 60   # spans take ~30-60 sec to land in Cloud Trace
-gcloud trace traces list --limit=5 --format="value(traceId)"
-# ✅ Expect: 5 trace IDs printed
+# ✅ Traces: Console → Trace explorer → filter service.name = pothole-laureate
+# ✅ Metrics: Console → Monitoring → Metrics Explorer → PromQL →
+#    {"prometheus.googleapis.com/pothole_laureate_requests/counter"}
 ```
 
 </QuickPath>
 
-Google rolled out a unified OpenTelemetry Protocol (OTLP) endpoint at `telemetry.googleapis.com`. one URL accepts traces, metrics, and logs in vendor-neutral OTLP format. Before this, each signal had its own Google API; now your app speaks the same protocol it would to any other backend, and Google handles the rest.
+## Where you are right now
 
-For your Streamlit app this is **two changes**: a `setup_otel()` initialisation block at the top of `app.py`, and `with tracer.start_as_current_span(...)` wrappers around three functions. The BigQuery and Cloud Storage clients auto-emit their own spans that attach as children of yours.
+Your Garage has come a long way. The AlloyDB Lead seeded 5,000 pothole reports. The Pipeline-author's DAG federates them into BigQuery where Gemini composes an ode per neighbourhood. The GKE / App Lead deployed Streamlit on Autopilot, wired its identity to BigQuery (Q2D-3), and exposed it through a Gateway. You added an uptime check in Q2E-1 that pings the public URL every 60 seconds.
+
+So you know the app is **up**. But you can't see **inside** it. When someone says "the page was slow at 2:14pm", you have no answer. Was it the BigQuery query? The broadcast bucket read? The network? The app is a black box.
+
+## How OpenTelemetry fixes this
+
+**OpenTelemetry** (OTel) is the industry standard for instrumenting applications. Instead of vendor-specific libraries, your app emits **traces** and **metrics** in a standard protocol called **OTLP** (OpenTelemetry Protocol). A trace is a tree of **spans**, each one a timed operation: "`load_live` took 240 ms, and inside it, the BigQuery query took 180 ms." A metric is an aggregate counter or histogram: "the app served 12 requests in the last minute, p95 latency was 310 ms."
+
+Google Cloud's observability stack speaks OTLP natively. One endpoint, `telemetry.googleapis.com`, accepts all three signal types: traces route to **Cloud Trace**, metrics route to **Cloud Monitoring** (queryable via **PromQL**, the same language you use in Grafana), and logs route to **Cloud Logging**. In this Quest we instrument traces and metrics; your app's logs already reach Cloud Logging via GKE's built-in stdout capture. No proprietary SDK, no vendor lock-in; the same instrumentation works with any OTLP-compatible backend.
+
+<Concept title="What about Managed OpenTelemetry for GKE?">
+
+Google also offers **Managed OpenTelemetry for GKE**: a fully managed pipeline that collects OTLP telemetry from all your workloads without you having to run or scale a collector. You enable it on the cluster and it handles collection, batching, and export automatically.
+
+For this Quest we instrument in-process (simpler, no extra config, all the logic in one Python file you can read end-to-end). If you take this pipeline into production, Managed OTel is the natural next step: your app's instrumentation stays identical, you just stop managing the export path.
+
+</Concept>
+
+## What you're doing, concretely
+
+Four things:
+
+1. **Grant the Pod permission to write traces and metrics.** Same WIF principal binding pattern as Q2D-3, two IAM roles: `cloudtrace.agent` (traces) and `monitoring.metricWriter` (metrics).
+
+2. **Add instrumentation to `app.py`.** One `setup_otel()` block that connects both a TracerProvider and a MeterProvider to `telemetry.googleapis.com`. Same endpoint, same credentials, two signal types.
+
+3. **Wrap your load functions.** Each function gets a span (for trace debugging) and two metric recording calls: a request counter and a duration histogram. The BigQuery and Cloud Storage clients auto-emit their own child spans underneath yours.
+
+4. **Rebuild, verify, and build a dashboard.** One `gcloud builds submit`, one rollout, then check Cloud Trace for spans and build a PromQL dashboard for your app and infrastructure metrics.
 
 ---
 
 ### Step 0 — Bind the Pod's WIF principal to the OTel IAM roles
 
-OpenTelemetry export to `telemetry.googleapis.com` needs two project-level IAM roles on the Pod's identity: `roles/cloudtrace.agent` (lets the Pod write spans) and `roles/monitoring.metricWriter` (lets it write metrics).
-
-These can't live in the per-Garage Terraform module, the GKE Workload Identity Pool `<PROJECT_ID>.svc.id.goog` is only created when your Infra-Admin runs `gcloud container clusters create-auto` in Q2D-1. IAM rejects bindings to pool members that don't exist yet, so the Guardian binds them here, after the cluster is up.
+Two project-level roles on the Pod's WIF identity: `roles/cloudtrace.agent` (write spans) and `roles/monitoring.metricWriter` (write metrics). Same binding pattern as Q2D-3; same reason it can't be pre-provisioned (the WIF pool only exists after Q2D-1).
 
 ```bash
 PRINCIPAL="principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/laureate/sa/pothole-laureate"
@@ -79,102 +105,136 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
   --condition=None
 ```
 
-✅ **Expect** (twice): `Updated IAM policy for project [...]` followed by the policy bindings showing your `principal://...` member with the new role.
+✅ **Expect** (twice): `Updated IAM policy for project [...]` with the new principal + role.
 
-Same principal URI format as Q2D-3. `PROJECT_NUMBER` in the `projects/` segment, `PROJECT_ID` in the `.svc.id.goog` pool name. If either is empty, re-export them from Q2D-1.
+> IAM propagation takes 2-7 minutes. The OTel exporter retries silently; first traces may take up to ~7 min to appear after rollout.
 
-> IAM propagation takes 2–7 minutes per Google's WIF docs. The OTel exporter retries silently; first traces may appear ~7 min after the rollout, not the ~60 s shown in Step 6.
-
-### Step 1 — Paste the `setup_otel()` block at the top of `app.py`
+### Step 1 — Add the `setup_otel()` block to `app.py`
 
 Open `streamlit/app.py` in your Workstation IDE. Right after the existing `import` block, paste this:
 
 ```python
-# ── OpenTelemetry → telemetry.googleapis.com (Telemetry OTLP API) ──────────
-# 1. Auth: read pod identity credentials (Workload Identity)
-import os
+# ── OpenTelemetry → telemetry.googleapis.com (traces + metrics) ──────────
+import os, time, socket
 import grpc
 import google.auth
 import google.auth.transport.requests
 from google.auth.transport.grpc import AuthMetadataPlugin
 
-# 2. OpenTelemetry SDK
-from opentelemetry import trace
+from opentelemetry import trace, metrics
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import Resource, SERVICE_NAME
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
 
 def setup_otel():
-    """Wire OpenTelemetry to telemetry.googleapis.com. Idempotent + safe to skip."""
+    """Wire OTel traces + metrics to telemetry.googleapis.com. Safe to skip."""
     if os.environ.get("OTEL_ENABLED", "").lower() not in ("1", "true", "yes"):
         return
+    # Streamlit reruns the script on every interaction. OTel provider state is
+    # process-global (lives in the opentelemetry package, not in this script),
+    # so check if a real provider is already set before configuring again.
+    if type(trace.get_tracer_provider()).__name__ != "ProxyTracerProvider":
+        return
     try:
-        # 3. Build authenticated gRPC channel to the Telemetry API
         credentials, project_id = google.auth.default()
         request = google.auth.transport.requests.Request()
-        auth_plugin = AuthMetadataPlugin(credentials=credentials, request=request)
         channel_creds = grpc.composite_channel_credentials(
             grpc.ssl_channel_credentials(),
-            grpc.metadata_call_credentials(auth_plugin),
+            grpc.metadata_call_credentials(
+                AuthMetadataPlugin(credentials=credentials, request=request)),
         )
 
-        # 4. Resource attributes (show up in Cloud Trace as labels)
         resource = Resource.create({
             SERVICE_NAME: "pothole-laureate",
+            "service.instance.id": socket.gethostname(),
+            "service.namespace": "laureate",
+            "cloud.region": os.environ.get("REGION", "europe-west1"),
             "gcp.project_id": project_id or "unknown",
         })
 
-        # 5. Tracer provider + OTLP exporter
-        provider = TracerProvider(resource=resource)
-        provider.add_span_processor(BatchSpanProcessor(
-            OTLPSpanExporter(
-                credentials=channel_creds,
-                endpoint="https://telemetry.googleapis.com:443/v1/traces",
-            )
+        # Traces → Cloud Trace
+        tp = TracerProvider(resource=resource)
+        tp.add_span_processor(SimpleSpanProcessor(OTLPSpanExporter(
+            credentials=channel_creds,
+            endpoint="https://telemetry.googleapis.com:443/v1/traces",
+        )))
+        trace.set_tracer_provider(tp)
+
+        # Metrics → Cloud Monitoring (PromQL-queryable as prometheus.googleapis.com/*)
+        metrics.set_meter_provider(MeterProvider(
+            resource=resource,
+            metric_readers=[PeriodicExportingMetricReader(
+                OTLPMetricExporter(
+                    credentials=channel_creds,
+                    endpoint="https://telemetry.googleapis.com:443/v1/metrics",
+                ),
+                export_interval_millis=15000,
+            )],
         ))
-        trace.set_tracer_provider(provider)
     except Exception as e:
-        # Don't break the app if OTel can't initialise — just log and continue.
         print(f"[otel] setup skipped: {e}", flush=True)
 
 setup_otel()
 tracer = trace.get_tracer(__name__)
+meter = metrics.get_meter(__name__)
+request_counter = meter.create_counter(
+    "pothole_laureate_requests", description="Total page renders")
+request_duration = meter.create_histogram(
+    "pothole_laureate_request_duration_seconds",
+    description="Page render duration", unit="s")
 ```
 
-The shape: **load credentials → wrap them in a gRPC auth plugin → build a TracerProvider with the OTLP exporter pointing at the new endpoint.** The `OTEL_ENABLED` env-var gate means you can flip it on without touching code (Step 3).
+One function, one endpoint, two signal types:
 
-✅ **Expect:** No syntax errors when you save. The block defines `tracer` as a module-level global ready for Step 2.
+1. **Credentials + resource**: Loads WIF identity from the Pod (Step 0). The resource attributes identify your app for both Cloud Trace labels and the Cloud Monitoring `prometheus_target` mapping.
+2. **`ProxyTracerProvider` guard**: Streamlit re-runs the entire script on every user interaction, but OTel provider state is process-global (it lives in the `opentelemetry` package, not in your script). If a real provider is already set, the function returns immediately. Providers are configured exactly once per process.
+3. **TracerProvider with `SimpleSpanProcessor`**: Exports each span synchronously to `telemetry.googleapis.com` → Cloud Trace. We use `SimpleSpanProcessor` for simplicity; for higher-throughput production apps, switch to `BatchSpanProcessor` (the guard prevents the leaked-thread issue).
+4. **MeterProvider**: Exports counters and histograms to the same endpoint → Cloud Monitoring, where they land as `prometheus.googleapis.com/*` metrics, queryable via PromQL.
+5. **Module-level instruments**: `request_counter` and `request_duration` are no-ops when `OTEL_ENABLED` is off, so the recording calls in Step 2 are always safe.
 
-<Concept title="Why in-process and not a sidecar collector?">
+✅ **Expect:** No syntax errors when you save. `tracer`, `request_counter`, and `request_duration` are module-level globals ready for Step 2.
 
-Production deployments at scale often run a **Google-built OpenTelemetry Collector** (sidecar or DaemonSet) that handles auth, batching, and sampling, the app just speaks OTLP to localhost. For a hackathon Pod doing a few requests per minute, the in-process exporter is simpler: no extra YAML, no second container, all the auth + endpoint logic lives in one Python file you can read end-to-end. **In production you'd graduate to a collector** (or to the new managed-OTel-for-GKE preview), but the API surface in your app stays identical.
+### Step 2 — Wrap your three functions with spans + metrics
 
-</Concept>
-
-### Step 2 — Wrap your three functions with custom spans
-
-Find these three functions in `app.py` and wrap their bodies with `tracer.start_as_current_span(...)`:
+Find these three functions in `app.py`. Each one gets a span wrapper (for trace debugging) and two metric recording lines (for the PromQL dashboard):
 
 ```python
 def read_broadcast() -> str:
     with tracer.start_as_current_span("read_broadcast"):
+        _start = time.time()
         # ... existing body ...
+        request_counter.add(1, {"function": "read_broadcast"})
+        request_duration.record(time.time() - _start, {"function": "read_broadcast"})
 
 def load_live(...):
     with tracer.start_as_current_span("load_live"):
+        _start = time.time()
         # ... existing BigQuery query body ...
+        request_counter.add(1, {"function": "load_live"})
+        request_duration.record(time.time() - _start, {"function": "load_live"})
 
 def load_seed(...):
     with tracer.start_as_current_span("load_seed"):
+        _start = time.time()
         # ... existing CSV-load body ...
+        request_counter.add(1, {"function": "load_seed"})
+        request_duration.record(time.time() - _start, {"function": "load_seed"})
 ```
 
-✅ **Expect:** No syntax errors. The BigQuery and Cloud Storage clients auto-emit their own spans; they'll attach as children of yours.
+Each function now produces two signal types:
+
+- **A span** that records when it started, when it ended, and whether it succeeded. The BigQuery and Cloud Storage clients auto-emit their own child spans underneath yours.
+- **A counter increment + duration measurement** that lands in Cloud Monitoring as `prometheus.googleapis.com/pothole_laureate_requests/counter` and `.../pothole_laureate_request_duration_seconds/histogram`. Both are PromQL-queryable the moment the first data point arrives.
+
+✅ **Expect:** No syntax errors. The `function` label on the metrics lets you break down the dashboard by code path.
 
 ### Step 3 — Flip on `OTEL_ENABLED` in the Deployment
 
-`k8s/deployment.yaml` already has the env var pre-written but commented out. Find the `pothole-laureate` container's `env:` block (around line 25-35), uncomment these two lines:
+`k8s/deployment.yaml` has the env var pre-written but commented out. Uncomment it:
 
 ```yaml
 - name: OTEL_ENABLED
@@ -201,7 +261,7 @@ grep -A1 OTEL_ENABLED k8s/deployment.yaml
 
 ### Step 4 — Build the new image and roll it out
 
-Build from the `pothole-poet/` parent directory (where the Dockerfile lives, see Q2D-2 Concept for why). The previous Step 3 sed ran inside `streamlit/`; `cd` up one level for the build:
+Build from `pothole-poet/` (where the Dockerfile lives):
 
 ```bash
 cd ~/quest/pothole-poet
@@ -225,30 +285,74 @@ kubectl rollout status deployment/pothole-laureate -n laureate
 
 ### Step 5 — While the build runs (~3 min): build a Guardian dashboard
 
-Cloud Monitoring → Dashboards → Create. Add three charts:
+Cloud Monitoring → Dashboards → **Create Custom Dashboard**. Name it `Pothole Laureate · Guardian view`.
 
-- `monitoring.googleapis.com/uptime_check/check_passed` filtered to your Q2E-1 check
-- `cloudtrace.googleapis.com/billing/spans_ingested` (Cloud Trace span count)
-- `kubernetes.io/container/cpu/core_usage_time` filtered to namespace `laureate` (Pod CPU)
+For each widget: click **Add widget** → select **Line chart** → in the query pane, click the **`< > PromQL`** button to switch to the code editor. Paste the query, click **Run query**, then **Apply**.
 
-Save as `Pothole Laureate · Guardian view`. Keep it open in a tab during Q3+. this becomes your "is anything weird happening right now?" surface.
+**Widget 1: Uptime (is the app alive?)**
 
-### Step 6 — Generate traffic and verify spans land
+```promql
+{"monitoring.googleapis.com/uptime_check/check_passed", monitored_resource="uptime_url"}
+```
+
+**Widget 2: App request rate (from your OTel counter)**
+
+```promql
+rate({"prometheus.googleapis.com/pothole_laureate_requests/counter", job="pothole-laureate"}[5m])
+```
+
+This widget will be empty until Step 6 sends traffic. Once data arrives, you see requests per second broken down by the `function` label you set in Step 2.
+
+**Widget 3: Pod CPU**
+
+```promql
+rate({"kubernetes.io/container/cpu/core_usage_time", namespace="laureate"}[5m])
+```
+
+**Widget 4: Pod memory**
+
+```promql
+{"kubernetes.io/container/memory/used_bytes", namespace="laureate"}
+```
+
+Click **Save** in the dashboard toolbar. Keep this tab open during Q3+; this is your "is anything weird right now?" surface.
+
+<Concept title="PromQL, OTel, and your Grafana dashboards">
+
+Every widget on this dashboard uses **PromQL**, the same query language you use in Grafana. Cloud Monitoring supports PromQL natively.
+
+**Two layers of metrics, one query language.** Widgets 3 and 4 query **infrastructure metrics** that GKE Autopilot collects automatically (free, always-on). Widget 2 queries an **app-level metric** that your OTel instrumentation in Step 1 exports to `telemetry.googleapis.com`. Both land in Cloud Monitoring as Prometheus-format time series, both queryable with identical PromQL syntax.
+
+**The Grafana bridge.** Cloud Monitoring exposes a **Prometheus-compatible API**:
+
+```
+https://monitoring.googleapis.com/v1/projects/PROJECT_ID/location/global/prometheus/api/v1/
+```
+
+Add this as a Prometheus data source in Grafana Cloud and every metric on this dashboard (plus thousands of GCP system metrics) is available in your existing Grafana dashboards and alerts. Same PromQL, same data.
+
+**Going further.** Your OTel counter gives you request rate. The histogram (`pothole_laureate_request_duration_seconds`) gives you latency percentiles:
+
+```promql
+histogram_quantile(0.95, sum(rate({"prometheus.googleapis.com/pothole_laureate_request_duration_seconds/histogram", job="pothole-laureate"}[5m])) by (le))
+```
+
+Add this as a fifth widget for a production-grade latency chart. Pair it with a PromQL-based alerting policy (Cloud Monitoring supports those too) and you have the full RED monitoring pattern, end to end, in PromQL.
+
+</Concept>
+
+### Step 6 — Generate traffic and verify both signals
 
 ```bash
 # Hit the page a few times
 for i in 1 2 3 4 5; do curl -s "http://$GATEWAY_IP/" >/dev/null; sleep 1; done
-
-# Wait ~30-60s for the first traces to land
-sleep 60
-
-# List recent traces
-gcloud trace traces list --limit=5 --format="value(traceId)"
 ```
 
-✅ **Expect:** 5 trace IDs printed.
+**Verify traces.** Wait 30-60 seconds, then open the Console: **Trace → Trace explorer** → filter `service.name = pothole-laureate`.
 
-In the Console: **Trace → Trace explorer** → filter `service.name = pothole-laureate`. Click a `load_live` trace. The span tree shows:
+✅ **Expect:** 5+ traces listed, each with `load_live` or `load_seed` as the root span.
+
+Click a `load_live` trace. The span tree shows:
 
 ```
 load_live                                ── 240 ms
@@ -258,20 +362,25 @@ read_broadcast                           ──  35 ms
   └─ google.cloud.storage.Bucket.get       ──  30 ms
 ```
 
-That's the moment you can answer *"why is the page slow today?"* without guessing.
+That's the moment you can answer "why was the page slow at 2:14pm?" without guessing.
+
+**Verify metrics.** Switch to your Guardian dashboard tab. The **App request rate** widget (Widget 2) should now show data points. Metrics export every 15 seconds, so give it a minute after the first curl batch.
+
+✅ **Expect:** A non-zero line on the request rate chart. If you open **Metrics Explorer** → `< > PromQL` and run `{"prometheus.googleapis.com/pothole_laureate_requests/counter"}`, you should see your counter.
 
 <Screenshot src="/quest/pothole-poet/img/trace_otel.png" caption="Trace explorer: filtered to pothole-laureate, showing recent traces with load_live / load_seed / read_broadcast as root spans." />
 
 <Gotchas>
 - <strong>No traces appear, ever.</strong> Most likely: <code>cloudtrace.googleapis.com</code> isn&rsquo;t enabled on the project. <code>telemetry.googleapis.com</code> silently discards trace data when Cloud Trace API is disabled. Check: <code>gcloud services list --enabled | grep cloudtrace</code>. Fix: <code>gcloud services enable cloudtrace.googleapis.com</code>. (Per-Garage Terraform pre-enables it; flag your Garage owner if it&rsquo;s missing.)
 - <strong>"Permission denied" in Pod logs from OTel exporter.</strong> The Pod&rsquo;s WIF principal needs <code>roles/cloudtrace.agent</code> and <code>roles/monitoring.metricWriter</code>. Both are bound in Step 0 above; if the Pod logs show <code>permission denied</code>, re-run Step 0 and wait ~7 min for IAM propagation (per Google&rsquo;s WIF docs). Verify: <code>gcloud projects get-iam-policy $PROJECT_ID --flatten='bindings[].members' --filter='bindings.members:principal*pothole-laureate AND bindings.role:cloudtrace.agent' --format='value(bindings.role)'</code>.
-- <strong>Streamlit reloader keeps recreating the TracerProvider.</strong> Streamlit&rsquo;s file-watch reloader can re-import the app on file changes, which calls <code>setup_otel()</code> again. The OTel SDK warns about double initialisation but keeps working. Safe to ignore in dev.
+- <strong>Streamlit reloader keeps recreating the TracerProvider.</strong> Streamlit re-runs the entire script on every user interaction and on file changes. The <code>ProxyTracerProvider</code> check in <code>setup_otel()</code> handles this: OTel provider state is process-global (lives in the <code>opentelemetry</code> package, not in your script), so once a real provider is set, subsequent reruns skip setup automatically. If you removed that check and see &ldquo;TracerProvider already set&rdquo; warnings, add it back.
+- <strong>No new traces on consecutive page refreshes.</strong> If your load functions use <code>@st.cache_data</code>, the function body (including the span wrapper) only runs on cache misses. Wait for the cache TTL to expire (30-60 s depending on your setting), then refresh. You will see a new trace.
 - <strong>Custom spans show up but BigQuery spans don&rsquo;t.</strong> The <code>google-cloud-bigquery</code> Python client has OpenTelemetry instrumentation built in; it auto-emits spans when a TracerProvider is configured before the client is constructed. There is <strong>no separate</strong> <code>opentelemetry-instrumentation-google-cloud-bigquery</code> package on PyPI; don&rsquo;t add one. If BQ child spans are missing, confirm <code>setup_otel()</code> runs before <code>bigquery.Client()</code> is first imported/called. (In <code>app.py</code> the setup block is at the top, above <code>load_live</code>, so this works by construction.)
 - <strong>gRPC connection errors in Pod logs.</strong> The Pod&rsquo;s outbound gRPC needs to reach <code>telemetry.googleapis.com:443</code>. GKE Autopilot reaches it via Private Google Access (auto-enabled on private-node subnets); no Cloud NAT required. If you see connection refused, confirm <code>cloudtrace.googleapis.com</code> is enabled on the project (per-Garage Terraform pre-enables it).
 </Gotchas>
 
 <Shipped>
-Guardian piece. <strong>Your Streamlit Pod is observable.</strong> Every page render produces a trace; every BigQuery query you make from the app is a child span; every Cloud Storage broadcast read is a child span. Your team's dashboards now have a real signal feed.
+<strong>Your Streamlit Pod is observable, two ways.</strong> Every page render produces a <strong>trace</strong> in Cloud Trace (debug individual requests) and a <strong>metric data point</strong> in Cloud Monitoring (PromQL dashboards and Grafana). One endpoint, one set of credentials, two signal types. The Guardian dashboard is your team's "is anything weird?" surface for the rest of the day.
 </Shipped>
 
 ➡️ Next: **Q2E-3 — Alert + Broadcast** (sidebar on the left).

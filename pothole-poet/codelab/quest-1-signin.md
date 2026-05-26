@@ -24,7 +24,7 @@ GCP has hundreds of products, and the Console is the UI on top of them. The shap
 
 ## 2. Sign in and select your Garage's project
 
-1. Open `https://console.cloud.google.com` in your laptop's browser (not the workstation; it has no browser).
+1. Open `https://console.cloud.google.com` in **Chrome** on your laptop (not the workstation; it has no browser). Some GCP Console features (especially Cloud Monitoring dashboards) can hang or render incorrectly in other browsers.
 
 2. If a sign-in screen pops up, pick your **Volvo Cars work account**. Some of you will see two Google identities (a personal `@gmail.com` plus the Volvo one), always pick the work one. Same identity you use for any other Google service at work.
 

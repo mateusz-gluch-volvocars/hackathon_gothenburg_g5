@@ -102,7 +102,7 @@ Open the Gateway URL (or `<ip>.nip.io` if you also did Q6B) in your **laptop's**
 
 ✅ **Expect:** The sidebar now has the **🚧 Report a pothole** form.
 
-<Screenshot src="/quest/pothole-poet/img/streamlit_gold_sidebar.png" caption="Streamlit sidebar showing the Report a pothole form: neighbourhood, severity, weather, mood, quote." />
+<Screenshot src="/quest/pothole-poet/img/streamlit_form_sidebar.png" caption="Streamlit sidebar showing the Report a pothole form: neighbourhood, severity, weather, mood, quote." />
 
 1. Pick any neighbourhood. Pick something funny.
 2. Click **Report it**.
@@ -142,7 +142,7 @@ gcloud composer environments run the-laureate-bureau \
 
 ✅ **Expect:** The new poem references your quote phrasing.
 
-<Screenshot src="/quest/pothole-poet/img/streamlit_gold_ode.png" caption="Same neighbourhood, freshly composed ode after the audience submission, quote phrasing visible in the verse." />
+<Screenshot src="/quest/pothole-poet/img/streamlit_form_ode.png" caption="Same neighbourhood, freshly composed ode after the audience submission, quote phrasing visible in the verse." />
 
 🎩 **The room understands what just happened.** The interactive loop is live.
 
