@@ -121,7 +121,7 @@ The platform doesn't care. The judges will.
 Edit `app.py`. Save. Rebuild + roll out:
 
 ```bash
-cd ~/quest/pothole-poet/streamlit
+cd ~/quest/pothole-poet
 
 gcloud builds submit \
   --tag=europe-west1-docker.pkg.dev/$PROJECT_ID/laureate/pothole-laureate:v2 \

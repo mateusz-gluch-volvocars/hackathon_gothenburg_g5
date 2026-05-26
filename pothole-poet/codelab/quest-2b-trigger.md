@@ -109,6 +109,10 @@ If a task failed, the Logs tab shows the full execution output. Scroll to the bo
 
 </Concept>
 
+Back on the Airflow home page, the dashboard confirms a healthy environment: all health checks green, successful runs, and the **Asset Events** panel on the right shows each time `compose_the_odes` updated the `neighbourhood_odes` asset.
+
+<Screenshot src="/quest/pothole-poet/img/airflow_home_dashboard.png" caption="Airflow home: health checks green, successful DAG runs, and Asset Events showing neighbourhood_odes updates from compose_the_odes." />
+
 ### Step 4 — Read at least one of the odes out loud
 
 In BigQuery Studio:

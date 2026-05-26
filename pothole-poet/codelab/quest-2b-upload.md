@@ -165,6 +165,10 @@ Open the Airflow UI:
 
 <Screenshot src="/quest/pothole-poet/img/airflow_dags_list.png" caption="Airflow DAGs tab showing compose_the_odes parsed and ready to trigger." />
 
+Click into `compose_the_odes`, then the **Tasks** tab. You should see the three tasks, their operator types, and retry counts:
+
+<Screenshot src="/quest/pothole-poet/img/airflow_tasks_tab.png" caption="Tasks tab: two BigQueryInsertJobOperators (federation + enrichment) and one @task (verification), each with its own retry count." />
+
 <Gotchas>
 - <strong>DAG doesn&rsquo;t appear in the UI after 5 min.</strong> Check the <strong>DAG Errors</strong> banner at the top of the Airflow UI. it&rsquo;ll show the parse error. Most common: forgot the <code>sql/</code> folder upload, or there&rsquo;s a Python syntax error.
 - <strong>DAG appears with red error pill.</strong> Click into it to see the import error. If it says &ldquo;No such file: <code>sql/01_federate.sql</code>&rdquo;. re-run the upload step with the <code>-r</code> flag to include the directory.

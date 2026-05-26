@@ -81,7 +81,7 @@ If you want a logo, drop an SVG in `streamlit/` and `st.image()` it in the heade
 Rebuild + roll out:
 
 ```bash
-cd ~/quest/pothole-poet/streamlit
+cd ~/quest/pothole-poet
 
 gcloud builds submit \
   --tag=europe-west1-docker.pkg.dev/$PROJECT_ID/laureate/pothole-laureate:theme \

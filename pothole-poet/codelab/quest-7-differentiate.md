@@ -27,6 +27,8 @@ Antigravity CLI will check your pipeline state, ask what your team is good at + 
 
 You've shipped the core pipeline + polish: form (Q6A) + HTTPS (Q6B) + alert/broadcast (Q2E-3). Your demo will work. **But every other Garage's demo will work too**, with the same shape, and the demo train is what the judges remember. Identical pipelines tell identical stories; the Garage that breaks away with something the judges haven't seen the previous fifteen times is the one that takes the prize.
 
+<Screenshot src="/quest/pothole-poet/img/streamlit_full.png" caption="The baseline: MODE=full with live odes, report form, Guardian banner, and pirate captain voice. Every Garage has this. What makes yours different?" />
+
 ---
 
 ## How it works
