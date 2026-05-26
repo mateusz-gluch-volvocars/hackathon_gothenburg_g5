@@ -374,7 +374,7 @@ That's the moment you can answer "why was the page slow at 2:14pm?" without gues
 
 ✅ **Expect:** A non-zero line on the request rate chart. If you open **Metrics Explorer** → `< > PromQL` and run `{"prometheus.googleapis.com/pothole_laureate_requests/counter"}`, you should see your counter.
 
-<Screenshot src="/quest/pothole-poet/img/trace_otel.png" caption="Trace explorer: filtered to pothole-laureate, showing recent traces with load_live / load_seed / read_broadcast as root spans." />
+<Screenshot src="/quest/pothole-poet/img/trace_otel.png" caption="Cloud Trace waterfall view: each row is a span, nested spans show parent-child relationships, and the timeline shows where time was spent. Your traces will show load_live / read_broadcast as root spans with BigQuery and Cloud Storage child spans underneath." />
 
 <Gotchas>
 - <strong>No traces appear, ever.</strong> Most likely: <code>cloudtrace.googleapis.com</code> isn&rsquo;t enabled on the project. <code>telemetry.googleapis.com</code> silently discards trace data when Cloud Trace API is disabled. Check: <code>gcloud services list --enabled | grep cloudtrace</code>. Fix: <code>gcloud services enable cloudtrace.googleapis.com</code>. (Per-Garage Terraform pre-enables it; flag your Garage owner if it&rsquo;s missing.)
