@@ -289,4 +289,6 @@ gcloud storage cat "gs://${PROJECT_ID}-broadcast/broadcast.txt"
 Guardian piece. <strong>Your Garage now has a complete Flow-Guardian loop.</strong> Alerts fire when things break; you claim them via snooze; you broadcast known issues to teammates and users; the system auto-recovers and you clear the broadcast. The same on-call rhythm production teams run every day, in 15 minutes of `gcloud` commands.
 </Shipped>
 
-🛡 Hand the keyboard to your App Dev side. Q3 (MODE switch to live) and Q4/Q5 (feature ships) are next. The Guardian rhythm you just built is what watches the team through those changes.
+🛡 **Guardian lane done.** Rejoin your team. If they are waiting at Q3 (convergence), head there now. If Q3 is already done, pick up wherever the team is (Q4/Q5/Q6).
+
+➡️ Next: **Quest 3 — Wire the Pipeline** (sidebar on the left).

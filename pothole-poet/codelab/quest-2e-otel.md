@@ -274,4 +274,4 @@ That's the moment you can answer *"why is the page slow today?"* without guessin
 Guardian piece. <strong>Your Streamlit Pod is observable.</strong> Every page render produces a trace; every BigQuery query you make from the app is a child span; every Cloud Storage broadcast read is a child span. Your team's dashboards now have a real signal feed.
 </Shipped>
 
-🛡 Move to **Q2E-3**. set up the alert + broadcast + snooze loop, the full Guardian-of-the-day rhythm.
+➡️ Next: **Q2E-3 — Alert + Broadcast** (sidebar on the left).

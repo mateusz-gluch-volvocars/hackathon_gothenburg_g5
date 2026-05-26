@@ -22,6 +22,8 @@ echo "PROJECT_ID=$PROJECT_ID  PROJECT_NUMBER=$PROJECT_NUMBER"
 # 2. Create the Autopilot cluster (~6-8 min)
 gcloud container clusters create-auto laureate-cluster \
   --region=$REGION \
+  --network=garage-vpc \
+  --subnetwork=garage-vpc \
   --enable-private-nodes \
   --release-channel=regular
 
@@ -60,6 +62,8 @@ The single command below creates a regional Autopilot cluster with private nodes
 ```bash
 gcloud container clusters create-auto laureate-cluster \
   --region=$REGION \
+  --network=garage-vpc \
+  --subnetwork=garage-vpc \
   --enable-private-nodes \
   --release-channel=regular
 ```
@@ -86,7 +90,7 @@ If you prefer clicking over typing, here's the Console path. The CLI command abo
 
 <Screenshot src="/quest/pothole-poet/img/gke_fleet_registration.png" caption="Fleet registration, auto-registered to your project. Click Next." />
 
-5. On the **Networking** page: confirm **Enable Private nodes** is checked (it should be by default for your Garage's project). Leave the VPC and subnet on defaults (`garage-vpc`).
+5. On the **Networking** page: set **Network** to `garage-vpc` and **Node subnet** to `garage-vpc`. Confirm **Enable Private nodes** is checked.
 
 <Screenshot src="/quest/pothole-poet/img/gke_networking.png" caption="Networking; confirm Enable Private nodes is checked. This is required by the Volvo Cars org policy." />
 
@@ -117,16 +121,22 @@ Private nodes still need a way to reach Google APIs, pulling images from Artifac
 
 </Concept>
 
-### Step 3 — While you wait (~6-8 min): be useful
+### Step 3 — While the cluster provisions (~6-8 min): start Q2D-2
 
-a) **Skim the Streamlit code.** In your Workstation IDE, open `pothole-poet/streamlit/app.py`. Note:
-- The `MODE` env var at the top; controls `seed` / `live` / `full` mode.
-- The `# TEAM CANVAS` block near the bottom; that's where Quest 4 lives. **Don't edit it now.**
-- `pothole-poet/Dockerfile`. vanilla Python + Streamlit, listens on 8080. It lives one directory up from `streamlit/` so the seed CSV is in the build context.
+**Don't sit idle.** The image build (Q2D-2) uses Cloud Build, which does not need the cluster. Open a second terminal tab and start it now:
 
-b) **Look at the manifests.** In `pothole-poet/streamlit/k8s/`, you'll see five YAMLs you'll apply across Q2D-3 to Q2D-5: `namespace-and-sa.yaml`, `deployment.yaml`, `service.yaml`, `gateway.yaml`, `httproute.yaml`. We'll explain each as you apply it.
+```bash
+cd ~/quest/pothole-poet
+gcloud builds submit \
+  --tag=europe-west1-docker.pkg.dev/$PROJECT_ID/laureate/pothole-laureate:v1 \
+  --region=$REGION
+```
 
-c) **Pair with the Data Engineer.** They're standing up AlloyDB + the BigQuery dataset (`pothole_laureate`) + the AlloyDB federation. Once both work, your data path is ready end-to-end; your Pod will read `pothole_laureate.neighbourhood_odes` once the Pipeline-author's DAG populates it.
+While Cloud Build runs (~3 min), skim the code:
+
+a) **`pothole-poet/streamlit/app.py`**. Note the `MODE` env var at the top (`seed` / `live` / `full`) and the `# TEAM CANVAS` block near the bottom (Quest 4 lives there; don't edit it now).
+
+b) **`pothole-poet/streamlit/k8s/`**. Five YAMLs you'll apply across Q2D-3 to Q2D-5: `namespace-and-sa.yaml`, `deployment.yaml`, `service.yaml`, `gateway.yaml`, `httproute.yaml`.
 
 ### Step 4 — Verify cluster is RUNNING
 
@@ -140,6 +150,7 @@ gcloud container clusters describe laureate-cluster \
 In the Console (`https://console.cloud.google.com/kubernetes/list/overview?project=$PROJECT_ID`), the cluster shows green health.
 
 <Gotchas>
+- <strong><code>has no network named "default"</code>.</strong> Your Garage uses <code>garage-vpc</code>, not <code>default</code>. Re-run the create command with <code>--network=garage-vpc --subnetwork=garage-vpc</code>.
 - <strong>Create command fails with <code>org policy compute.vmExternalIpAccess</code>.</strong> You forgot <code>--enable-private-nodes</code>. Re-run with the flag.
 - <strong>Stuck on PROVISIONING for &gt;12 min.</strong> Check the Console's <strong>Kubernetes Engine &rarr; Operations</strong> tab for an error. Past 15 min, flag a Sherpa.
 - <strong><code>command not found: gcloud</code>.</strong> You&rsquo;re in a Cloud Shell, not the Workstation. Open the Workstation terminal instead. <code>gcloud</code> is preinstalled there.

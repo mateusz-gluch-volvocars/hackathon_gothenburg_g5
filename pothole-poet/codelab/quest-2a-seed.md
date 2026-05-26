@@ -146,10 +146,8 @@ LIMIT 5;
 The Garage&rsquo;s operational database is live. <strong>AlloyDB cluster <code>pothole-archive</code> is READY in <code>europe-west1</code>, with 5,000 citizen reports planted across 12 neighbourhoods.</strong> The BigQuery Lead can now wire federation against it; the Airflow Lead&rsquo;s DAG can pull from it.
 </Shipped>
 
-🛢 **Lane B done.** Walk over to the BigQuery Lead and confirm:
+🛢 **AlloyDB sub-lane done.** Now switch to your BigQuery sub-lane.
 
-> *"Pothole archive is planted. Cluster `pothole-archive`, primary instance `pothole-archive-primary`, in `europe-west1`. 5,000 rows, 12 neighbourhoods."*
+If you already started **Q2C-3 (Analyst's Bench) Phase A** during the AlloyDB wait, keep going. Either way, your next critical-path task is **Q2C-2 (Federation)**: the Pipeline-author's DAG cannot run until the `alloydb_archive` connection exists. That handoff is on you.
 
-If the Airflow Lead's Composer is still creating, sit with them and read `pothole-poet/airflow/compose_the_odes.py` together; that's the DAG that'll harvest your potholes shortly.
-
-➡️ Next: head to **Quest 3 — Wire the Pipeline** when the rest of the lanes finish (sidebar on the left). Wait there for the others.
+➡️ Next: **Q2C-1 — BigQuery Tour** if you haven't started it, or **Q2C-2 — Federation** if you have.

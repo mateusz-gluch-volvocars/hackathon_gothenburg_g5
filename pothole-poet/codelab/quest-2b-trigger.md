@@ -32,6 +32,12 @@ bq query --use_legacy_sql=false --format=prettyjson \
 
 DAG is in the bucket, parsed, sitting ready in the Airflow UI. Now we trigger it manually (don't wait for the scheduled run) and watch the AI moment unfold.
 
+<Callout type="critical" title="Wait for the Data Engineer before triggering">
+
+The DAG's first task (`federate_pothole_reports`) reads from the `alloydb_archive` BigQuery connection. If your Data Engineer has not finished **Q2C-2 (Federation)**, the task fails with `connection alloydb_archive not found`. Confirm with them before you trigger.
+
+</Callout>
+
 Here's what will happen when you trigger: Airflow runs the two tasks in order. First, `federate_pothole_reports` submits a BigQuery SQL job that pulls AlloyDB data via the federation connection the Data Engineer created. When that finishes, `ask_the_laureate` submits a second BigQuery SQL job that aggregates the data and calls Gemini via `AI.GENERATE` to compose 12 poems. Both jobs execute inside BigQuery's engine, the Airflow worker just submits them and waits.
 
 ---

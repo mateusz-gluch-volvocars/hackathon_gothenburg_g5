@@ -8,7 +8,7 @@
 
 </Objective>
 
-> Guardian lane · ~10 min hands-on · runs in parallel with your Infra-Admin's Q2D-5 Gateway provisioning.
+> Guardian lane · ~10 min hands-on · follows Q2D-5 (you need the Gateway IP).
 
 <QuickPath>
 
@@ -25,9 +25,8 @@ gcloud monitoring uptime create pothole-laureate-uptime \
   --resource-labels="host=${GATEWAY_IP},project_id=$(gcloud config get-value project)" \
   --protocol=http \
   --path="/_stcore/health" \
-  --period=1m \
-  --timeout=10s \
-  --status-codes=200
+  --period=1 \
+  --timeout=10
 
 # 3. Verify it exists
 gcloud monitoring uptime list-configs \
@@ -56,7 +55,7 @@ echo "Gateway IP: $GATEWAY_IP"
 
 ✅ **Expect:** A real IPv4 address (e.g. `34.117.42.183`).
 
-If blank, your Infra-Admin hasn't finished Q2D-5 yet (the Gateway takes 5-15 min to PROGRAM on a fresh Autopilot). Pre-position by reading the Volvo Flow-Guardian role definition in `help.mdx`, then come back when they have an IP.
+If blank, the Gateway is still provisioning (Q2D-5 takes 3-5 min to reach PROGRAMMED). Wait and re-run.
 
 ### Step 2 — Create the uptime check
 
@@ -66,32 +65,11 @@ gcloud monitoring uptime create pothole-laureate-uptime \
   --resource-labels="host=${GATEWAY_IP},project_id=$(gcloud config get-value project)" \
   --protocol=http \
   --path="/_stcore/health" \
-  --period=1m \
-  --timeout=10s \
-  --status-codes=200
+  --period=1 \
+  --timeout=10
 ```
 
 ✅ **Expect:** `Created uptime check [projects/<id>/uptimeCheckConfigs/pothole-laureate-uptime].`
-
-<Cheat title="Or use the GKE-native UX in the Console">
-
-The 2026 GKE Console added a "Create uptime check" button on the Service detail page that auto-fills the IP:
-
-1. Console → **Kubernetes Engine** → **Services & Ingress** → click `pothole-laureate` (in the `laureate` namespace).
-2. Scroll to the **Endpoints** card → click **Create uptime check**.
-3. Fill in the form, the IP and path are pre-populated. Click **Test** before saving (one-shot probe). Click **Create**.
-
-Note the Console says "URL" where gcloud says `uptime-url`. same resource type.
-
-</Cheat>
-
-<Concept title="Why does the Guardian start before the Gateway is ready?">
-
-Pure pacing. Your Infra-Admin's Q2D-5 (Gateway provisioning + PROGRAMMED state) takes 5–15 min on a fresh Autopilot cluster. If you wait until that's done, you've burned 15 min idle. Instead, set the uptime check up *now*. the moment the Gateway flips to PROGRAMMED, your check goes green, and you've already saved your team 10 minutes.
-
-This is the Guardian rhythm: **be ready before things break, be available before things go live.**
-
-</Concept>
 
 ### Step 3 — Verify the check exists
 
@@ -130,4 +108,4 @@ The check fires every minute, but it can take a few min for all 6 regions to con
 Guardian piece. <strong>Your team's first heartbeat is live.</strong> The Gateway has a watcher; if it goes down, the next two pages (Q2E-2 OTel + Q2E-3 alert) build on this signal so your Garage knows about failures before anyone refreshes the page.
 </Shipped>
 
-🛡 Move to **Q2E-2**. wire OpenTelemetry into the Streamlit Pod so you see what users actually do, not just whether the door is open.
+➡️ Next: **Q2E-2 — OpenTelemetry** (sidebar on the left).

@@ -17,7 +17,7 @@ AlloyDB (operational store)
 - **Project: the active `gcloud config get-value project`.** Each Garage has its own GCP project. Do not hard-code a project ID — read it fresh every time you compose a command.
 - **Gemini model: `gemini-3-flash-preview` on the global endpoint.** Full endpoint URL: `https://aiplatform.googleapis.com/v1/projects/<project>/locations/global/publishers/google/models/gemini-3-flash-preview`. The regional endpoint does NOT host Gemini 3 — `gemini-3-flash` alone will fail with 404 model not found.
 - **Composer is Gen 3** (now branded "Managed Service for Apache Airflow"). Airflow 3.1, default image.
-- **GKE is Autopilot** with `--enable-private-nodes`. The Volvo Cars org policy blocks public-IP nodes. Egress to Google APIs goes via Private Google Access — there is no general internet egress and no Cloud NAT for the participant cluster.
+- **GKE is Autopilot** with `--network=garage-vpc --subnetwork=garage-vpc --enable-private-nodes`. The Garage VPC is `garage-vpc` (there is no `default` network). The Volvo Cars org policy blocks public-IP nodes. Egress to Google APIs goes via Private Google Access — there is no general internet egress and no Cloud NAT for the participant cluster.
 - **GKE Workload Identity: direct WIF**, no GSA in the middle. Bind IAM directly to the K8s ServiceAccount via a `principal://iam.googleapis.com/...` URI (see the wif-binding-helper skill for the exact shape).
 
 ## Connection naming conventions

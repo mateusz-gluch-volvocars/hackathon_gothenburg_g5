@@ -16,22 +16,11 @@ The pipeline goes live. Three short steps, one per lane.
 
 ## Choreography
 
-```
-Airflow Lead          BigQuery Lead          GKE / App Lead
-   │                  │                 │
-   ▼                  │                 │
-trigger DAG           │                 │
-   │                  │                 │
-   ▼                  ▼                 │
-   wait ~1 min        watch BQ          │
-                      table populate    │
-                          │             │
-                          ▼             ▼
-                       confirm 12    redeploy with
-                          rows         MODE=live
-                          │             │
-                          └── done ─────┘
-```
+<div style="max-width: 340px; margin: 0 auto;">
+
+<Screenshot src="/quest/pothole-poet/img/quest_3_choreography.svg" caption="Quest 3 choreography: three handoffs, then Foundation is complete." />
+
+</div>
 
 ---
 

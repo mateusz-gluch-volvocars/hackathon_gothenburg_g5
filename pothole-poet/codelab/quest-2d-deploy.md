@@ -54,8 +54,6 @@ sed -i "s/REPLACE_PROJECT_ID/$PROJECT_ID/g" k8s/deployment.yaml
 grep -q REPLACE_PROJECT_ID k8s/deployment.yaml && echo "WARN: substitution failed" || echo "✅ substitution clean"
 ```
 
-> Re-running `sed` is harmless, once the placeholder is gone there's nothing left to substitute. If you see "WARN: substitution failed", check that `$PROJECT_ID` is set (`echo $PROJECT_ID`).
-
 ### Step 2 — Apply Deployment + Service
 
 ```bash

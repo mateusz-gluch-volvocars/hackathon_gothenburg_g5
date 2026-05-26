@@ -107,6 +107,6 @@ You&rsquo;re oriented. <strong>The pre-provisioned <code>pothole_laureate</code>
 
 📊 **Q2C-1 done.** Oriented and warmed up.
 
-➡️ Next, two things in parallel:
-- **Q2C-3. The Analyst's Bench**. start Phase A immediately on the 6 pre-loaded tables. Don't wait on anyone.
-- **Q2C-2. Wire and Test Federation**. kick off as soon as your AlloyDB sub-lane (Q2A-3) finishes seeding 5,000 rows.
+➡️ Next: **Q2C-2 — Wire BigQuery → AlloyDB Federation**. This is the critical path: the Pipeline-author's DAG cannot run until you create the `alloydb_archive` connection. Start Q2C-2 as soon as Q2A-3 (seed) is done.
+
+While you wait for the seed, open **Q2C-3 (Analyst's Bench) Phase A** in another tab. The 6 pre-loaded tables let you do ~30 min of real analyst work right now, no dependencies.

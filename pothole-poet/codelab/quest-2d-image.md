@@ -13,9 +13,7 @@
 <QuickPath>
 
 ```bash
-# Build context is pothole-poet/ (NOT pothole-poet/streamlit/) so the
-# seed CSV is alongside the Streamlit app in the image — see the Concept block
-# below for the path mechanic.
+# Build from pothole-poet/ (where the Dockerfile lives)
 cd ~/quest/pothole-poet
 
 gcloud builds submit \
@@ -38,7 +36,7 @@ A Pod runs a container. A container runs from an image. We package the Streamlit
 
 ### Step 1 — Build and push (~3 min)
 
-`cd` into the **`pothole-poet/`** directory (the Dockerfile lives there, one level above `streamlit/`) and submit the build. Cloud Build reads the `Dockerfile`, builds the image on its infrastructure, and pushes the result to AR.
+If you already kicked off the build during Q2D-1's wait (Step 3 on that page), skip to Step 3 (verify). Otherwise, `cd` into the **`pothole-poet/`** directory (the Dockerfile lives there, one level above `streamlit/`) and submit the build. Cloud Build reads the `Dockerfile`, builds the image on its infrastructure, and pushes the result to AR.
 
 ```bash
 cd ~/quest/pothole-poet
@@ -53,14 +51,6 @@ gcloud builds submit \
 > First build pulls the `python:3.12-slim` base, installs `libpq-dev` + `gcc`, then `pip install` the deps. ~3 min total. Re-runs are faster; cached layers from the previous build are reused.
 >
 > The `--region=europe-west1` keeps the build close to AR; without it Cloud Build runs in `us-central1` and uploads cross-region (slower).
-
-<Concept title="Why is the Dockerfile in pothole-poet/ and not in streamlit/?">
-
-Seed mode serves the bundled `seed/pothole_reports.csv` so the page works without AlloyDB or BigQuery. `app.py` reads it via `Path(__file__).parent.parent / "seed" / "pothole_reports.csv"`. i.e, a sibling of the `streamlit/` directory.
-
-Docker can only `COPY` files that are inside the build context, so building from `streamlit/` alone would leave the seed CSV out and the app would crash on import with `FileNotFoundError: '/seed/pothole_reports.csv'`. Building from the `pothole-poet/` parent keeps `streamlit/` and `seed/` as siblings inside the image; same layout as on disk, no path math in `app.py`.
-
-</Concept>
 
 <Concept title="Why Cloud Build instead of running docker locally?">
 

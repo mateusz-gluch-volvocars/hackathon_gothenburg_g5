@@ -37,6 +37,8 @@ The QuickPath and Studio paths below still work, the skill just bakes in the sub
 # 1. Set env vars for the script
 export PROJECT_ID="$(gcloud config get-value project)"
 export REGION="europe-west1"
+export ALLOYDB_CLUSTER="pothole-archive"
+export ALLOYDB_INSTANCE="pothole-archive-primary"
 
 # 2. Create the federation connection
 bash ~/quest/pothole-poet/bigquery/setup_alloydb_connection.sh
@@ -94,15 +96,17 @@ The script we run uses the connector framework. If you try the legacy flag with 
 ```bash
 export PROJECT_ID="$(gcloud config get-value project)"
 export REGION="europe-west1"
+export ALLOYDB_CLUSTER="pothole-archive"
+export ALLOYDB_INSTANCE="pothole-archive-primary"
 
 bash ~/quest/pothole-poet/bigquery/setup_alloydb_connection.sh
 ```
 
 ✅ **Expect:** `Connection alloydb_archive successfully created`
 
-> The script uses the same cluster + instance names your AlloyDB sub-lane picked (`pothole-archive` / `pothole-archive-primary`). If you used different names, edit the env vars at the top of the script first.
+> The script reads `ALLOYDB_CLUSTER` and `ALLOYDB_INSTANCE` from the environment. The defaults above match the names from Q2A-1. If your AlloyDB Lead used different names, click the gold-underlined values in the code block above to update them; the change carries across every page in this Quest.
 > 
-> Re-running the script on an existing connection fails with "already exists". safe to ignore; the connection is already there.
+> Re-running the script on an existing connection fails with "already exists". Safe to ignore; the connection is already there.
 
 ### Step 3 — Run the federation smoke query
 
@@ -157,6 +161,7 @@ bq query --use_legacy_sql=false \
 <Gotchas>
 - <strong><code>bq mk --connection_type=CLOUD_SQL</code> rejects the AlloyDB instance path.</strong> Use the modern connector framework: <code>--connector_configuration</code> with <code>connector_id: "google-alloydb"</code>. the existing script does this; don&rsquo;t roll your own.
 - <strong>Federation query returns 0 rows or hangs.</strong> Either AlloyDB isn&rsquo;t READY yet, or the cluster/instance ID in the connector config doesn&rsquo;t match what you provisioned in Q2A-1. Confirm with <code>gcloud alloydb clusters list --region=europe-west1</code>.
+- <strong><code>EXTERNAL_QUERY</code> fails with &ldquo;server closed the connection unexpectedly&rdquo;.</strong> This almost always means the connection was created with a <em>different</em> cluster or instance name than what AlloyDB actually has. Run <code>gcloud alloydb clusters list --region=europe-west1</code> and <code>gcloud alloydb instances list --cluster=YOUR_CLUSTER --region=europe-west1</code> to see the real names. Then re-export <code>ALLOYDB_CLUSTER</code> and <code>ALLOYDB_INSTANCE</code> with the correct values, delete the broken connection (<code>bq rm --connection --location=europe-west1 alloydb_archive</code>), and re-run the setup script.
 - <strong><code>PostgreSQL type UUID in column id is not supported in BigQuery</code>.</strong> Cast it: <code>SELECT id::TEXT AS id, ...</code>. The DAG SQL and <code>test_federation.sql</code> already do this; only matters if you write your own ad-hoc query.
 - <strong><code>&#36;&#123;PROJECT_ID&#125;</code> appears literally in the error message.</strong> You missed a Find &amp; Replace in Studio. Either replace it manually with your project_id, or use the <code>bq query</code> bash form in QuickPath above (which expands env vars automatically).
 - <strong>Connection shows up in <code>INFORMATION_SCHEMA</code> but federation fails with permission errors.</strong> The connection&rsquo;s service account needs <code>roles/alloydb.client</code> on your project, should be pre-bound by the platform; flag a Sherpa.

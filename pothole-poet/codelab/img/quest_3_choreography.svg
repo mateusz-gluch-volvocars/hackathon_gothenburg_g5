@@ -1,0 +1,42 @@
+<svg viewBox="0 0 400 430" xmlns="http://www.w3.org/2000/svg" font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#9a9aae"/>
+    </marker>
+  </defs>
+
+  <!-- Step 1: Airflow Lead -->
+  <rect x="70" y="0" width="260" height="76" rx="10" fill="#b07d62"/>
+  <text x="88" y="22" fill="rgba(255,255,255,0.7)" font-size="10" font-weight="700" letter-spacing="0.07em">STEP 1</text>
+  <text x="200" y="44" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">⚙️  Airflow Lead: trigger DAG</text>
+  <text x="200" y="64" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="11">Both tasks go green (~1 min)</text>
+
+  <!-- Arrow 1→2 -->
+  <line x1="200" y1="76" x2="200" y2="128" stroke="#9a9aae" stroke-width="1.5" marker-end="url(#ah)"/>
+  <rect x="210" y="90" width="140" height="18" rx="9" fill="rgba(154,154,174,0.12)"/>
+  <text x="280" y="103" text-anchor="middle" fill="#a0a0b8" font-size="9.5" font-style="italic">"12 odes are in BQ"</text>
+
+  <!-- Step 2: BigQuery Lead -->
+  <rect x="70" y="134" width="260" height="76" rx="10" fill="#2d6a4f"/>
+  <text x="88" y="156" fill="rgba(255,255,255,0.7)" font-size="10" font-weight="700" letter-spacing="0.07em">STEP 2</text>
+  <text x="200" y="178" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">📊  BigQuery Lead: confirm rows</text>
+  <text x="200" y="198" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="11">12 rows in neighbourhood_odes</text>
+
+  <!-- Arrow 2→3 -->
+  <line x1="200" y1="210" x2="200" y2="262" stroke="#9a9aae" stroke-width="1.5" marker-end="url(#ah)"/>
+  <rect x="210" y="224" width="152" height="18" rx="9" fill="rgba(154,154,174,0.12)"/>
+  <text x="286" y="237" text-anchor="middle" fill="#a0a0b8" font-size="9.5" font-style="italic">"Swap the data source"</text>
+
+  <!-- Step 3: GKE / App Lead -->
+  <rect x="70" y="268" width="260" height="76" rx="10" fill="#c69f3a"/>
+  <text x="88" y="290" fill="rgba(255,255,255,0.7)" font-size="10" font-weight="700" letter-spacing="0.07em">STEP 3</text>
+  <text x="200" y="312" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">☸  GKE / App Lead: redeploy</text>
+  <text x="200" y="332" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="11">kubectl set env MODE=live</text>
+
+  <!-- Arrow 3→Done -->
+  <line x1="200" y1="344" x2="200" y2="385" stroke="#9a9aae" stroke-width="1.5" marker-end="url(#ah)"/>
+
+  <!-- Done badge -->
+  <rect x="110" y="391" width="180" height="36" rx="18" fill="#2d6a4f"/>
+  <text x="200" y="414" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">✓  Foundation complete</text>
+</svg>
