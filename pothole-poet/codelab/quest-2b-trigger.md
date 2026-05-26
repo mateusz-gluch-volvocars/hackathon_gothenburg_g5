@@ -32,9 +32,10 @@ bq query --use_legacy_sql=false --format=prettyjson \
 
 DAG is in the bucket, parsed, sitting ready in the Airflow UI. Now we trigger it manually (don't wait for the scheduled run) and watch the AI moment unfold.
 
-<Callout type="critical" title="Wait for the Data Engineer before triggering">
+<Callout type="critical" title="Two lanes must be done before you trigger">
 
-The DAG's first task (`federate_pothole_reports`) reads from the `alloydb_archive` BigQuery connection. If your Data Engineer has not finished **Q2C-2 (Federation)**, the task fails with `connection alloydb_archive not found`. Confirm with them before you trigger.
+1. **AlloyDB Lead must finish Q2A-3 (Seed).** The DAG federates data from AlloyDB into BigQuery. If AlloyDB has no data, the DAG goes **green but produces 0 odes**: no error, just empty results. This is the hardest failure to diagnose because nothing looks broken. Confirm with your AlloyDB Lead that 5,000 rows are loaded before you trigger.
+2. **BigQuery Lead must finish Q2C-2 (Federation).** The DAG's first task reads via the `alloydb_archive` BigQuery connection. If it doesn't exist yet, the task fails with `connection alloydb_archive not found`.
 
 </Callout>
 

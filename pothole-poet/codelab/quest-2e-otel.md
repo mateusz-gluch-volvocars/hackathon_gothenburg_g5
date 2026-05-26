@@ -8,6 +8,12 @@
 
 </Objective>
 
+<Callout type="critical" title="Needs a running Streamlit deployment">
+
+This page instruments the app you deployed in Q2D-4. If `kubectl get deployment pothole-laureate -n laureate` returns "not found", finish Q2D-4 first.
+
+</Callout>
+
 > Guardian lane · ~20 min hands-on (much of it waiting for `gcloud builds submit`).
 
 <QuickPath>

@@ -8,7 +8,7 @@
 
 </Objective>
 
-> Make it yours · ~20 minutes · pairs naturally with Q6B (HTTPS) which any order works.
+> Make it yours · ~20 minutes · pairs naturally with Q6B (HTTPS) which any order works. **Requires Quest 3 complete.**
 
 <QuickPath>
 

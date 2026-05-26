@@ -10,6 +10,17 @@
 
 > All four lanes converge. ~10 minutes.
 
+<Callout type="critical" title="Pre-flight: every lane must reach this point before you start">
+
+- **AlloyDB Lead**: Q2A-3 done (5,000 rows seeded)
+- **Airflow Lead**: Q2B-3 done (DAG triggered, `neighbourhood_odes` has 12 rows in BigQuery)
+- **BigQuery Lead**: Q2C-2 done (federation connection created and smoke-tested)
+- **GKE / App Lead**: Q2D-5 done (Gateway has a public IP, Streamlit app is running)
+
+If any lane isn't there yet, that person finishes now while the team watches. Do not skip ahead to Q4.
+
+</Callout>
+
 The pipeline goes live. Three short steps, one per lane.
 
 ---

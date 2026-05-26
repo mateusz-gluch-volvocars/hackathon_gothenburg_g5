@@ -8,7 +8,7 @@
 
 </Objective>
 
-> Optional. ~15 minutes. The whole team or one person.
+> Optional. ~15 minutes. The whole team or one person. **Requires Quest 3 complete.**
 
 Two ways to give the Office personality without rebuilding anything.
 

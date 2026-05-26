@@ -8,7 +8,7 @@
 
 </Objective>
 
-> The whole team. ~25 minutes.
+> The whole team. ~25 minutes. **Requires Quest 3 complete** (MODE=live, Gemini odes on the page).
 
 The Foundation is live. Twelve poems are on a generic dataframe page. Now decide: **how does the Göteborg Pothole Poet Laureate Office want to present its work to the world?**
 

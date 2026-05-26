@@ -8,6 +8,12 @@
 
 </Objective>
 
+<Callout type="critical" title="Needs AlloyDB data before the smoke query">
+
+The connection itself only needs AlloyDB's private IP (available after Q2A-1). But the smoke query at the end expects 5,000 rows. If your AlloyDB Lead hasn't finished **Q2A-3 (Seed)** yet, you can create the connection now and run the smoke query after they confirm seeding is done.
+
+</Callout>
+
 > Lane C · 2 of 3. ~5 minutes hands-on.
 
 <Concept title="🤖 Or drive this with Antigravity CLI">
