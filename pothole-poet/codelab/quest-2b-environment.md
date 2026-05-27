@@ -37,7 +37,7 @@ The name sounds academic, but the idea is simple; think of a vehicle assembly li
 
 Your DAG has two tasks: `federate_pothole_reports` (pull data from AlloyDB into BigQuery) then `ask_the_laureate` (call Gemini to compose poems). Airflow makes sure the second never runs until the first finishes.
 
-**"Managed"** means Google runs all the Airflow infrastructure, the scheduler, the workers, the database, the web server, inside a Google-managed project you never see. You upload your DAG file, and Google handles everything else. The Console URL still says `composer` because the product was originally called Cloud Composer; the current brand is **Managed Service for Apache Airflow**, but it's the same service.
+**"Managed"** means Google runs all the Airflow infrastructure, the scheduler, the workers, the database, the web server, inside a Google-managed project you never see. You upload your DAG file, and Google handles everything else. The product was originally called Cloud Composer; the current brand is **Managed Service for Apache Airflow** (shown as **Managed Airflow** in the Console menu).
 
 </Concept>
 

@@ -16,7 +16,7 @@ In Q1-1 you confirmed the right project is selected. Now you learn how to *navig
 
 ## 1. Why
 
-GCP has hundreds of products organised into a dozen categories. The hamburger menu is a maze for newcomers. AlloyDB is under "Databases", Composer is under "Data Analytics → Cloud Composer", BigQuery is under "Analytics → BigQuery", Kubernetes Engine is its own top-level entry. You *could* hunt every time. You won't, because the search bar exists.
+GCP has hundreds of products organised into a dozen categories. The hamburger menu is a maze for newcomers. AlloyDB is under "Databases", Managed Airflow is under "Data Analytics → Managed Airflow", BigQuery is under "Analytics → BigQuery", Kubernetes Engine is its own top-level entry. You *could* hunt every time. You won't, because the search bar exists.
 
 The Console designers put three navigation tools at the top of every page for exactly this reason. Today you learn all three, in order of how often you'll use them.
 
@@ -81,7 +81,7 @@ The hamburger is the full product catalog. You'll use it when you're browsing ra
    | Product | Where it lives in the menu | Star it |
    |---|---|---|
    | **AlloyDB for PostgreSQL** | Databases → AlloyDB for PostgreSQL | ⭐ |
-   | **Composer** | Data Analytics → Cloud Composer *(Google's name for Managed Service for Apache Airflow)* | ⭐ |
+   | **Managed Airflow** | Data Analytics → Managed Airflow *(formerly Cloud Composer)* | ⭐ |
    | **BigQuery** | Analytics → BigQuery | ⭐ |
    | **Kubernetes Engine** | (Top-level, near the top of the menu) | ⭐ |
 
@@ -95,7 +95,7 @@ The hamburger is the full product catalog. You'll use it when you're browsing ra
 
 ## 6. Verify
 
-- ⭐ The hamburger menu shows **AlloyDB**, **Composer**, **BigQuery**, **Kubernetes Engine** in the starred section at the top.
+- ⭐ The hamburger menu shows **AlloyDB**, **Managed Airflow**, **BigQuery**, **Kubernetes Engine** in the starred section at the top.
 - 🔍 You used the search bar at least twice without touching the mouse to open it.
 - 🟦 The project picker still shows your `project_id` (you didn't accidentally switch).
 
@@ -111,14 +111,14 @@ The third option, running `gcloud` from your laptop, also works (install once, a
 
 ## Expected result
 
-The hamburger menu, open. At the top, a "⭐ Starred" section with four entries: **AlloyDB**, **Composer**, **BigQuery**, **Kubernetes Engine**, in roughly that order. Underneath, the rest of the product catalog organised by category.
+The hamburger menu, open. At the top, a "⭐ Starred" section with four entries: **AlloyDB**, **Managed Airflow**, **BigQuery**, **Kubernetes Engine**, in roughly that order. Underneath, the rest of the product catalog organised by category.
 
-<Screenshot src="/quest/pothole-poet/img/console_pinned_menu.png" caption="Hamburger menu fully expanded, the Starred section at the very top showing AlloyDB, Composer, BigQuery, and Kubernetes Engine (⭐ icon visible next to each), with the rest of the product catalog (Compute, Databases, Storage, Networking, Data Analytics…) underneath." />
+<Screenshot src="/quest/pothole-poet/img/console_pinned_menu.png" caption="Hamburger menu fully expanded, the Starred section at the very top showing AlloyDB, Managed Airflow, BigQuery, and Kubernetes Engine (⭐ icon visible next to each), with the rest of the product catalog (Compute, Databases, Storage, Networking, Data Analytics…) underneath." />
 
 <Gotchas>
 - <strong>Search bar doesn't open when you press <kbd>/</kbd>.</strong> Your browser caught the keystroke (usually if focus is in a text field). Click anywhere outside a form and try again; <kbd>Ctrl</kbd>+<kbd>/</kbd> also works.
 - <strong>Starring didn't save.</strong> Browser is in incognito or you're signed into multiple Google accounts in the same browser. Sign out of all but the work account or stay in regular browsing mode for the day.
-- <strong>You see "Activate this API" on a product's landing page.</strong> Don't click it; every API you need today is pre-enabled for your Garage's project. If you see this prompt on AlloyDB / Composer / BigQuery / Kubernetes Engine, flag a Sherpa; that's a pre-provisioning miss.
+- <strong>You see "Activate this API" on a product's landing page.</strong> Don't click it; every API you need today is pre-enabled for your Garage's project. If you see this prompt on AlloyDB / Managed Airflow / BigQuery / Kubernetes Engine, flag a Sherpa; that's a pre-provisioning miss.
 - <strong>"Permission denied" anywhere.</strong> Don't debug it yourself; flag a Sherpa with the exact error text. Your Garage role binding may be partial.
 </Gotchas>
 
