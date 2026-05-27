@@ -48,7 +48,7 @@ cd ~/quest/pothole-poet
 gcloud monitoring dashboards create --config-from-file=dashboards/pipeline-overview.json
 ```
 
-✅ "Pothole Laureate · Pipeline Overview" appears in Dashboards with 11 PromQL widgets covering Streamlit, Composer, and AlloyDB.
+✅ "Pothole Laureate · Pipeline Overview" appears in Dashboards with 9 PromQL widgets covering Streamlit, Composer, and AlloyDB.
 
 </QuickPath>
 
@@ -226,7 +226,7 @@ The JSON file you just imported is the same format the Cloud Monitoring API uses
 4. Check it into version control.
 5. Import it into any other project: `gcloud monitoring dashboards create --config-from-file=my-dashboard.json`
 
-The JSON structure uses `prometheusQuery` fields for PromQL widgets. Open `dashboards/pipeline-overview.json` in your Workstation IDE and search for that key to see all 11 queries. The `dashboardFilters` array at the top defines the **Namespace** dropdown; it resolves automatically at render time and scopes the GKE widgets without touching the Composer or AlloyDB queries.
+The JSON structure uses `prometheusQuery` fields for PromQL widgets. Open `dashboards/pipeline-overview.json` in your Workstation IDE and search for that key to see all 9 queries. The `dashboardFilters` array at the top defines the **Namespace** dropdown; it resolves automatically at render time and scopes the GKE widgets without touching the Composer or AlloyDB queries.
 
 Your quest repo also includes two Google-published sample dashboards (`dashboards/k8s-pod-prometheus.json` and `dashboards/k8s-cluster-prometheus.json`) with generic Kubernetes PromQL widgets. Import them the same way if you want broader cluster-level visibility.
 
