@@ -78,7 +78,7 @@ GKE Pods get an IP from your VPC's pod range when they schedule, so they're alre
 
 Add the env vars to the running Deployment in one command. Kubernetes does a rolling restart automatically.
 
-> **Important:** `kubectl set env` *merges* into the existing env list; it updates or appends the vars you name and leaves the rest alone. We list all six here anyway so the env contract is explicit on one line; if you already set `BROADCAST_BUCKET` in Q2E-3 it would survive a narrower command too.
+> **Important:** `kubectl set env` *merges* into the existing env list; it updates or appends the vars you name and leaves the rest alone. We list all six here anyway so the env contract is explicit on one line; if you already set `BROADCAST_BUCKET` in Q2E-4 it would survive a narrower command too.
 
 ```bash
 kubectl set env deployment/pothole-laureate -n laureate \

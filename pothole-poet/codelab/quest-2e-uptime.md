@@ -93,8 +93,8 @@ Open **Console → Monitoring → Uptime checks** → click `pothole-laureate-up
 
 The check fires every minute, but it can take a few min for all 6 regions to converge. While you wait:
 
-1. **Read the Guardian role description** in `help.mdx` (the help link at the top of this page). Skim the "Flow-Guardian" glossary entry so you know what rhythm Q2E-3 is going to make you do.
-2. **Decide a Guardian-of-the-day handle**. pick something short (`@anna`, `@karl`). You'll use it in the broadcast banner in Q2E-3.
+1. **Read the Guardian role description** in `help.mdx` (the help link at the top of this page). Skim the "Flow-Guardian" glossary entry so you know what rhythm Q2E-4 is going to make you do.
+2. **Decide a Guardian-of-the-day handle**. pick something short (`@anna`, `@karl`). You'll use it in the broadcast banner in Q2E-4.
 3. **Pre-position for Q2E-2**. open `streamlit/app.py` in your Workstation IDE. You'll be pasting an OpenTelemetry init block at the top.
 
 <Gotchas>
@@ -105,7 +105,7 @@ The check fires every minute, but it can take a few min for all 6 regions to con
 </Gotchas>
 
 <Shipped>
-Guardian piece. <strong>Your team's first heartbeat is live.</strong> The Gateway has a watcher; if it goes down, the next two pages (Q2E-2 OTel + Q2E-3 alert) build on this signal so your Garage knows about failures before anyone refreshes the page.
+Guardian piece. <strong>Your team's first heartbeat is live.</strong> The Gateway has a watcher; if it goes down, the next three pages (Q2E-2 OTel + Q2E-3 dashboard + Q2E-4 alert) build on this signal so your Garage knows about failures before anyone refreshes the page.
 </Shipped>
 
 ➡️ Next: **Q2E-2 — OpenTelemetry** (sidebar on the left).

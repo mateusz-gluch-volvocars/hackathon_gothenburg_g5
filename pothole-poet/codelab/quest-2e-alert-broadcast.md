@@ -1,4 +1,4 @@
-# 🛡 Quest 2E-3 — Alert · Broadcast · Snooze: the full Guardian loop
+# 🛡 Quest 2E-4 — Alert · Broadcast · Snooze: the full Guardian loop
 
 <Objective lane="guardian">
 
@@ -171,7 +171,7 @@ gcloud alpha monitoring policies create --policy-from-file=/tmp/uptime-alert.jso
 
 <Concept title="Could this alert use PromQL instead?">
 
-Yes. Cloud Monitoring supports PromQL-based alerting policies, and if your team uses Prometheus alerting rules in Grafana Cloud you can migrate them directly. We use the JSON filter format here because it's the verified pattern for uptime-check alerts. For production, consider PromQL-based policies so your alerting rules are portable between Cloud Monitoring and Grafana.
+Yes. Cloud Monitoring supports PromQL-based alerting policies. We use the JSON filter format here because it is the verified pattern for uptime-check alerts. For production, consider PromQL-based policies: they use the same query language as your dashboard widgets and are portable to any Prometheus-compatible alerting backend.
 
 </Concept>
 

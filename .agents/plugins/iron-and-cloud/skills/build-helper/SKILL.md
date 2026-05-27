@@ -1,6 +1,6 @@
 ---
 name: build-helper
-description: Drives Quest 7 (Differentiate to Win) — the open-ended build window after the team has shipped the Foundation pipeline + Make it yours polish (Q6A form, Q6B HTTPS, Q2E-3 alert + broadcast). Helps the team pick a direction (small inspiration menu or freeform), preserves the pipeline's hard invariants, walks through agentic implementation with HITL on every write, time-boxes against the demo train clock, and verifies the end state. Use when the participant lands on Q7, asks to differentiate their demo, asks how to win the hackathon, says they want to build something beyond the core pipeline, or asks what to do with their remaining time before T+3:00.
+description: Drives Quest 7 (Differentiate to Win) — the open-ended build window after the team has shipped the Foundation pipeline + Make it yours polish (Q6A form, Q6B HTTPS, Q2E-4 alert + broadcast). Helps the team pick a direction (small inspiration menu or freeform), preserves the pipeline's hard invariants, walks through agentic implementation with HITL on every write, time-boxes against the demo train clock, and verifies the end state. Use when the participant lands on Q7, asks to differentiate their demo, asks how to win the hackathon, says they want to build something beyond the core pipeline, or asks what to do with their remaining time before T+3:00.
 ---
 
 # Build helper — Differentiate to Win
@@ -16,7 +16,7 @@ Trigger this skill ONLY when the participant has already shipped:
 1. **Foundation** — public URL serving live Gemini-composed odes (Q1 → Q3 complete).
 2. **Q6A** — Submit-a-Pothole form writing back to AlloyDB.
 3. **Q6B** — HTTPS via Cert Manager on `<ip>.nip.io`.
-4. **Q2E-3** — Guardian alert + broadcast banner.
+4. **Q2E-4** — Guardian alert + broadcast banner.
 
 If any of these is incomplete, do NOT start a differentiation direction — point them at the missing codelab page instead. A Garage that ships a fancy capability on top of an incomplete pipeline won't survive demo questions.
 
@@ -34,8 +34,8 @@ kubectl describe deployment pothole-laureate -n laureate | grep -A1 ALLOYDB_HOST
 # Q6B: HTTPS listener attached
 kubectl get gateway pothole-gateway -n laureate -o jsonpath='{.status.listeners[*].name}' | grep -q https && echo "Q6B DONE" || echo "Q6B NOT DONE"
 
-# Q2E-3: broadcast bucket env wired
-kubectl describe deployment pothole-laureate -n laureate | grep BROADCAST_BUCKET || echo "Q2E-3 NOT DONE"
+# Q2E-4: broadcast bucket env wired
+kubectl describe deployment pothole-laureate -n laureate | grep BROADCAST_BUCKET || echo "Q2E-4 NOT DONE"
 ```
 
 Surface any gaps to the team before proposing a direction.
@@ -49,7 +49,7 @@ These are the load-bearing pieces of the pipeline. Any direction must leave them
 - **Gemini model + endpoint.** `gemini-3-flash-preview` on the global endpoint (`locations/global`). Never propose a regional endpoint or an older model.
 - **GKE shape.** Pod runs in namespace `laureate` as ServiceAccount `pothole-laureate`. The WIF principal binding for BigQuery dataViewer + jobUser stays in place. The Gateway + HTTPRoute + HealthCheckPolicy stay attached.
 - **MODE env contract.** `MODE=full` already drives Q6A's sidebar form rendering. A new direction adding UI should respect the same env-flag gating pattern rather than ripping it out.
-- **`BROADCAST_BUCKET` env.** Q2E-3 wired this and the Streamlit app reads it for the Guardian banner. Don't clobber it in any new `kubectl set env` call — list it explicitly when re-running `set env`.
+- **`BROADCAST_BUCKET` env.** Q2E-4 wired this and the Streamlit app reads it for the Guardian banner. Don't clobber it in any new `kubectl set env` call — list it explicitly when re-running `set env`.
 - **No extra Google Cloud APIs.** The Garage project has a curated API list (AlloyDB, BigQuery, Composer, Vertex AI, Cloud Build, Cloud Run, GKE, etc.). Don't propose a direction that needs a new API (Cloud Text-to-Speech, Cloud Translation, Cloud Vision, Maps Platform, etc.) — it adds a Foreman-touch step and time the team doesn't have. Stick to capabilities reachable via what's already enabled.
 - **Don't pre-clone or re-clone.** The team is in `~/quest/`. Edit in place.
 

@@ -44,7 +44,7 @@ REGION="europe-west1"
 ## Two phases
 
 - 🔧 **Foundation** — pipeline live end-to-end: AlloyDB → Airflow → BigQuery (Gemini odes) → Streamlit on GKE via Gateway. Requires Q1 + Q2 (all lanes) + Q3.
-- ✨ **Make it yours** — interactive form (Q6A), HTTPS (Q6B), alert/broadcast (Q2E-3), differentiation (Q7). Where each Garage's demo earns its identity.
+- ✨ **Make it yours** — interactive form (Q6A), HTTPS (Q6B), alert/broadcast (Q2E-4), differentiation (Q7). Where each Garage's demo earns its identity.
 
 ## How to be helpful
 
@@ -58,11 +58,11 @@ REGION="europe-west1"
 
 ## After Foundation + Q6 — the open-ended build window (Quest 7)
 
-Once a Garage has shipped the core steps (Q6A form, Q6B HTTPS, Q2E-3 alert + broadcast), they enter **Quest 7 — Differentiate to Win** (codelab page `~/quest/pothole-poet/codelab/quest-7-differentiate.md`). This is the hackathon's open-ended build window — every Garage's pipeline is identical underneath, so Q7 is where each Garage's demo earns its own identity and the prize goes to the most creative implementation.
+Once a Garage has shipped the core steps (Q6A form, Q6B HTTPS, Q2E-4 alert + broadcast), they enter **Quest 7 — Differentiate to Win** (codelab page `~/quest/pothole-poet/codelab/quest-7-differentiate.md`). This is the hackathon's open-ended build window — every Garage's pipeline is identical underneath, so Q7 is where each Garage's demo earns its own identity and the prize goes to the most creative implementation.
 
 When the participant asks *"what else can we build"*, *"how do we differentiate our demo"*, *"we have 30 minutes left, what now"*, *"how do we win the hackathon"*, or anything similar after the core pipeline + polish is done — load the **`build-helper`** skill. It carries:
 
-- A guarded entry check (refuses to start if Foundation / Q6A / Q6B / Q2E-3 are incomplete)
+- A guarded entry check (refuses to start if Foundation / Q6A / Q6B / Q2E-4 are incomplete)
 - A short inspiration menu (persona deepening, leaderboard, translation, roast mode, mood theming, citizen spotlight) plus a freeform path
 - The list of hard invariants any new direction must preserve
 - A HITL + time-box discipline that fits the 15–60 minute window before demo

@@ -1,0 +1,283 @@
+{
+  "displayName": "Pothole Laureate · Pipeline Overview",
+  "dashboardFilters": [
+    {
+      "filterType": "RESOURCE_LABEL",
+      "labelKey": "namespace",
+      "templateVariable": "Namespace",
+      "stringValue": "laureate",
+      "valueType": "STRING"
+    }
+  ],
+  "labels": {},
+  "mosaicLayout": {
+    "columns": 48,
+    "tiles": [
+      {
+        "width": 16,
+        "height": 8,
+        "widget": {
+          "title": "App Uptime",
+          "scorecard": {
+            "sparkChartView": {
+              "sparkChartType": "SPARK_LINE"
+            },
+            "thresholds": [
+              {
+                "color": "RED",
+                "direction": "BELOW",
+                "value": 1
+              }
+            ],
+            "timeSeriesQuery": {
+              "prometheusQuery": "min({\"monitoring.googleapis.com/uptime_check/check_passed\", monitored_resource=\"uptime_url\"})",
+              "unitOverride": ""
+            }
+          }
+        }
+      },
+      {
+        "xPos": 16,
+        "width": 16,
+        "height": 8,
+        "widget": {
+          "title": "Composer Healthy",
+          "scorecard": {
+            "sparkChartView": {
+              "sparkChartType": "SPARK_LINE"
+            },
+            "thresholds": [
+              {
+                "color": "RED",
+                "direction": "BELOW",
+                "value": 1
+              }
+            ],
+            "timeSeriesQuery": {
+              "prometheusQuery": "{\"composer.googleapis.com/environment/healthy\"}",
+              "unitOverride": ""
+            }
+          }
+        }
+      },
+      {
+        "xPos": 32,
+        "width": 16,
+        "height": 8,
+        "widget": {
+          "title": "AlloyDB CPU",
+          "scorecard": {
+            "sparkChartView": {
+              "sparkChartType": "SPARK_LINE"
+            },
+            "thresholds": [
+              {
+                "color": "YELLOW",
+                "direction": "ABOVE",
+                "value": 0.7
+              },
+              {
+                "color": "RED",
+                "direction": "ABOVE",
+                "value": 0.9
+              }
+            ],
+            "timeSeriesQuery": {
+              "prometheusQuery": "max({\"alloydb.googleapis.com/database/cpu/utilization\"})",
+              "unitOverride": ""
+            }
+          }
+        }
+      },
+      {
+        "yPos": 8,
+        "width": 48,
+        "height": 4,
+        "widget": {
+          "title": "Streamlit App",
+          "sectionHeader": {
+            "subtitle": "Your OTel instrumentation from Q2E-2",
+            "dividerBelow": false
+          }
+        }
+      },
+      {
+        "yPos": 12,
+        "width": 24,
+        "height": 16,
+        "widget": {
+          "title": "Request Rate by Function",
+          "xyChart": {
+            "chartOptions": {
+              "mode": "COLOR"
+            },
+            "dataSets": [
+              {
+                "plotType": "LINE",
+                "targetAxis": "Y1",
+                "timeSeriesQuery": {
+                  "prometheusQuery": "sum(rate({\"prometheus.googleapis.com/pothole_laureate_requests/counter\", job=\"pothole-laureate\"}[5m])) by (function)",
+                  "unitOverride": ""
+                }
+              }
+            ],
+            "yAxis": {
+              "label": "req/s",
+              "scale": "LINEAR"
+            }
+          }
+        }
+      },
+      {
+        "xPos": 24,
+        "yPos": 12,
+        "width": 24,
+        "height": 16,
+        "widget": {
+          "title": "Request Latency p95",
+          "xyChart": {
+            "chartOptions": {
+              "mode": "COLOR"
+            },
+            "dataSets": [
+              {
+                "plotType": "LINE",
+                "targetAxis": "Y1",
+                "timeSeriesQuery": {
+                  "prometheusQuery": "histogram_quantile(0.95, sum(rate({\"prometheus.googleapis.com/pothole_laureate_request_duration_seconds/histogram\", job=\"pothole-laureate\"}[5m])) by (le))",
+                  "unitOverride": "s"
+                }
+              }
+            ],
+            "yAxis": {
+              "label": "seconds",
+              "scale": "LINEAR"
+            }
+          }
+        }
+      },
+      {
+        "yPos": 28,
+        "width": 24,
+        "height": 16,
+        "widget": {
+          "title": "Pod CPU",
+          "xyChart": {
+            "chartOptions": {
+              "mode": "COLOR"
+            },
+            "dataSets": [
+              {
+                "plotType": "LINE",
+                "targetAxis": "Y1",
+                "timeSeriesQuery": {
+                  "prometheusQuery": "sum(rate({\"kubernetes.io/container/cpu/core_usage_time\", ${Namespace}}[5m])) by (pod_name)",
+                  "unitOverride": ""
+                }
+              }
+            ],
+            "yAxis": {
+              "label": "cores",
+              "scale": "LINEAR"
+            }
+          }
+        }
+      },
+      {
+        "xPos": 24,
+        "yPos": 28,
+        "width": 24,
+        "height": 16,
+        "widget": {
+          "title": "Pod Memory",
+          "xyChart": {
+            "chartOptions": {
+              "mode": "COLOR"
+            },
+            "dataSets": [
+              {
+                "plotType": "LINE",
+                "targetAxis": "Y1",
+                "timeSeriesQuery": {
+                  "prometheusQuery": "{\"kubernetes.io/container/memory/used_bytes\", ${Namespace}}",
+                  "unitOverride": "By"
+                }
+              }
+            ],
+            "yAxis": {
+              "label": "bytes",
+              "scale": "LINEAR"
+            }
+          }
+        }
+      },
+      {
+        "yPos": 44,
+        "width": 48,
+        "height": 4,
+        "widget": {
+          "title": "Data Pipeline",
+          "sectionHeader": {
+            "subtitle": "Managed Airflow + AlloyDB",
+            "dividerBelow": false
+          }
+        }
+      },
+      {
+        "yPos": 48,
+        "width": 24,
+        "height": 16,
+        "widget": {
+          "title": "Composer Task Throughput",
+          "xyChart": {
+            "chartOptions": {
+              "mode": "COLOR"
+            },
+            "dataSets": [
+              {
+                "plotType": "STACKED_BAR",
+                "targetAxis": "Y1",
+                "timeSeriesQuery": {
+                  "prometheusQuery": "sum(rate({\"composer.googleapis.com/environment/finished_task_instance_count\"}[10m])) by (state)",
+                  "unitOverride": ""
+                }
+              }
+            ],
+            "yAxis": {
+              "label": "tasks/s",
+              "scale": "LINEAR"
+            }
+          }
+        }
+      },
+      {
+        "xPos": 24,
+        "yPos": 48,
+        "width": 24,
+        "height": 16,
+        "widget": {
+          "title": "AlloyDB CPU Utilization",
+          "xyChart": {
+            "chartOptions": {
+              "mode": "COLOR"
+            },
+            "dataSets": [
+              {
+                "plotType": "LINE",
+                "targetAxis": "Y1",
+                "timeSeriesQuery": {
+                  "prometheusQuery": "{\"alloydb.googleapis.com/database/cpu/utilization\"}",
+                  "unitOverride": ""
+                }
+              }
+            ],
+            "yAxis": {
+              "label": "utilization",
+              "scale": "LINEAR"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

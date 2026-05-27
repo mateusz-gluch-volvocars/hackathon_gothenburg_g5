@@ -4,7 +4,7 @@
 
 **🎯 What you'll do.** Add **OpenTelemetry tracing and metrics** to your Streamlit app, shipping both signals to `telemetry.googleapis.com`. Traces land in Cloud Trace for debugging; metrics land in Cloud Monitoring as PromQL-queryable Prometheus time series. One setup, one endpoint, one rebuild. ~20 min.
 
-**🤝 Why it matters.** Your uptime check (Q2E-1) tells you *if* the app is up. Traces tell you *what happens inside each request*. Metrics tell you *how the app is performing over time*: request rate, latency, broken down by code path, queryable in the same PromQL you use in Grafana.
+**🤝 Why it matters.** Your uptime check (Q2E-1) tells you *if* the app is up. Traces tell you *what happens inside each request*. Metrics tell you *how the app is performing over time*: request rate, latency, broken down by code path, queryable via **PromQL**.
 
 </Objective>
 
@@ -69,13 +69,19 @@ So you know the app is **up**. But you can't see **inside** it. When someone say
 
 **OpenTelemetry** (OTel) is the industry standard for instrumenting applications. Instead of vendor-specific libraries, your app emits **traces** and **metrics** in a standard protocol called **OTLP** (OpenTelemetry Protocol). A trace is a tree of **spans**, each one a timed operation: "`load_live` took 240 ms, and inside it, the BigQuery query took 180 ms." A metric is an aggregate counter or histogram: "the app served 12 requests in the last minute, p95 latency was 310 ms."
 
-Google Cloud's observability stack speaks OTLP natively. One endpoint, `telemetry.googleapis.com`, accepts all three signal types: traces route to **Cloud Trace**, metrics route to **Cloud Monitoring** (queryable via **PromQL**, the same language you use in Grafana), and logs route to **Cloud Logging**. In this Quest we instrument traces and metrics; your app's logs already reach Cloud Logging via GKE's built-in stdout capture. No proprietary SDK, no vendor lock-in; the same instrumentation works with any OTLP-compatible backend.
+Google Cloud's observability stack speaks OTLP natively. One endpoint, `telemetry.googleapis.com`, accepts all three signal types: traces route to **Cloud Trace**, metrics route to **Cloud Monitoring** (queryable via **PromQL**), and logs route to **Cloud Logging**. In this Quest we instrument traces and metrics; your app's logs already reach Cloud Logging via GKE's built-in stdout capture. No proprietary SDK, no vendor lock-in; the same instrumentation works with any OTLP-compatible backend.
 
 <Concept title="What about Managed OpenTelemetry for GKE?">
 
-Google also offers **Managed OpenTelemetry for GKE**: a fully managed pipeline that collects OTLP telemetry from all your workloads without you having to run or scale a collector. You enable it on the cluster and it handles collection, batching, and export automatically.
+GKE also offers **Managed OpenTelemetry for GKE**: a fully managed in-cluster collector that receives OTLP traces, metrics, and logs from your workloads and exports them to Cloud Trace, Cloud Monitoring, and Cloud Logging automatically. You enable it on the cluster (`gcloud beta container clusters update ... --managed-otel-scope=COLLECTION_AND_INSTRUMENTATION_COMPONENTS`), and GKE deploys a managed collector at:
 
-For this Quest we instrument in-process (simpler, no extra config, all the logic in one Python file you can read end-to-end). If you take this pipeline into production, Managed OTel is the natural next step: your app's instrumentation stays identical, you just stop managing the export path.
+```
+http://opentelemetry-collector.gke-managed-otel.svc.cluster.local:4318
+```
+
+You then create an `Instrumentation` custom resource in your namespace, and GKE auto-injects the `OTEL_EXPORTER_OTLP_ENDPOINT` environment variable into your Pods. Your app sends OTLP over HTTP to the in-cluster collector instead of authenticating directly to `telemetry.googleapis.com`. The collector handles credentials, batching, retries, and export. No WIF IAM bindings for trace/metrics export, no gRPC channel credentials in your code.
+
+For this Quest we export directly to `telemetry.googleapis.com` so you see the full auth + export path end-to-end. Your `setup_otel()` code, your span wrappers, your counters and histograms all stay identical with either approach; the only thing that changes is where the OTLP data goes first. If you take this pipeline into production, Managed OTel is the natural next step.
 
 </Concept>
 
@@ -89,7 +95,7 @@ Four things:
 
 3. **Wrap your load functions.** Each function gets a span (for trace debugging) and two metric recording calls: a request counter and a duration histogram. The BigQuery and Cloud Storage clients auto-emit their own child spans underneath yours.
 
-4. **Rebuild, verify, and build a dashboard.** One `gcloud builds submit`, one rollout, then check Cloud Trace for spans and build a PromQL dashboard for your app and infrastructure metrics.
+4. **Rebuild and verify.** One `gcloud builds submit`, one rollout, then check Cloud Trace for spans and Metrics Explorer for your counter.
 
 ---
 
@@ -289,65 +295,7 @@ kubectl rollout status deployment/pothole-laureate -n laureate
 
 ✅ **Expect:** `deployment "pothole-laureate" successfully rolled out`.
 
-### Step 5 — While the build runs (~3 min): build a Guardian dashboard
-
-Cloud Monitoring → Dashboards → **Create Custom Dashboard**. Name it `Pothole Laureate · Guardian view`.
-
-For each widget: click **Add widget** → select **Line chart** → in the query pane, click the **`< > PromQL`** button to switch to the code editor. Paste the query, click **Run query**, then **Apply**.
-
-**Widget 1: Uptime (is the app alive?)**
-
-```promql
-{"monitoring.googleapis.com/uptime_check/check_passed", monitored_resource="uptime_url"}
-```
-
-**Widget 2: App request rate (from your OTel counter)**
-
-```promql
-rate({"prometheus.googleapis.com/pothole_laureate_requests/counter", job="pothole-laureate"}[5m])
-```
-
-This widget will be empty until Step 6 sends traffic. Once data arrives, you see requests per second broken down by the `function` label you set in Step 2.
-
-**Widget 3: Pod CPU**
-
-```promql
-rate({"kubernetes.io/container/cpu/core_usage_time", namespace="laureate"}[5m])
-```
-
-**Widget 4: Pod memory**
-
-```promql
-{"kubernetes.io/container/memory/used_bytes", namespace="laureate"}
-```
-
-Click **Save** in the dashboard toolbar. Keep this tab open during Q3+; this is your "is anything weird right now?" surface.
-
-<Concept title="PromQL, OTel, and your Grafana dashboards">
-
-Every widget on this dashboard uses **PromQL**, the same query language you use in Grafana. Cloud Monitoring supports PromQL natively.
-
-**Two layers of metrics, one query language.** Widgets 3 and 4 query **infrastructure metrics** that GKE Autopilot collects automatically (free, always-on). Widget 2 queries an **app-level metric** that your OTel instrumentation in Step 1 exports to `telemetry.googleapis.com`. Both land in Cloud Monitoring as Prometheus-format time series, both queryable with identical PromQL syntax.
-
-**The Grafana bridge.** Cloud Monitoring exposes a **Prometheus-compatible API**:
-
-```
-https://monitoring.googleapis.com/v1/projects/PROJECT_ID/location/global/prometheus/api/v1/
-```
-
-Add this as a Prometheus data source in Grafana Cloud and every metric on this dashboard (plus thousands of GCP system metrics) is available in your existing Grafana dashboards and alerts. Same PromQL, same data.
-
-**Going further.** Your OTel counter gives you request rate. The histogram (`pothole_laureate_request_duration_seconds`) gives you latency percentiles:
-
-```promql
-histogram_quantile(0.95, sum(rate({"prometheus.googleapis.com/pothole_laureate_request_duration_seconds/histogram", job="pothole-laureate"}[5m])) by (le))
-```
-
-Add this as a fifth widget for a production-grade latency chart. Pair it with a PromQL-based alerting policy (Cloud Monitoring supports those too) and you have the full RED monitoring pattern, end to end, in PromQL.
-
-</Concept>
-
-### Step 6 — Generate traffic and verify both signals
+### Step 5 — Generate traffic and verify both signals
 
 ```bash
 # Hit the page a few times
@@ -370,9 +318,15 @@ read_broadcast                           ──  35 ms
 
 That's the moment you can answer "why was the page slow at 2:14pm?" without guessing.
 
-**Verify metrics.** Switch to your Guardian dashboard tab. The **App request rate** widget (Widget 2) should now show data points. Metrics export every 15 seconds, so give it a minute after the first curl batch.
+**Verify metrics.** Open **Console → Monitoring → Metrics Explorer** → click the **`< > PromQL`** button and run:
 
-✅ **Expect:** A non-zero line on the request rate chart. If you open **Metrics Explorer** → `< > PromQL` and run `{"prometheus.googleapis.com/pothole_laureate_requests/counter"}`, you should see your counter.
+```promql
+{"prometheus.googleapis.com/pothole_laureate_requests/counter"}
+```
+
+Metrics export every 15 seconds, so give it a minute after the first curl batch.
+
+✅ **Expect:** A rising counter line. If you see data here, your OTel metrics pipeline is working. The next page (Q2E-3) puts these metrics on a proper Guardian dashboard alongside infrastructure and platform signals.
 
 <Screenshot src="/quest/pothole-poet/img/trace_otel.png" caption="Cloud Trace waterfall view: each row is a span, nested spans show parent-child relationships, and the timeline shows where time was spent. Your traces will show load_live / read_broadcast as root spans with BigQuery and Cloud Storage child spans underneath." />
 
@@ -386,7 +340,7 @@ That's the moment you can answer "why was the page slow at 2:14pm?" without gues
 </Gotchas>
 
 <Shipped>
-<strong>Your Streamlit Pod is observable, two ways.</strong> Every page render produces a <strong>trace</strong> in Cloud Trace (debug individual requests) and a <strong>metric data point</strong> in Cloud Monitoring (PromQL dashboards and Grafana). One endpoint, one set of credentials, two signal types. The Guardian dashboard is your team's "is anything weird?" surface for the rest of the day.
+<strong>Your Streamlit Pod is observable, two ways.</strong> Every page render produces a <strong>trace</strong> in Cloud Trace (debug individual requests) and a <strong>metric data point</strong> in Cloud Monitoring (queryable via PromQL). One endpoint, one set of credentials, two signal types. The next page puts these metrics on a proper dashboard.
 </Shipped>
 
-➡️ Next: **Q2E-3 — Alert + Broadcast** (sidebar on the left).
+➡️ Next: **Q2E-3 — Guardian Dashboard** (sidebar on the left).
