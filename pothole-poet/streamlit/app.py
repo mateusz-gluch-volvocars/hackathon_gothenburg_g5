@@ -378,10 +378,16 @@ def call_gemini(prompt: str) -> str:
 
         url = f"https://aiplatform.googleapis.com/v1/projects/{project_id}/locations/global/publishers/google/models/gemini-3-flash-preview:generateContent"
         body = {
-            "contents": {
-                "role": "user",
-                "parts": {"text": prompt}
-            },
+            "contents": [
+                {
+                    "role": "user",
+                    "parts": [
+                        {
+                            "text": prompt
+                        }
+                    ]
+                }
+            ],
             "generationConfig": {
                 "temperature": 0.7,
                 "maxOutputTokens": 1000
@@ -402,7 +408,27 @@ def call_gemini(prompt: str) -> str:
         with urllib.request.urlopen(req) as response:
             res_body = response.read().decode('utf-8')
             res_json = json.loads(res_body)
-            return res_json['candidates'][0]['content']['parts'][0]['text'].strip()
+            
+            # Print response for debugging in container logs
+            print(f"[gemini-response] {json.dumps(res_json)}", flush=True)
+            
+            candidates = res_json.get('candidates', [])
+            if not candidates:
+                return f"Could not contact Gemini: No candidates returned. Response: {res_json}"
+            
+            first_candidate = candidates[0]
+            finish_reason = first_candidate.get('finishReason', 'UNKNOWN')
+            
+            content = first_candidate.get('content', {})
+            parts = content.get('parts', [])
+            if not parts:
+                return f"Could not contact Gemini: No content parts returned (Finish Reason: {finish_reason}). Response: {res_json}"
+            
+            text = parts[0].get('text', '')
+            if not text:
+                return f"Could not contact Gemini: Empty text returned. Response: {res_json}"
+            
+            return text.strip()
     except Exception as e:
         return f"Could not contact Gemini: {e}"
 

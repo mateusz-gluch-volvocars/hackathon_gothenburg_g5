@@ -18,7 +18,7 @@ spec:
       serviceAccountName: pothole-laureate
       containers:
         - name: pothole-laureate
-          image: europe-west1-docker.pkg.dev/vcc-ic-g05/laureate/pothole-laureate:v16-darkmode
+          image: europe-west1-docker.pkg.dev/vcc-ic-g05/laureate/pothole-laureate:v17-partsfix
           ports:
             - name: http
               containerPort: 8080
@@ -39,7 +39,7 @@ spec:
             - name: BROADCAST_BUCKET
               value: "vcc-ic-g05-broadcast"
             - name: APP_VERSION
-              value: "v16-darkmode"
+              value: "v17-partsfix"
             # OpenTelemetry: codelab Q2E-2 flips this on after wiring setup_otel().
             # Leave commented out so the initial deploy works without OTel deps active.
             - name: OTEL_ENABLED
