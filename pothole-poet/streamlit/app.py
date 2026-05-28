@@ -320,6 +320,103 @@ def render_health_dashboard():
         st.markdown("**Service Availability Timeline (%)**")
         st.line_chart(chart_data.set_index("Hour")["Synthetic Availability (%)"], color="#2d6a4f")
 
+def call_gemini(prompt: str) -> str:
+    """Helper to call Gemini on Vertex AI REST API."""
+    import google.auth
+    import google.auth.transport.requests
+    import urllib.request
+    import json
+
+    try:
+        credentials, project_id = google.auth.default(
+            scopes=['https://www.googleapis.com/auth/cloud-platform']
+        )
+        auth_req = google.auth.transport.requests.Request()
+        credentials.refresh(auth_req)
+
+        url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/gemini-2.5-flash:generateContent"
+        body = {
+            "contents": {
+                "role": "user",
+                "parts": {"text": prompt}
+            },
+            "generationConfig": {
+                "temperature": 0.7,
+                "maxOutputTokens": 250
+            }
+        }
+
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(body).encode('utf-8'),
+            headers={
+                'Authorization': f'Bearer {credentials.token}',
+                'Content-Type': 'application/json'
+            },
+            method='POST'
+        )
+
+        with urllib.request.urlopen(req) as response:
+            res_body = response.read().decode('utf-8')
+            res_json = json.loads(res_body)
+            return res_json['candidates'][0]['content']['parts'][0]['text'].strip()
+    except Exception as e:
+        return f"Could not contact Gemini: {e}"
+
+@st.cache_data(show_spinner=False)
+def translate_ode(ode_text: str) -> str:
+    """Translate the Swedish/Swinglish poem into English."""
+    prompt = (
+        f"Translate the following Gothenburg Swinglish/Swedish pothole poem into pure, highly poetic English, "
+        f"preserving its melancholy or frustration rhythm and tone:\n\n{ode_text}"
+    )
+    return call_gemini(prompt)
+
+@st.cache_data(ttl=300)
+def load_citizens_by_neighbourhood(neighbourhood: str) -> pd.DataFrame:
+    """Load citizens and complaint posts for the selected neighbourhood from BigQuery."""
+    if MODE == "seed":
+        # Return a simple mock dataframe if in seed mode
+        return pd.DataFrame({
+            "full_name": ["Sven Andersson", "Freja Lindqvist", "Lars Bergström"],
+            "occupation": ["Volvo Engineer", "Cafe Owner", "Tram Driver"],
+            "posts_count": [3, 2, 1],
+            "tone": ["amateur urbanist", "melancholic", "frustrated"],
+            "sample_post": [
+                "The crater in Haga is as wide as a flatpack bookshelf!", 
+                "Slask and slask, but mostly holes.",
+                "Line 11 has to detour because of this giant bump on the road."
+            ]
+        })
+
+    try:
+        from google.cloud import bigquery
+        client = bigquery.Client(project=PROJECT_ID)
+        sql = f"""
+            SELECT 
+                c.full_name,
+                c.occupation,
+                c.tone,
+                COUNT(s.post_id) as posts_count,
+                MAX(s.text) as sample_post
+            FROM `{PROJECT_ID}.pothole_laureate.citizens` c
+            JOIN `{PROJECT_ID}.pothole_laureate.social_sentiment` s
+              ON c.citizen_id = s.citizen_id
+            WHERE s.neighbourhood = @neighbourhood
+            GROUP BY c.full_name, c.occupation, c.tone
+            ORDER BY posts_count DESC
+            LIMIT 5
+        """
+        job_config = bigquery.QueryJobConfig(
+            query_parameters=[
+                bigquery.ScalarQueryParameter("neighbourhood", "STRING", neighbourhood)
+            ]
+        )
+        return client.query(sql, job_config=job_config).to_dataframe()
+    except Exception as e:
+        print(f"[citizens] Error loading citizens: {e}", flush=True)
+        return pd.DataFrame()
+
 # ─── CONFIG ──────────────────────────────────────────────────────────────────
 
 MODE             = os.environ.get("MODE", "live")             # seed | live | full
@@ -586,14 +683,77 @@ st.markdown("---")
 nb = st.selectbox("Select a neighbourhood:", df["neighbourhood"].tolist())
 row = df[df["neighbourhood"] == nb].iloc[0]
 
-# Poem display
-st.markdown("### Today's Ode")
-st.markdown(f'<div class="laureate-poem">{add_slang_tooltips(row["ode"])}</div>', unsafe_allow_html=True)
+# 💡 Stage 1 / Idea C: Severity-driven UI Mood Theming
+# Shift the app's palette based on the currently selected neighborhood's dominant mood.
+selected_mood = row.get("dominant_mood", "lagom").lower() if pd.notna(row.get("dominant_mood", None)) else "lagom"
 
-# Audio reader player
-audio_bytes = synthesize_text(row["ode"])
-if audio_bytes:
-    st.audio(audio_bytes, format="audio/mp3")
+if "frustrated" in selected_mood or "vengeful" in selected_mood or "angry" in selected_mood:
+    THEME_COLORS = {
+        "bg_color": "#2c0e0e",
+        "text_color": "#fcd7d7",
+        "card_bg": "#4a1515",
+        "accent_color": "#ff4d4d",
+        "border_color": "#ff3333",
+        "theme_name": "🌋 Volcanic Vengeance"
+    }
+elif "resigned" in selected_mood or "philosophical" in selected_mood or "sad" in selected_mood:
+    THEME_COLORS = {
+        "bg_color": "#1e252b",
+        "text_color": "#e2e8f0",
+        "card_bg": "#2d3748",
+        "accent_color": "#cbd5e0",
+        "border_color": "#a0aec0",
+        "theme_name": "🌫️ Resigned Reflection"
+    }
+else:
+    THEME_COLORS = {
+        "bg_color": "#f5f0eb",
+        "text_color": "#1a1a2e",
+        "card_bg": "#ffffff",
+        "accent_color": "#2d6a4f",
+        "border_color": "#b07d62",
+        "theme_name": "🌲 Lagom Balance"
+    }
+
+st.markdown(
+    f"""
+    <style>
+      .stApp {{ background-color: {THEME_COLORS['bg_color']}; color: {THEME_COLORS['text_color']}; }}
+      h1, h2, h3, h4 {{ color: {THEME_COLORS['text_color']} !important; }}
+      .laureate-poem {{
+        color: {THEME_COLORS['text_color']};
+        background-color: {THEME_COLORS['card_bg']} !important;
+        border-left: 4px solid {THEME_COLORS['accent_color']} !important;
+      }}
+      .stMarkdown p {{ color: {THEME_COLORS['text_color']}; }}
+      .stSelectbox label {{ color: {THEME_COLORS['text_color']}; }}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.caption(f"🎨 **Dynamic Theme Active**: {THEME_COLORS['theme_name']} (based on mood: *{selected_mood}*)")
+
+# 💡 Stage 2 / Idea B: Translate-and-Compare (Swedish ↔ English)
+st.markdown("### Today's Ode")
+col_ode_left, col_ode_right = st.columns(2)
+with col_ode_left:
+    st.markdown("#### Raw Swinglish Verse")
+    st.markdown(f'<div class="laureate-poem">{add_slang_tooltips(row["ode"])}</div>', unsafe_allow_html=True)
+    
+    # Audio reader player
+    audio_bytes = synthesize_text(row["ode"])
+    if audio_bytes:
+        st.audio(audio_bytes, format="audio/mp3")
+
+with col_ode_right:
+    st.markdown("#### Poetic English Translation")
+    if "(placeholder)" in row["ode"].lower():
+        st.markdown(f'<div class="laureate-poem">(Placeholder - await live pipeline composition)</div>', unsafe_allow_html=True)
+    else:
+        with st.spinner("Calling Gemini for translation..."):
+            translated_ode_text = translate_ode(row["ode"])
+        st.markdown(f'<div class="laureate-poem">{translated_ode_text}</div>', unsafe_allow_html=True)
 
 # Per-neighbourhood stats
 st.markdown("---")
@@ -608,6 +768,76 @@ if MODE != "seed" and pd.notna(row.get("composed_at", None)):
         f"Dominant weather: {row.get('dominant_weather', '—')} · "
         f"Dominant mood: {row.get('dominant_mood', '—')}"
     )
+
+# 💡 Stage 4 / Idea D: Citizen Spotlight
+st.markdown("---")
+st.markdown("### 📣 Citizen Spotlight")
+st.markdown(f"Meet the loudest and most poetic citizens reporting potholes in **{nb}**.")
+
+citizen_df = load_citizens_by_neighbourhood(nb)
+
+if citizen_df.empty:
+    st.info("No active citizen records found for this neighbourhood.")
+else:
+    col_cit_select, col_cit_desc = st.columns([1, 2])
+    with col_cit_select:
+        cit_names = citizen_df["full_name"].tolist()
+        selected_citizen_name = st.selectbox("Select a Citizen:", cit_names)
+        cit_row = citizen_df[citizen_df["full_name"] == selected_citizen_name].iloc[0]
+        
+        st.markdown(
+            f"""
+            - **Occupation**: {cit_row['occupation']}
+            - **Tone Persona**: {cit_row['tone']}
+            - **Total Complaints**: {cit_row['posts_count']}
+            - **Sample Complaint**: *"{cit_row['sample_post']}"*
+            """
+        )
+    
+    with col_cit_desc:
+        st.markdown("**AI Dramatic Profile Summary**")
+        if st.button("Generate Profile Summary 🎭", key=f"btn_cit_{selected_citizen_name}"):
+            with st.spinner("Synthesizing citizen complaint history..."):
+                prompt = (
+                    f"Create a funny, dramatic 3-sentence profile summary of this citizen reporting potholes in Gothenburg:\n"
+                    f"Name: {selected_citizen_name}\n"
+                    f"Occupation: {cit_row['occupation']}\n"
+                    f"Tone/Persona: {cit_row['tone']}\n"
+                    f"Total complaints: {cit_row['posts_count']}\n"
+                    f"Sample complaint: {cit_row['sample_post']}\n\n"
+                    f"Keep it extremely witty and poetic, echoing Swedish stereotypes (e.g. loves lagom, fika, Volvo, or flatpack furniture)."
+                )
+                summary_res = call_gemini(prompt)
+                st.info(summary_res)
+
+# 💡 Stage 3 / Idea A: "Laureate Roast" Comparative Mode
+st.markdown("---")
+st.markdown("### 🔥 The Laureate Comparative Roast")
+st.markdown("Select two neighborhoods to generate an AI-powered comparative roast!")
+
+roast_col1, roast_col2, roast_style_col = st.columns(3)
+with roast_col1:
+    nb_a = st.selectbox("Neighborhood A", sorted(NEIGHBOURHOODS), index=0)
+with roast_col2:
+    nb_b = st.selectbox("Neighborhood B", [n for n in sorted(NEIGHBOURHOODS) if n != nb_a], index=0)
+with roast_style_col:
+    roast_style = st.selectbox("Roast Persona", ["IKEA Assembly Manual", "ABBA Ballad Melodrama", "Volvo Owner's Handbook Warning"])
+
+if st.button("Generate Comparative Roast ⚡"):
+    with st.spinner("Analyzing craters and preparing the roast..."):
+        row_a = df[df["neighbourhood"] == nb_a].iloc[0]
+        row_b = df[df["neighbourhood"] == nb_b].iloc[0]
+        
+        prompt = (
+            f"You are the Göteborg Pothole Poet Laureate. Compare and roast these two neighborhoods:\n"
+            f"Neighborhood A: {nb_a} ({row_a['pothole_count']} reports, severity {row_a['avg_severity']:.2f}/5, dominant weather {row_a['dominant_weather']})\n"
+            f"Neighborhood B: {nb_b} ({row_b['pothole_count']} reports, severity {row_b['avg_severity']:.2f}/5, dominant weather {row_b['dominant_weather']})\n\n"
+            f"Write exactly a 6-line poetic comparative roast in the style of: {roast_style}.\n"
+            f"Output only the 6 lines. No other text."
+        )
+        
+        roast_result = call_gemini(prompt)
+        st.markdown(f'<div class="laureate-poem" style="border-left-color: #ff5500;">{roast_result}</div>', unsafe_allow_html=True)
 
 # ─── TEAM CANVAS ────────────────────────────────────────────────────────────
 #
