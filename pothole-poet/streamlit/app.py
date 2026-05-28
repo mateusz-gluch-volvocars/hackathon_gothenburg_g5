@@ -500,20 +500,6 @@ def load_data() -> pd.DataFrame:
     return load_seed() if MODE == "seed" else load_live()
 
 
-# ─── HEADER ─────────────────────────────────────────────────────────────────
-
-# Guardian's broadcast banner — appears at the top of every page if set.
-_broadcast = read_broadcast()
-if _broadcast:
-    st.warning(f"🛡 **Guardian broadcast** · {_broadcast}")
-
-if page == "📊 System Health Dashboard":
-    render_health_dashboard()
-    st.stop()
-
-st.title("🕳 Göteborg Pothole Poet Laureate Office")
-st.caption("*Official commissioned verse on the state of the city's roads, est. 2026.*")
-
 # ─── SIDEBAR ────────────────────────────────────────────────────────────────
 
 with st.sidebar:
@@ -565,6 +551,20 @@ with st.sidebar:
                         st.error(f"Could not write to AlloyDB: {e}")
                 else:
                     st.warning("Tell us what happened. The Laureate needs material.")
+
+# ─── HEADER ─────────────────────────────────────────────────────────────────
+
+# Guardian's broadcast banner — appears at the top of every page if set.
+_broadcast = read_broadcast()
+if _broadcast:
+    st.warning(f"🛡 **Guardian broadcast** · {_broadcast}")
+
+if page == "📊 System Health Dashboard":
+    render_health_dashboard()
+    st.stop()
+
+st.title("🕳 Göteborg Pothole Poet Laureate Office")
+st.caption("*Official commissioned verse on the state of the city's roads, est. 2026.*")
 
 # ─── MAIN ───────────────────────────────────────────────────────────────────
 
