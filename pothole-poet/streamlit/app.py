@@ -231,26 +231,43 @@ st.markdown("---")
 st.markdown("### 🗺️ Gothenburg Pothole Map")
 import pydeck as pdk
 
+map_type = st.radio("View Type:", ["Interactive Scatterplot", "Density Heatmap"], horizontal=True)
+
+if map_type == "Density Heatmap":
+    layer = pdk.Layer(
+        "HeatmapLayer",
+        data=df,
+        get_position=["centroid_lng", "centroid_lat"],
+        get_weight="pothole_count",
+        radius_pixels=80,
+        intensity=1.5,
+        threshold=0.05,
+    )
+    tooltip = None
+    pitch = 0
+else:
+    layer = pdk.Layer(
+        "ScatterplotLayer",
+        data=df,
+        get_position=["centroid_lng", "centroid_lat"],
+        get_radius="pothole_count * 1.5",
+        get_fill_color=[176, 125, 98, 180],  # copper, with alpha
+        pickable=True,
+        auto_highlight=True,
+    )
+    tooltip = {"text": "{neighbourhood}\nReports: {pothole_count}\n\nOde:\n{ode}"}
+    pitch = 40
+
 st.pydeck_chart(pdk.Deck(
     map_style="mapbox://styles/mapbox/light-v9",
     initial_view_state=pdk.ViewState(
         latitude=57.7088,
         longitude=11.9746,
-        zoom=11,
-        pitch=40,
+        zoom=10.5,
+        pitch=pitch,
     ),
-    layers=[
-        pdk.Layer(
-            "ScatterplotLayer",
-            data=df,
-            get_position=["centroid_lng", "centroid_lat"],
-            get_radius="pothole_count * 1.5",
-            get_fill_color=[176, 125, 98, 180],  # copper, with alpha
-            pickable=True,
-            auto_highlight=True,
-        ),
-    ],
-    tooltip={"text": "{neighbourhood}\nReports: {pothole_count}\n\nOde:\n{ode}"},
+    layers=[layer],
+    tooltip=tooltip,
 ))
 
 st.markdown("---")
