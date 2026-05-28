@@ -32,8 +32,8 @@ spec:
               value: "vcc-ic-g05-broadcast"
             # OpenTelemetry: codelab Q2E-2 flips this on after wiring setup_otel().
             # Leave commented out so the initial deploy works without OTel deps active.
-            # - name: OTEL_ENABLED
-            #   value: "true"
+            - name: OTEL_ENABLED
+              value: "true"
           readinessProbe:
             httpGet:
               path: /_stcore/health
