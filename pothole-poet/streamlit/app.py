@@ -166,14 +166,15 @@ def add_slang_tooltips(text: str) -> str:
         kw = item["keyword"]
         desc = item["desc"]
         
-        tooltip_html = (
-            f'<span class="slang-tooltip">\\1'
-            f'<span class="tooltiptext">💡 <b>English:</b> {kw}<br/><i>{desc}</i></span>'
-            f'</span>'
-        )
-        
         pattern = re.compile(rf'(?<![a-zA-ZåäöÅÄÖôÔ])({re.escape(term)})(?![a-zA-ZåäöÅÄÖôÔ])', re.IGNORECASE)
-        text = pattern.sub(tooltip_html, text)
+        text = pattern.sub(
+            lambda m, kw=kw, desc=desc: (
+                f'<span class="slang-tooltip">{m.group(1)}'
+                f'<span class="tooltiptext">💡 <b>English:</b> {kw}<br/><i>{desc}</i></span>'
+                f'</span>'
+            ),
+            text
+        )
         
     return text
 
@@ -351,7 +352,8 @@ def call_gemini(prompt: str) -> str:
             data=json.dumps(body).encode('utf-8'),
             headers={
                 'Authorization': f'Bearer {credentials.token}',
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-Goog-User-Project': project_id or 'vcc-ic-g05'
             },
             method='POST'
         )
@@ -689,44 +691,67 @@ selected_mood = row.get("dominant_mood", "lagom").lower() if pd.notna(row.get("d
 
 if "frustrated" in selected_mood or "vengeful" in selected_mood or "angry" in selected_mood:
     THEME_COLORS = {
-        "bg_color": "#2c0e0e",
-        "text_color": "#fcd7d7",
-        "card_bg": "#4a1515",
-        "accent_color": "#ff4d4d",
-        "border_color": "#ff3333",
+        "bg_color": "#1c0505",       # Dark volcanic black-red
+        "text_color": "#ffffff",     # High-contrast white
+        "card_bg": "#3b1111",        # Crimson-dark card
+        "accent_color": "#ff6b6b",    # Vibrant red accent
+        "border_color": "#ff4d4d",
         "theme_name": "🌋 Volcanic Vengeance"
     }
 elif "resigned" in selected_mood or "philosophical" in selected_mood or "sad" in selected_mood:
     THEME_COLORS = {
-        "bg_color": "#1e252b",
-        "text_color": "#e2e8f0",
-        "card_bg": "#2d3748",
-        "accent_color": "#cbd5e0",
-        "border_color": "#a0aec0",
+        "bg_color": "#0d1117",       # Dark reflection slate
+        "text_color": "#ffffff",     # High-contrast white
+        "card_bg": "#21262d",        # Slate-dark card
+        "accent_color": "#58a6ff",    # Vibrant blue accent
+        "border_color": "#8b949e",
         "theme_name": "🌫️ Resigned Reflection"
     }
 else:
     THEME_COLORS = {
-        "bg_color": "#f5f0eb",
-        "text_color": "#1a1a2e",
-        "card_bg": "#ffffff",
-        "accent_color": "#2d6a4f",
-        "border_color": "#b07d62",
-        "theme_name": "🌲 Lagom Balance"
+        "bg_color": "#081c15",       # Dark forest green (Lagom)
+        "text_color": "#ffffff",     # High-contrast white
+        "card_bg": "#1b4332",        # Green card
+        "accent_color": "#d4af37",    # Bright gold accent
+        "border_color": "#52b788",
+        "theme_name": "🌲 Lagom Balance (Dark Green)"
     }
 
 st.markdown(
     f"""
     <style>
       .stApp {{ background-color: {THEME_COLORS['bg_color']}; color: {THEME_COLORS['text_color']}; }}
-      h1, h2, h3, h4 {{ color: {THEME_COLORS['text_color']} !important; }}
+      h1, h2, h3, h4, h5, h6, p, li, label, span {{ color: {THEME_COLORS['text_color']} !important; }}
+      
+      /* Avoid container overflow clipping for tooltips */
+      div[data-testid="stMarkdownContainer"], 
+      .element-container, 
+      .laureate-poem, 
+      .slang-tooltip {{
+        overflow: visible !important;
+      }}
+      
+      /* Make Streamlit widgets fully visible with high contrast */
+      div[data-baseweb="select"] > div {{
+          background-color: {THEME_COLORS['card_bg']} !important;
+          border: 1.5px solid {THEME_COLORS['accent_color']} !important;
+          color: #ffffff !important;
+      }}
+      div[role="listbox"] {{
+          background-color: {THEME_COLORS['card_bg']} !important;
+          color: #ffffff !important;
+      }}
+      div[data-baseweb="select"] span {{
+          color: #ffffff !important;
+      }}
+      
       .laureate-poem {{
         color: {THEME_COLORS['text_color']};
         background-color: {THEME_COLORS['card_bg']} !important;
-        border-left: 4px solid {THEME_COLORS['accent_color']} !important;
+        border-left: 5px solid {THEME_COLORS['accent_color']} !important;
+        border-radius: 6px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.25);
       }}
-      .stMarkdown p {{ color: {THEME_COLORS['text_color']}; }}
-      .stSelectbox label {{ color: {THEME_COLORS['text_color']}; }}
     </style>
     """,
     unsafe_allow_html=True,
