@@ -177,6 +177,61 @@ def add_slang_tooltips(text: str) -> str:
         
     return text
 
+@st.cache_data(show_spinner=False)
+def synthesize_text(text: str) -> bytes | None:
+    """Synthesizes text to speech using Google Cloud Text-to-Speech API."""
+    import google.auth
+    import google.auth.transport.requests
+    import urllib.request
+    import json
+    import base64
+
+    # Skip placeholder odes or empty text
+    if not text or "(placeholder)" in text.lower():
+        return None
+
+    try:
+        credentials, project_id = google.auth.default(
+            scopes=['https://www.googleapis.com/auth/cloud-platform']
+        )
+        auth_req = google.auth.transport.requests.Request()
+        credentials.refresh(auth_req)
+
+        url = "https://texttospeech.googleapis.com/v1/text:synthesize"
+        body = {
+            "input": {"text": text},
+            "voice": {
+                "languageCode": "sv-SE",
+                "name": "sv-SE-Wavenet-C"
+            },
+            "audioConfig": {
+                "audioEncoding": "MP3",
+                "speakingRate": 1.0,
+                "pitch": 0.0
+            }
+        }
+
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(body).encode('utf-8'),
+            headers={
+                'Authorization': f'Bearer {credentials.token}',
+                'Content-Type': 'application/json',
+                'X-Goog-User-Project': project_id or 'vcc-ic-g05'
+            },
+            method='POST'
+        )
+
+        with urllib.request.urlopen(req) as response:
+            res_body = response.read().decode('utf-8')
+            res_json = json.loads(res_body)
+            audio_content = res_json.get('audioContent')
+            if audio_content:
+                return base64.b64decode(audio_content)
+    except Exception as e:
+        print(f"[tts] Synthesis failed: {e}", flush=True)
+    return None
+
 # ─── CONFIG ──────────────────────────────────────────────────────────────────
 
 MODE             = os.environ.get("MODE", "live")             # seed | live | full
@@ -435,6 +490,11 @@ row = df[df["neighbourhood"] == nb].iloc[0]
 # Poem display
 st.markdown("### Today's Ode")
 st.markdown(f'<div class="laureate-poem">{add_slang_tooltips(row["ode"])}</div>', unsafe_allow_html=True)
+
+# Audio reader player
+audio_bytes = synthesize_text(row["ode"])
+if audio_bytes:
+    st.audio(audio_bytes, format="audio/mp3")
 
 # Per-neighbourhood stats
 st.markdown("---")
