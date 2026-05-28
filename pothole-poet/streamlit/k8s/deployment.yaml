@@ -18,18 +18,18 @@ spec:
       serviceAccountName: pothole-laureate
       containers:
         - name: pothole-laureate
-          image: europe-west1-docker.pkg.dev/REPLACE_PROJECT_ID/laureate/pothole-laureate:v1
+          image: europe-west1-docker.pkg.dev/vcc-ic-g05/laureate/pothole-laureate:v1
           ports:
             - name: http
               containerPort: 8080
           env:
             - name: MODE
-              value: "seed"
+              value: "live"
             - name: PROJECT_ID
-              value: "REPLACE_PROJECT_ID"
+              value: "vcc-ic-g05"
             # Guardian's broadcast banner: gs://<project>-broadcast/broadcast.txt
             - name: BROADCAST_BUCKET
-              value: "REPLACE_PROJECT_ID-broadcast"
+              value: "vcc-ic-g05-broadcast"
             # OpenTelemetry: codelab Q2E-2 flips this on after wiring setup_otel().
             # Leave commented out so the initial deploy works without OTel deps active.
             # - name: OTEL_ENABLED

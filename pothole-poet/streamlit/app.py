@@ -20,7 +20,7 @@ import streamlit as st
 
 # ─── CONFIG ──────────────────────────────────────────────────────────────────
 
-MODE             = os.environ.get("MODE", "seed")             # seed | live | full
+MODE             = os.environ.get("MODE", "live")             # seed | live | full
 PROJECT_ID       = os.environ.get("PROJECT_ID", "")
 BROADCAST_BUCKET = os.environ.get("BROADCAST_BUCKET", "")    # Guardian banner; empty = disabled
 BQ_DATASET       = "pothole_laureate"
@@ -226,6 +226,32 @@ if MODE != "seed" and pd.notna(row.get("composed_at", None)):
 # Inspiration cards in codelab/quest-4-render.md — but you can ignore them all
 # and design something nobody else thought of.
 # ─────────────────────────────────────────────────────────────────────────────
+
+st.markdown("---")
+st.markdown("### 🗺️ Gothenburg Pothole Map")
+import pydeck as pdk
+
+st.pydeck_chart(pdk.Deck(
+    map_style="mapbox://styles/mapbox/light-v9",
+    initial_view_state=pdk.ViewState(
+        latitude=57.7088,
+        longitude=11.9746,
+        zoom=11,
+        pitch=40,
+    ),
+    layers=[
+        pdk.Layer(
+            "ScatterplotLayer",
+            data=df,
+            get_position=["centroid_lng", "centroid_lat"],
+            get_radius="pothole_count * 1.5",
+            get_fill_color=[176, 125, 98, 180],  # copper, with alpha
+            pickable=True,
+            auto_highlight=True,
+        ),
+    ],
+    tooltip={"text": "{neighbourhood}\nReports: {pothole_count}\n\nOde:\n{ode}"},
+))
 
 st.markdown("---")
 st.markdown("### Office Bulletin Board")
