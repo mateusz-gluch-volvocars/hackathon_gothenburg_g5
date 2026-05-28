@@ -136,6 +136,47 @@ def trigger_airflow_dag():
     except Exception as e:
         return False, f"Failed to trigger pipeline: {e}"
 
+def add_slang_tooltips(text: str) -> str:
+    """Wraps known Gothenburg/Swinglish slang terms with custom HTML hover tooltips."""
+    if not text:
+        return text
+    
+    # Sort descending by length so we match longer multi-word terms first (e.g. 'klara sig' before 'sig')
+    glossary = [
+        {"term": "bamba", "keyword": "cafeteria", "desc": "Traditional Gothenburg slang for a school lunchroom or public canteen"},
+        {"term": "gôtt mos", "keyword": "great mash", "desc": "Traditional Gothenburg phrase meaning 'great' or 'delicious'"},
+        {"term": "gôtt", "keyword": "great / good", "desc": "Meaning 'great', 'delicious', 'lovely', 'good', or 'fine'"},
+        {"term": "hjul", "keyword": "wheels", "desc": "Car wheels / rolling gear"},
+        {"term": "hylla", "keyword": "bookshelf", "desc": "Gothenburg shelving references"},
+        {"term": "kaross", "keyword": "chassis", "desc": "The car body or frame"},
+        {"term": "klara sig", "keyword": "survive", "desc": "To survive or get through"},
+        {"term": "knô", "keyword": "crowd / squeeze", "desc": "To push, shove, or squeeze (e.g., 'knô past the crater')"},
+        {"term": "kåre", "keyword": "breeze", "desc": "A cool breeze or wind"},
+        {"term": "möbel", "keyword": "IKEA", "desc": "Flatpack furniture references"},
+        {"term": "schlager", "keyword": "ABBA", "desc": "Traditional Swedish/Gothenburg pop music references"},
+        {"term": "sjyst", "keyword": "nice", "desc": "Meaning 'nice' or 'cool'"},
+        {"term": "tjôta", "keyword": "complain / whine", "desc": "To whine, complain, or nag endlessly"},
+        {"term": "änna", "keyword": "really / indeed", "desc": "Used to emphasize statements, meaning 'indeed' or 'really'"},
+    ]
+
+    import re
+    # Match on Swedish letters and standard characters
+    for item in glossary:
+        term = item["term"]
+        kw = item["keyword"]
+        desc = item["desc"]
+        
+        tooltip_html = (
+            f'<span class="slang-tooltip">\\1'
+            f'<span class="tooltiptext">💡 <b>English:</b> {kw}<br/><i>{desc}</i></span>'
+            f'</span>'
+        )
+        
+        pattern = re.compile(rf'(?<![a-zA-ZåäöÅÄÖôÔ])({re.escape(term)})(?![a-zA-ZåäöÅÄÖôÔ])', re.IGNORECASE)
+        text = pattern.sub(tooltip_html, text)
+        
+    return text
+
 # ─── CONFIG ──────────────────────────────────────────────────────────────────
 
 MODE             = os.environ.get("MODE", "live")             # seed | live | full
@@ -188,6 +229,51 @@ st.markdown(
         font-size: 0.85rem;
         background: {PALETTE['pine']};
         color: white;
+      }}
+      /* Tooltips for Swinglish Terms */
+      .slang-tooltip {{
+        position: relative;
+        display: inline;
+        border-bottom: 2px dashed {PALETTE['copper']};
+        cursor: help;
+        color: {PALETTE['pine']};
+        font-weight: 600;
+      }}
+      .slang-tooltip .tooltiptext {{
+        visibility: hidden;
+        width: 240px;
+        background-color: {PALETTE['charcoal']};
+        color: #fff;
+        text-align: left;
+        border-radius: 8px;
+        padding: 10px 14px;
+        position: absolute;
+        z-index: 999;
+        bottom: 125%;
+        left: 50%;
+        margin-left: -120px;
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-family: system-ui, sans-serif;
+        font-size: 0.85rem;
+        line-height: 1.4;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        white-space: normal;
+        font-weight: normal;
+      }}
+      .slang-tooltip .tooltiptext::after {{
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -6px;
+        border-width: 6px;
+        border-style: solid;
+        border-color: {PALETTE['charcoal']} transparent transparent transparent;
+      }}
+      .slang-tooltip:hover .tooltiptext {{
+        visibility: visible;
+        opacity: 1;
       }}
     </style>
     """,
@@ -348,7 +434,7 @@ row = df[df["neighbourhood"] == nb].iloc[0]
 
 # Poem display
 st.markdown("### Today's Ode")
-st.markdown(f'<div class="laureate-poem">{row["ode"]}</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="laureate-poem">{add_slang_tooltips(row["ode"])}</div>', unsafe_allow_html=True)
 
 # Per-neighbourhood stats
 st.markdown("---")
