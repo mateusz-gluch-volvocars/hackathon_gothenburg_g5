@@ -91,6 +91,51 @@ request_duration = meter.create_histogram(
     "pothole_laureate_request_duration_seconds",
     description="Page render duration", unit="s")
 
+def trigger_airflow_dag():
+    """Trigger the compose_the_odes DAG in Composer via Google Cloud API."""
+    import google.auth
+    import google.auth.transport.requests
+    import urllib.request
+    import json
+
+    try:
+        credentials, project_id = google.auth.default(
+            scopes=['https://www.googleapis.com/auth/cloud-platform']
+        )
+        auth_req = google.auth.transport.requests.Request()
+        credentials.refresh(auth_req)
+
+        url = (
+            f"https://composer.googleapis.com/v1/"
+            f"projects/{project_id}/"
+            f"locations/europe-west1/"
+            f"environments/the-laureate-bureau:executeAirflowCommand"
+        )
+
+        body = {
+            "command": "dags",
+            "subcommand": "trigger",
+            "parameters": ["compose_the_odes"]
+        }
+
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(body).encode('utf-8'),
+            headers={
+                'Authorization': f'Bearer {credentials.token}',
+                'Content-Type': 'application/json'
+            },
+            method='POST'
+        )
+
+        with urllib.request.urlopen(req) as response:
+            res_body = response.read().decode('utf-8')
+            res_json = json.loads(res_body)
+            exec_id = res_json.get('executionId', 'N/A')
+            return True, f"Pipeline triggered successfully! (Execution ID: {exec_id[:8]}...)"
+    except Exception as e:
+        return False, f"Failed to trigger pipeline: {e}"
+
 # ─── CONFIG ──────────────────────────────────────────────────────────────────
 
 MODE             = os.environ.get("MODE", "live")             # seed | live | full
@@ -243,6 +288,17 @@ with st.sidebar:
         f'**Mode:** <span class="mode-chip">{MODE}</span>',
         unsafe_allow_html=True,
     )
+
+    st.markdown("---")
+    st.subheader("⚙️ Pipeline Control")
+    if st.button("🔄 Refresh Airflow DAG", help="Trigger the 'compose_the_odes' DAG to run the full pipeline.", use_container_width=True):
+        with st.spinner("Contacting Apache Airflow..."):
+            success, msg = trigger_airflow_dag()
+            if success:
+                st.success(msg)
+                st.toast("Pipeline triggered!", icon="🚀")
+            else:
+                st.error(msg)
 
     if MODE == "full":
         from alloydb_writer import insert_pothole_report
