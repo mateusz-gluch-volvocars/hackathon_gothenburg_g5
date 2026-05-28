@@ -268,7 +268,7 @@ def render_health_dashboard():
         rss_mb = 124.5  # safe fallback if not running on Linux
 
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Application Version", os.environ.get("APP_VERSION", "v12-telemetry"))
+    col1.metric("Application Version", os.environ.get("APP_VERSION", "v15-polished"))
     col2.metric("Process Uptime", uptime_str)
     col3.metric("Resident Memory (RSS)", f"{rss_mb:.1f} MB")
     col4.metric("Process CPU Time", f"{cpu_time:.2f}s")
