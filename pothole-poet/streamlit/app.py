@@ -390,7 +390,7 @@ def call_gemini(prompt: str) -> str:
             ],
             "generationConfig": {
                 "temperature": 0.7,
-                "maxOutputTokens": 1000
+                "maxOutputTokens": 8192
             }
         }
 
