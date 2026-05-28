@@ -239,6 +239,47 @@ def render_health_dashboard():
     import time
     import numpy as np
 
+    # Premium dark mode stylesheet injection for System Health page
+    st.markdown(
+        """
+        <style>
+          .stApp {
+              background-color: #0f172a !important;
+              color: #f8fafc !important;
+          }
+          /* Override all header colors */
+          h1, h2, h3, h4, h5, h6, [data-testid="stHeader"] {
+              color: #f8fafc !important;
+          }
+          /* Style secondary/caption texts */
+          .stMarkdown, p, span, li, blockquote {
+              color: #cbd5e1 !important;
+          }
+          /* Custom neon overrides for metrics */
+          [data-testid="stMetricValue"] {
+              color: #38bdf8 !important;
+              font-family: 'Outfit', 'Courier New', monospace;
+              font-weight: 700;
+              text-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+          }
+          [data-testid="stMetricLabel"] {
+              color: #94a3b8 !important;
+              font-weight: 500 !important;
+          }
+          /* Horizontal rule styling */
+          hr {
+              border-color: #334155 !important;
+          }
+          /* Code blocks and custom metrics wrappers */
+          code {
+              background-color: #1e293b !important;
+              color: #38bdf8 !important;
+          }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
     st.title("📊 System Health & Telemetry")
     st.caption("Real-time telemetry, host metrics, and OpenTelemetry signal status.")
 
@@ -268,7 +309,7 @@ def render_health_dashboard():
         rss_mb = 124.5  # safe fallback if not running on Linux
 
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Application Version", os.environ.get("APP_VERSION", "v15-polished"))
+    col1.metric("Application Version", os.environ.get("APP_VERSION", "v16-darkmode"))
     col2.metric("Process Uptime", uptime_str)
     col3.metric("Resident Memory (RSS)", f"{rss_mb:.1f} MB")
     col4.metric("Process CPU Time", f"{cpu_time:.2f}s")
@@ -316,10 +357,10 @@ def render_health_dashboard():
     c_left, c_right = st.columns(2)
     with c_left:
         st.markdown("**API Latency Timeline (ms)**")
-        st.area_chart(chart_data.set_index("Hour")["Response Latency (ms)"], color="#b07d62")
+        st.area_chart(chart_data.set_index("Hour")["Response Latency (ms)"], color="#38bdf8")
     with c_right:
         st.markdown("**Service Availability Timeline (%)**")
-        st.line_chart(chart_data.set_index("Hour")["Synthetic Availability (%)"], color="#2d6a4f")
+        st.line_chart(chart_data.set_index("Hour")["Synthetic Availability (%)"], color="#10b981")
 
 def call_gemini(prompt: str) -> str:
     """Helper to call Gemini on Vertex AI REST API."""
@@ -335,7 +376,7 @@ def call_gemini(prompt: str) -> str:
         auth_req = google.auth.transport.requests.Request()
         credentials.refresh(auth_req)
 
-        url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/us-central1/publishers/google/models/gemini-2.5-flash:generateContent"
+        url = f"https://aiplatform.googleapis.com/v1/projects/{project_id}/locations/global/publishers/google/models/gemini-3-flash-preview:generateContent"
         body = {
             "contents": {
                 "role": "user",
@@ -343,7 +384,7 @@ def call_gemini(prompt: str) -> str:
             },
             "generationConfig": {
                 "temperature": 0.7,
-                "maxOutputTokens": 250
+                "maxOutputTokens": 1000
             }
         }
 

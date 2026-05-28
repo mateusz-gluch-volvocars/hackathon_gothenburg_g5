@@ -18,18 +18,28 @@ spec:
       serviceAccountName: pothole-laureate
       containers:
         - name: pothole-laureate
-          image: europe-west1-docker.pkg.dev/vcc-ic-g05/laureate/pothole-laureate:v15-polished
+          image: europe-west1-docker.pkg.dev/vcc-ic-g05/laureate/pothole-laureate:v16-darkmode
           ports:
             - name: http
               containerPort: 8080
           env:
             - name: MODE
-              value: "live"
+              value: "full"
             - name: PROJECT_ID
               value: "vcc-ic-g05"
+            - name: ALLOYDB_HOST
+              value: "10.228.0.2"
+            - name: ALLOYDB_USER
+              value: "postgres"
+            - name: ALLOYDB_PASSWORD
+              value: "buildwithgemini2026"
+            - name: ALLOYDB_DBNAME
+              value: "postgres"
             # Guardian's broadcast banner: gs://<project>-broadcast/broadcast.txt
             - name: BROADCAST_BUCKET
               value: "vcc-ic-g05-broadcast"
+            - name: APP_VERSION
+              value: "v16-darkmode"
             # OpenTelemetry: codelab Q2E-2 flips this on after wiring setup_otel().
             # Leave commented out so the initial deploy works without OTel deps active.
             - name: OTEL_ENABLED
