@@ -231,13 +231,18 @@ st.markdown("---")
 st.markdown("### 🗺️ Gothenburg Pothole Map")
 import pydeck as pdk
 
+# Ensure coordinates are numeric and drop any null values to prevent mapping errors
+df["centroid_lat"] = pd.to_numeric(df["centroid_lat"], errors="coerce")
+df["centroid_lng"] = pd.to_numeric(df["centroid_lng"], errors="coerce")
+map_clean_df = df.dropna(subset=["centroid_lat", "centroid_lng"])
+
 map_type = st.radio("View Type:", ["Interactive Scatterplot", "Density Heatmap"], horizontal=True)
 
 if map_type == "Density Heatmap":
     layer = pdk.Layer(
         "HeatmapLayer",
-        data=df,
-        get_position=["centroid_lng", "centroid_lat"],
+        data=map_clean_df,
+        get_position="[centroid_lng, centroid_lat]",
         get_weight="pothole_count",
         radius_pixels=80,
         intensity=1.5,
@@ -248,8 +253,8 @@ if map_type == "Density Heatmap":
 else:
     layer = pdk.Layer(
         "ScatterplotLayer",
-        data=df,
-        get_position=["centroid_lng", "centroid_lat"],
+        data=map_clean_df,
+        get_position="[centroid_lng, centroid_lat]",
         get_radius="pothole_count * 1.5",
         get_fill_color=[176, 125, 98, 180],  # copper, with alpha
         pickable=True,
